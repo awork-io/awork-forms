@@ -90,7 +90,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Add JWT auth middleware",
       "Verify all CRUD operations work"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

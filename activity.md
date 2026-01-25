@@ -2,8 +2,8 @@
 
 ## Current Status
 **Last Updated:** 2026-01-25
-**Tasks Completed:** 5/16
-**Current Task:** Main layout and navigation complete
+**Tasks Completed:** 6/16
+**Current Task:** Forms CRUD API complete
 
 ---
 
@@ -138,6 +138,40 @@
 - Navigation between all pages works correctly
 - Active state highlights current page in sidebar
 - User info displays correctly in sidebar footer
+- No console errors
+
+**Build Status:**
+- Frontend: `npm run lint && npm run build` passes
+- Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-25 - Forms CRUD API Complete
+
+**Task:** Implement forms CRUD API
+
+**Changes:**
+- Created `backend/Forms/FormsService.cs` with all CRUD operations
+- Created DTOs: FormListDto, FormDetailDto, CreateFormDto, UpdateFormDto
+- Registered FormsService in dependency injection container
+- Added GET /api/forms - Lists all forms for authenticated user with submission count and field count
+- Added POST /api/forms - Creates a new form with validation (name required)
+- Added GET /api/forms/{id} - Retrieves a specific form by ID
+- Added PUT /api/forms/{id} - Updates an existing form with partial updates support
+- Added DELETE /api/forms/{id} - Deletes a form and its related submissions
+- All endpoints require JWT authentication via `.RequireAuth()` middleware
+- Forms are scoped to the authenticated user (users can only access their own forms)
+
+**Visual Verification:**
+- Screenshot: `screenshots/06-forms-crud-api-verification.png` - Forms page showing empty state (frontend integration pending)
+- Tested all CRUD operations via curl:
+  - GET returns empty list initially
+  - POST creates form and returns with ID and PublicId (GUID)
+  - GET by ID returns full form details
+  - PUT updates form and returns updated data
+  - DELETE removes form and returns success message
+  - Unauthenticated requests return 401
+- Verified API calls from frontend JavaScript work correctly
 - No console errors
 
 **Build Status:**

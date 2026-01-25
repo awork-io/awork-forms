@@ -1,5 +1,6 @@
 using Backend.Auth;
 using Backend.Database;
+using Backend.Forms;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,13 @@ builder.Services.AddSingleton(sp =>
     var dbFactory = sp.GetRequiredService<DbContextFactory>();
     var jwtService = sp.GetRequiredService<JwtService>();
     return new AuthService(httpClientFactory.CreateClient(), dbFactory, jwtService, redirectUri, aworkClientId, aworkClientSecret);
+});
+
+// Configure FormsService
+builder.Services.AddSingleton(sp =>
+{
+    var dbFactory = sp.GetRequiredService<DbContextFactory>();
+    return new FormsService(dbFactory);
 });
 
 var app = builder.Build();
@@ -153,6 +161,80 @@ app.MapPost("/api/auth/logout", () =>
     // In the future, we could implement token blacklisting
     return Results.Ok(new { message = "Logged out successfully" });
 });
+
+// =====================
+// Forms Endpoints
+// =====================
+
+// GET /api/forms - List all forms for current user
+app.MapGet("/api/forms", (HttpContext context, FormsService formsService) =>
+{
+    var userId = context.GetCurrentUserId();
+    if (userId == null) return Results.Unauthorized();
+
+    var forms = formsService.GetFormsByUser(userId.Value);
+    return Results.Ok(forms);
+}).RequireAuth();
+
+// POST /api/forms - Create a new form
+app.MapPost("/api/forms", (HttpContext context, FormsService formsService, CreateFormDto dto) =>
+{
+    var userId = context.GetCurrentUserId();
+    if (userId == null) return Results.Unauthorized();
+
+    if (string.IsNullOrWhiteSpace(dto.Name))
+    {
+        return Results.BadRequest(new { error = "Form name is required" });
+    }
+
+    var form = formsService.CreateForm(dto, userId.Value);
+    return Results.Created($"/api/forms/{form.Id}", form);
+}).RequireAuth();
+
+// GET /api/forms/{id} - Get a specific form
+app.MapGet("/api/forms/{id:int}", (HttpContext context, FormsService formsService, int id) =>
+{
+    var userId = context.GetCurrentUserId();
+    if (userId == null) return Results.Unauthorized();
+
+    var form = formsService.GetFormById(id, userId.Value);
+    if (form == null)
+    {
+        return Results.NotFound(new { error = "Form not found" });
+    }
+
+    return Results.Ok(form);
+}).RequireAuth();
+
+// PUT /api/forms/{id} - Update a form
+app.MapPut("/api/forms/{id:int}", (HttpContext context, FormsService formsService, int id, UpdateFormDto dto) =>
+{
+    var userId = context.GetCurrentUserId();
+    if (userId == null) return Results.Unauthorized();
+
+    var form = formsService.UpdateForm(id, dto, userId.Value);
+    if (form == null)
+    {
+        return Results.NotFound(new { error = "Form not found" });
+    }
+
+    return Results.Ok(form);
+}).RequireAuth();
+
+// DELETE /api/forms/{id} - Delete a form
+app.MapDelete("/api/forms/{id:int}", (HttpContext context, FormsService formsService, int id) =>
+{
+    var userId = context.GetCurrentUserId();
+    if (userId == null) return Results.Unauthorized();
+
+    var deleted = formsService.DeleteForm(id, userId.Value);
+    if (!deleted)
+    {
+        return Results.NotFound(new { error = "Form not found" });
+    }
+
+    return Results.Ok(new { message = "Form deleted successfully" });
+}).RequireAuth();
 
 // Test endpoint for visual verification (only in development)
 if (app.Environment.IsDevelopment())
