@@ -30,13 +30,13 @@ for ((i=1; i<=$MAX_ITERATIONS; i++)); do
 
   # Run claude with the prompt file
   # Using Opus 4.5 for best quality
-  # --verbose shows model, tokens, tool calls
-  result=$(claude -p "$(cat PROMPT.md)" --model claude-opus-4-20250514 --verbose --output-format text 2>&1) || true
+  # Output streams directly to terminal (no capture)
+  LOG_FILE="/tmp/ralph_iteration_${i}.log"
+  
+  claude -p "$(cat PROMPT.md)" --model claude-opus-4-20250514 --verbose 2>&1 | tee "$LOG_FILE" || true
 
-  echo "$result"
-
-  # Check for completion promise
-  if [[ "$result" == *"<promise>COMPLETE</promise>"* ]]; then
+  # Check for completion promise in the log
+  if grep -q "<promise>COMPLETE</promise>" "$LOG_FILE" 2>/dev/null; then
     echo ""
     echo "=========================================="
     echo "  SUCCESS! All tasks complete"
