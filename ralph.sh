@@ -30,7 +30,8 @@ for ((i=1; i<=$MAX_ITERATIONS; i++)); do
 
   # Run claude with the prompt file
   # Using Opus 4.5 for best quality
-  result=$(claude -p "$(cat PROMPT.md)" --model claude-opus-4-20250514 --output-format text 2>&1) || true
+  # --verbose shows model, tokens, tool calls
+  result=$(claude -p "$(cat PROMPT.md)" --model claude-opus-4-20250514 --verbose --output-format text 2>&1) || true
 
   echo "$result"
 
