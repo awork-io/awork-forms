@@ -5,13 +5,12 @@
 
 set -e
 
-if [ -z "$1" ]; then
-  echo "Usage: $0 <iterations>"
-  echo "Example: $0 20"
-  exit 1
-fi
+MAX_ITERATIONS=${1:-15}
 
-MAX_ITERATIONS=$1
+if [ "$MAX_ITERATIONS" -gt 15 ]; then
+  echo "Warning: Max iterations capped at 15"
+  MAX_ITERATIONS=15
+fi
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "=========================================="
