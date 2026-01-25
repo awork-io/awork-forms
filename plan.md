@@ -35,7 +35,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Create solution file combining frontend/backend",
       "Verify API starts and returns health check"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
