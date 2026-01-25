@@ -255,6 +255,64 @@ public class AworkApiService
         var result = await MakeAworkRequestAsync<List<AworkTypeOfWork>>(userId, "typeofwork");
         return result ?? new List<AworkTypeOfWork>();
     }
+
+    /// <summary>
+    /// Creates a new project in awork
+    /// </summary>
+    public async Task<AworkCreateProjectResponse?> CreateProjectAsync(int userId, AworkCreateProjectRequest request)
+    {
+        return await MakeAworkPostRequestAsync<AworkCreateProjectResponse>(userId, "projects", request);
+    }
+
+    /// <summary>
+    /// Creates a new task in awork
+    /// </summary>
+    public async Task<AworkCreateTaskResponse?> CreateTaskAsync(int userId, string projectId, AworkCreateTaskRequest request)
+    {
+        return await MakeAworkPostRequestAsync<AworkCreateTaskResponse>(userId, $"projects/{projectId}/tasks", request);
+    }
+
+    /// <summary>
+    /// Makes an authenticated POST request to the awork API
+    /// </summary>
+    private async Task<T?> MakeAworkPostRequestAsync<T>(int userId, string endpoint, object body) where T : class
+    {
+        var accessToken = await GetValidAccessTokenAsync(userId);
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            throw new UnauthorizedAccessException("No valid awork access token available. Please re-authenticate.");
+        }
+
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{AworkApiBaseUrl}/{endpoint}");
+        request.Headers.Add("Authorization", $"Bearer {accessToken}");
+
+        var jsonBody = JsonSerializer.Serialize(body, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        });
+        request.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.SendAsync(request);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            throw new UnauthorizedAccessException("awork API returned unauthorized. Please re-authenticate.");
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"awork API error for POST {endpoint}: {response.StatusCode} - {errorBody}");
+            throw new HttpRequestException($"awork API error: {response.StatusCode} - {errorBody}");
+        }
+
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+    }
 }
 
 // DTOs for awork API responses
@@ -337,4 +395,57 @@ public class TokenRefreshResult
     public string? AccessToken { get; set; }
     public string? RefreshToken { get; set; }
     public int ExpiresIn { get; set; }
+}
+
+// DTOs for creating projects
+public class AworkCreateProjectRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? ProjectTypeId { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? DueDate { get; set; }
+}
+
+public class AworkCreateProjectResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? ProjectTypeId { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? DueDate { get; set; }
+}
+
+// DTOs for creating tasks
+public class AworkCreateTaskRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool IsPriority { get; set; }
+    public DateTime? DueOn { get; set; }
+    public DateTime? StartOn { get; set; }
+    public int? PlannedDuration { get; set; }
+    public string? TaskStatusId { get; set; }
+    public string? TypeOfWorkId { get; set; }
+    public string? TaskListId { get; set; }
+    public List<AworkTaskAssignment>? Assignments { get; set; }
+}
+
+public class AworkTaskAssignment
+{
+    public string UserId { get; set; } = string.Empty;
+}
+
+public class AworkCreateTaskResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool IsPriority { get; set; }
+    public DateTime? DueOn { get; set; }
+    public DateTime? StartOn { get; set; }
+    public int? PlannedDuration { get; set; }
+    public string? TaskStatusId { get; set; }
+    public string? ProjectId { get; set; }
 }

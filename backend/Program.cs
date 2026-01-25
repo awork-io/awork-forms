@@ -2,6 +2,7 @@ using Backend.Auth;
 using Backend.Awork;
 using Backend.Database;
 using Backend.Forms;
+using Backend.Submissions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,6 +61,14 @@ builder.Services.AddSingleton(sp =>
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
     var dbFactory = sp.GetRequiredService<DbContextFactory>();
     return new AworkApiService(httpClientFactory.CreateClient(), dbFactory);
+});
+
+// Configure SubmissionProcessor
+builder.Services.AddSingleton(sp =>
+{
+    var dbFactory = sp.GetRequiredService<DbContextFactory>();
+    var aworkService = sp.GetRequiredService<AworkApiService>();
+    return new SubmissionProcessor(dbFactory, aworkService);
 });
 
 var app = builder.Build();
@@ -529,7 +538,7 @@ app.MapGet("/api/f/{publicId:guid}", (FormsService formsService, Guid publicId) 
 });
 
 // POST /api/f/{publicId}/submit - Submit data to a public form
-app.MapPost("/api/f/{publicId:guid}/submit", (FormsService formsService, Guid publicId, CreateSubmissionDto dto) =>
+app.MapPost("/api/f/{publicId:guid}/submit", async (FormsService formsService, SubmissionProcessor processor, Guid publicId, CreateSubmissionDto dto) =>
 {
     var form = formsService.GetPublicFormByPublicId(publicId);
 
@@ -546,14 +555,37 @@ app.MapPost("/api/f/{publicId:guid}/submit", (FormsService formsService, Guid pu
     // Convert data to JSON string
     var dataJson = System.Text.Json.JsonSerializer.Serialize(dto.Data);
 
+    // Create the submission record
     var submission = formsService.CreateSubmission(form.Id, dataJson);
 
-    return Results.Created($"/api/submissions/{submission.Id}", new
+    // Process the submission (create awork task/project if configured)
+    var processResult = await processor.ProcessSubmissionAsync(submission.Id);
+
+    // Return appropriate response based on processing result
+    if (processResult.Status == "completed")
     {
-        success = true,
-        message = "Thank you for your submission!",
-        submissionId = submission.Id
-    });
+        return Results.Created($"/api/submissions/{submission.Id}", new
+        {
+            success = true,
+            message = "Thank you for your submission!",
+            submissionId = submission.Id,
+            aworkProjectId = processResult.AworkProjectId,
+            aworkTaskId = processResult.AworkTaskId
+        });
+    }
+    else
+    {
+        // Still return success to user even if awork integration failed
+        // The submission was recorded; awork integration can be retried
+        return Results.Created($"/api/submissions/{submission.Id}", new
+        {
+            success = true,
+            message = "Thank you for your submission!",
+            submissionId = submission.Id,
+            integrationStatus = processResult.Status,
+            integrationError = processResult.ErrorMessage
+        });
+    }
 });
 
 app.Run();

@@ -2,8 +2,8 @@
 
 ## Current Status
 **Last Updated:** 2026-01-25
-**Tasks Completed:** 12/16
-**Current Task:** Public form view complete
+**Tasks Completed:** 13/16
+**Current Task:** awork project/task creation on submit complete
 
 ---
 
@@ -450,6 +450,50 @@
 - Form submission creates record in Submissions table
 - Custom colors applied correctly (green primary color #10B981)
 - All field types work correctly (dropdown, email, text inputs)
+- No console errors
+
+**Build Status:**
+- Frontend: `npm run lint && npm run build` passes
+- Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-25 - awork Project/Task Creation on Submit Complete
+
+**Task:** Implement awork project/task creation on submit
+
+**Changes:**
+- Extended `backend/Awork/AworkApiService.cs` with:
+  - `CreateProjectAsync()` - Creates a new project in awork
+  - `CreateTaskAsync()` - Creates a new task in awork
+  - `MakeAworkPostRequestAsync<T>()` - Generic method for authenticated POST requests
+  - New DTOs: `AworkCreateProjectRequest`, `AworkCreateProjectResponse`, `AworkCreateTaskRequest`, `AworkTaskAssignment`, `AworkCreateTaskResponse`
+- Created `backend/Submissions/SubmissionProcessor.cs`:
+  - `ProcessSubmissionAsync()` - Processes submissions based on form configuration
+  - Retrieves form configuration (action type, field mappings, awork settings)
+  - Creates awork projects when action type is "project" or "both"
+  - Creates awork tasks when action type is "task" or "both"
+  - Applies field mappings for name, description, dates, duration
+  - Handles "both" action type by creating task in newly created project
+  - Updates submission status to "completed" or "failed" with error details
+  - Stores awork project/task IDs in submission record
+- Updated `backend/Program.cs`:
+  - Registered `SubmissionProcessor` in dependency injection
+  - Updated POST `/api/f/{publicId}/submit` endpoint to process submissions after creation
+  - Returns awork project/task IDs in response when successful
+  - Returns integration status and error message when awork integration fails
+- Field mapping support:
+  - Task fields: name, description, dueOn, startOn, plannedDuration
+  - Project fields: name, description, startDate, dueDate
+  - Uses form field ID to look up submitted values
+
+**Visual Verification:**
+- Screenshot: `screenshots/13-form-submission-success.png` - Success state after submission
+- Tested submission without awork integration: status "completed" immediately
+- Tested submission with awork integration but no tokens: status "failed" with auth error
+- API response includes aworkProjectId/aworkTaskId when integration succeeds
+- Error messages properly stored in ErrorMessage column
+- User receives success message even when integration fails (submission is recorded)
 - No console errors
 
 **Build Status:**

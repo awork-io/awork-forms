@@ -197,7 +197,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Update submission status (pending/completed/failed)",
       "Handle errors gracefully with retry logic"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
