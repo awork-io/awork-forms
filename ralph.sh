@@ -29,8 +29,8 @@ for ((i=1; i<=$MAX_ITERATIONS; i++)); do
   echo ""
 
   # Run claude with the prompt file
-  # Using --output-format text for cleaner output
-  result=$(claude -p "$(cat PROMPT.md)" --output-format text 2>&1) || true
+  # Using sonnet for speed, change to opus for complex tasks
+  result=$(claude -p "$(cat PROMPT.md)" --model claude-sonnet-4-20250514 --output-format text 2>&1) || true
 
   echo "$result"
 
