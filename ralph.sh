@@ -33,7 +33,7 @@ while [ $i -lt $MAX_ITERATIONS ]; do
   
   # The original Ralph loop - pipe prompt to claude
   # This runs interactively so you see everything
-  cat PROMPT.md | claude-unsafe --model claude-opus-4-20250514
+  cat PROMPT.md | claude --dangerously-skip-permissions --model claude-opus-4-20250514
   
   # Check if all tasks complete
   if grep -q "COMPLETE" /tmp/ralph_last_output.txt 2>/dev/null; then
