@@ -9,7 +9,7 @@ A standalone web application for awork customers to create customizable forms th
 1. Enable customers to collect structured data via forms
 2. Automatically create awork projects/tasks from submissions
 3. Provide simple form management without awork app complexity
-4. Host on internal Hetzner infrastructure
+4. **Multi-tenant**: Forms and config stored per awork workspace (all workspace users share access)
 
 ## User Stories
 

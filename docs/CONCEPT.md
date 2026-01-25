@@ -47,7 +47,7 @@ Based on awork-form-craft implementation:
 
 1. **Dynamic Client Registration (DCR)**: App registers itself with awork API on first OAuth
 2. **PKCE Flow**: Authorization code exchange with code_verifier (no client_secret needed)
-3. **Token Storage**: Access/refresh tokens stored server-side in SQLite
+3. **Token Storage**: Access/refresh tokens stored per **workspace** (not per user)
 4. **Session**: JWT issued by our backend after successful awork OAuth
 
 ```
@@ -56,30 +56,50 @@ User → Login → Backend generates PKCE verifier
      → User grants access
      → Callback with code
      → Backend exchanges code for tokens (with verifier)
-     → Backend stores tokens, issues session JWT
+     → Backend creates/updates workspace with tokens
+     → Backend creates/updates user record
+     → Backend issues session JWT (contains workspace_id + user_id)
 ```
+
+**Multi-tenancy**: 
+- All users from same awork workspace see the same forms
+- Tokens stored at workspace level (shared across users)
+- Forms scoped to workspace, not individual user
 
 ## Data Model (SQLite)
 
+**Multi-tenancy**: All data is scoped to `workspace_id`. Users from the same awork workspace share forms.
+
 ```sql
--- Users authenticated via awork
-CREATE TABLE users (
-    id TEXT PRIMARY KEY,
-    awork_user_id TEXT UNIQUE NOT NULL,
-    awork_workspace_id TEXT NOT NULL,
-    awork_workspace_name TEXT,
+-- Workspaces (tenants) - one per awork workspace
+CREATE TABLE workspaces (
+    id TEXT PRIMARY KEY, -- awork workspace_id
+    name TEXT,
     access_token TEXT NOT NULL,
     refresh_token TEXT NOT NULL,
     token_expires_at TEXT NOT NULL,
+    client_id TEXT, -- DCR client_id
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- Form definitions
+-- Users authenticated via awork (for audit/tracking)
+CREATE TABLE users (
+    id TEXT PRIMARY KEY,
+    awork_user_id TEXT UNIQUE NOT NULL,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    email TEXT,
+    name TEXT,
+    last_login_at TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Form definitions (scoped to workspace)
 CREATE TABLE forms (
     id TEXT PRIMARY KEY,
     public_id TEXT UNIQUE NOT NULL, -- GUID for shareable link
-    user_id TEXT NOT NULL REFERENCES users(id),
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id), -- tenant isolation
+    created_by_user_id TEXT REFERENCES users(id),
     name TEXT NOT NULL,
     description TEXT,
     fields TEXT NOT NULL, -- JSON array
@@ -94,8 +114,7 @@ CREATE TABLE forms (
     -- Status
     is_active INTEGER DEFAULT 1,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Form submissions
@@ -109,6 +128,10 @@ CREATE TABLE submissions (
     error_message TEXT,
     submitted_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Indexes for tenant isolation
+CREATE INDEX idx_forms_workspace ON forms(workspace_id);
+CREATE INDEX idx_users_workspace ON users(workspace_id);
 ```
 
 ## API Endpoints
