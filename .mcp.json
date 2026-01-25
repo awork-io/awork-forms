@@ -5,7 +5,6 @@
       "args": [
         "-y",
         "@playwright/mcp@latest",
-        "--headless",
         "--output-dir",
         "screenshots"
       ]
