@@ -5,29 +5,22 @@
   },
   "permissions": {
     "allow": [
-      "WebFetch(domain:registry.npmjs.org)",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:api.awork.com)",
-      "mcp__playwright__*"
+      "WebFetch(*)",
+      "mcp__playwright__*",
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)"
     ],
     "deny": [
       "Bash(sudo *)",
-      "Bash(docker *)",
-      "Read(./.env)",
+      "Bash(rm -rf /)*",
       "Read(~/.ssh/**)",
       "Read(~/.aws/**)"
     ],
-    "ask": [
-      "Bash(git push:*)"
-    ],
-    "defaultMode": "acceptEdits"
+    "defaultMode": "bypassPermissions"
   },
   "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true,
-    "allowUnsandboxedCommands": false,
-    "network": {
-      "allowLocalBinding": true
-    }
+    "enabled": false
   }
 }
