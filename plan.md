@@ -150,15 +150,33 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
   },
   {
     "category": "feature",
-    "description": "Create public form view and submission",
+    "description": "Add form styling options (colors, logo)",
     "steps": [
-      "Create GET /api/forms/{id}/public endpoint (no auth)",
-      "Create POST /api/forms/{id}/submit endpoint (no auth)",
-      "Create PublicForm page component",
+      "Add styling fields to form schema (primary_color, background_color, logo_url)",
+      "Create POST /api/forms/{id}/logo endpoint for logo upload",
+      "Store logos in /uploads directory",
+      "Add StyleEditor component with color pickers",
+      "Add logo upload with preview",
+      "Add live preview panel showing styled form",
+      "Save styling with form"
+    ],
+    "passes": false
+  },
+  {
+    "category": "feature",
+    "description": "Create public form view with GUID and custom styling",
+    "steps": [
+      "Add public_id (GUID) to forms table",
+      "Create GET /api/f/{publicId} endpoint (no auth)",
+      "Create POST /api/f/{publicId}/submit endpoint (no auth)",
+      "Create PublicForm page at /f/{publicId}",
+      "Apply custom colors and logo from form settings",
+      "Design beautiful, modern public form UI",
+      "Add subtle animations and polish",
       "Render form fields dynamically",
       "Validate required fields",
-      "Submit data to API",
-      "Show success/error message"
+      "Show success message with confetti/animation",
+      "Mobile responsive design"
     ],
     "passes": false
   },
@@ -204,14 +222,29 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
   },
   {
     "category": "testing",
-    "description": "Add unit tests for critical paths",
+    "description": "Add backend unit tests (xUnit)",
     "steps": [
-      "Set up vitest for frontend",
-      "Set up xunit for backend",
-      "Test OAuth flow",
-      "Test form CRUD",
-      "Test submission creation",
-      "Test awork API integration"
+      "Create backend test project with xUnit",
+      "Add test for user authentication/JWT",
+      "Add test for form CRUD operations",
+      "Add test for public form access by GUID",
+      "Add test for submission creation",
+      "Add test for awork token refresh",
+      "Verify all tests pass"
+    ],
+    "passes": false
+  },
+  {
+    "category": "testing",
+    "description": "Add frontend unit tests (Vitest)",
+    "steps": [
+      "Set up vitest with React Testing Library",
+      "Add test for AuthContext",
+      "Add test for FormEditor component",
+      "Add test for PublicForm rendering",
+      "Add test for form validation",
+      "Add test for API hooks",
+      "Verify all tests pass with npm test"
     ],
     "passes": false
   },

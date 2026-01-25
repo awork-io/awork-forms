@@ -38,9 +38,17 @@ A standalone web application for awork customers to create customizable forms th
 - [ ] As a user, I can configure a form to create both a project and a task
 
 ### Form Sharing
-- [ ] As a user, I can get a public link to my form
+- [ ] As a user, I can get a shareable public link with a unique GUID
+- [ ] As a user, I can copy the public link to clipboard
 - [ ] As a user, I can preview how my form looks to submitters
 - [ ] As a user, I can activate/deactivate forms
+
+### Public Form Customization
+- [ ] As a user, I can set a custom primary color for my public form
+- [ ] As a user, I can upload a logo for my public form
+- [ ] As a user, I can set a custom background color
+- [ ] As a user, I can preview styling changes before saving
+- [ ] As an anonymous user, I see the branded form with custom styling
 
 ### Submissions
 - [ ] As an anonymous user, I can fill out and submit a public form
@@ -73,11 +81,10 @@ A standalone web application for awork customers to create customizable forms th
 ## Non-Goals (v1)
 
 - Form analytics/reporting
-- Custom branding/white-labeling
 - Webhook integrations
 - Multi-workspace support
 - Form templates
-- File upload fields
+- File upload fields (except logo)
 - Conditional logic
 
 ## Success Metrics
@@ -104,12 +111,19 @@ A standalone web application for awork customers to create customizable forms th
 - [ ] Project/task creation
 - [ ] Field mapping configuration
 
-### Phase 4: Public Forms
-- [ ] Public form endpoint
+### Phase 4: Public Forms & Styling
+- [ ] Public form endpoint with GUID
+- [ ] Form customization (colors, logo)
+- [ ] Beautiful public form UI
 - [ ] Form submission handling
 - [ ] Submission status tracking
 
-### Phase 5: Deployment
+### Phase 5: Testing
+- [ ] Unit tests for backend (xUnit)
+- [ ] Unit tests for frontend (Vitest)
+- [ ] Integration tests for critical paths
+
+### Phase 6: Deployment
 - [ ] Docker build
 - [ ] Kubernetes manifests
 - [ ] Hetzner deployment

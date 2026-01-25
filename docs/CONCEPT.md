@@ -78,6 +78,7 @@ CREATE TABLE users (
 -- Form definitions
 CREATE TABLE forms (
     id TEXT PRIMARY KEY,
+    public_id TEXT UNIQUE NOT NULL, -- GUID for shareable link
     user_id TEXT NOT NULL REFERENCES users(id),
     name TEXT NOT NULL,
     description TEXT,
@@ -86,6 +87,11 @@ CREATE TABLE forms (
     project_mapping TEXT, -- JSON: field mappings for project creation
     task_mapping TEXT,    -- JSON: field mappings for task creation
     target_project_id TEXT, -- Fixed project for task-only forms
+    -- Styling options
+    primary_color TEXT DEFAULT '#6366f1', -- Indigo default
+    background_color TEXT DEFAULT '#ffffff',
+    logo_url TEXT, -- URL to uploaded logo
+    -- Status
     is_active INTEGER DEFAULT 1,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -119,10 +125,11 @@ CREATE TABLE submissions (
 - `GET /api/forms/{id}` - Get form details
 - `PUT /api/forms/{id}` - Update form
 - `DELETE /api/forms/{id}` - Delete form
-- `GET /api/forms/{id}/public` - Get public form (no auth)
+- `POST /api/forms/{id}/logo` - Upload form logo
+- `GET /api/f/{publicId}` - Get public form by GUID (no auth)
 
 ### Submissions
-- `POST /api/forms/{id}/submit` - Submit form (public, no auth)
+- `POST /api/f/{publicId}/submit` - Submit form (public, no auth)
 - `GET /api/forms/{id}/submissions` - List submissions
 
 ### awork Proxy
