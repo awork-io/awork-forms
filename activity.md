@@ -2,8 +2,8 @@
 
 ## Current Status
 **Last Updated:** 2026-01-25
-**Tasks Completed:** 4/16
-**Current Task:** awork OAuth authentication complete
+**Tasks Completed:** 5/16
+**Current Task:** Main layout and navigation complete
 
 ---
 
@@ -107,6 +107,38 @@
 - Tested login button click - successfully redirects to awork authorization endpoint
 - Verified PKCE parameters in authorization URL (code_challenge, code_challenge_method=S256)
 - No console errors on login page
+
+**Build Status:**
+- Frontend: `npm run lint && npm run build` passes
+- Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-25 - Main Layout and Navigation Complete
+
+**Task:** Create main layout and navigation
+
+**Changes:**
+- Created AppLayout component with sidebar navigation (`frontend/src/components/layout/AppLayout.tsx`)
+- Added navigation links: Dashboard, Forms, Settings with icons
+- Styled sidebar with awork-inspired aesthetic (clean, modern design)
+- Added user avatar (or initial fallback) and workspace name in sidebar footer
+- Added user email in header
+- Created FormsPage with empty state and "Create Form" buttons
+- Created SettingsPage with account info and about sections
+- Updated App.tsx to wrap protected routes with AppLayout
+- Fixed JWT token validation bug: `sub` claim was being mapped to `ClaimTypes.NameIdentifier`
+- Added test-login endpoint for development visual verification
+- Updated DashboardPage with stats cards and quick action links
+
+**Visual Verification:**
+- Screenshot: `screenshots/05-dashboard-with-layout.png` - Dashboard with sidebar, stats, and quick actions
+- Screenshot: `screenshots/05-forms-page.png` - Forms page with empty state and active nav highlight
+- Screenshot: `screenshots/05-settings-page.png` - Settings page with account and about sections
+- Navigation between all pages works correctly
+- Active state highlights current page in sidebar
+- User info displays correctly in sidebar footer
+- No console errors
 
 **Build Status:**
 - Frontend: `npm run lint && npm run build` passes

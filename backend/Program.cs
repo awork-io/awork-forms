@@ -154,4 +154,66 @@ app.MapPost("/api/auth/logout", () =>
     return Results.Ok(new { message = "Logged out successfully" });
 });
 
+// Test endpoint for visual verification (only in development)
+if (app.Environment.IsDevelopment())
+{
+    app.MapGet("/api/auth/test-login", (DbContextFactory dbFactory, JwtService jwtService) =>
+    {
+        using var ctx = dbFactory.CreateContext();
+
+        // Create or get test user
+        var testEmail = "test@awork-forms.dev";
+        using var checkCmd = ctx.Connection.CreateCommand();
+        checkCmd.CommandText = "SELECT Id, Email, Name, AvatarUrl, AworkWorkspaceId FROM Users WHERE Email = @email";
+        var emailParam = checkCmd.CreateParameter();
+        emailParam.ParameterName = "@email";
+        emailParam.Value = testEmail;
+        checkCmd.Parameters.Add(emailParam);
+
+        int userId;
+        string? avatarUrl = null;
+
+        using var reader = checkCmd.ExecuteReader();
+        if (reader.Read())
+        {
+            userId = reader.GetInt32(0);
+            avatarUrl = reader.IsDBNull(3) ? null : reader.GetString(3);
+        }
+        else
+        {
+            reader.Close();
+            // Create test user
+            using var insertCmd = ctx.Connection.CreateCommand();
+            insertCmd.CommandText = @"
+                INSERT INTO Users (Email, Name, AworkUserId, AworkWorkspaceId, CreatedAt, UpdatedAt)
+                VALUES (@email, @name, @aworkUserId, @workspaceId, @now, @now);
+                SELECT last_insert_rowid();";
+
+            var p1 = insertCmd.CreateParameter(); p1.ParameterName = "@email"; p1.Value = testEmail; insertCmd.Parameters.Add(p1);
+            var p2 = insertCmd.CreateParameter(); p2.ParameterName = "@name"; p2.Value = "Test User"; insertCmd.Parameters.Add(p2);
+            var p3 = insertCmd.CreateParameter(); p3.ParameterName = "@aworkUserId"; p3.Value = "test-awork-user-id"; insertCmd.Parameters.Add(p3);
+            var p4 = insertCmd.CreateParameter(); p4.ParameterName = "@workspaceId"; p4.Value = "test-workspace"; insertCmd.Parameters.Add(p4);
+            var p5 = insertCmd.CreateParameter(); p5.ParameterName = "@now"; p5.Value = DateTime.UtcNow.ToString("o"); insertCmd.Parameters.Add(p5);
+
+            userId = Convert.ToInt32(insertCmd.ExecuteScalar());
+        }
+
+        // Generate JWT token
+        var token = jwtService.GenerateToken(userId, "test-awork-user-id", "test-workspace");
+
+        return Results.Ok(new
+        {
+            token = token,
+            user = new UserDto
+            {
+                Id = userId,
+                Email = testEmail,
+                Name = "Test User",
+                AvatarUrl = avatarUrl,
+                WorkspaceId = "test-workspace"
+            }
+        });
+    });
+}
+
 app.Run();

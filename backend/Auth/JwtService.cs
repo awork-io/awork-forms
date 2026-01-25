@@ -94,7 +94,11 @@ public class JwtService
     /// </summary>
     public static int? GetUserId(ClaimsPrincipal? principal)
     {
-        var userIdClaim = principal?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        // JWT libraries may remap 'sub' to ClaimTypes.NameIdentifier
+        var userIdClaim = principal?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? principal?.FindFirst("sub")?.Value;
+
         if (int.TryParse(userIdClaim, out var userId))
         {
             return userId;

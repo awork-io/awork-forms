@@ -76,7 +76,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Create protected route wrapper",
       "Verify navigation works between pages"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
