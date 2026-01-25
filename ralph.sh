@@ -32,8 +32,12 @@ while [ $i -lt $MAX_ITERATIONS ]; do
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   
   # Run one iteration then exit (fresh context each time)
-  # -p = print mode, --verbose shows progress
-  claude -p "$(cat PROMPT.md)" --dangerously-skip-permissions --model opus --verbose 2>&1 | tee /tmp/ralph_output_${i}.log
+  # -p = print mode, stream-json shows real-time progress
+  claude -p "$(cat PROMPT.md)" \
+    --dangerously-skip-permissions \
+    --model opus \
+    --output-format stream-json \
+    --verbose 2>&1 | tee /tmp/ralph_output_${i}.log
   
   # Check if all tasks complete
   if grep -q "COMPLETE" /tmp/ralph_output_${i}.log 2>/dev/null; then
