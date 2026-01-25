@@ -67,6 +67,52 @@ export interface LoginInitResponse {
   state: string;
 }
 
+// awork API types
+export interface AworkProject {
+  id: string;
+  name: string;
+  description?: string;
+  projectTypeId?: string;
+  projectStatusId?: string;
+  startDate?: string;
+  dueDate?: string;
+  isBillableByDefault: boolean;
+  color?: string;
+}
+
+export interface AworkProjectType {
+  id: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  isPreset: boolean;
+}
+
+export interface AworkUser {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  position?: string;
+  profileImage?: string;
+  isExternal: boolean;
+  isArchived: boolean;
+}
+
+export interface AworkProjectStatus {
+  id: string;
+  name: string;
+  type: string;
+  order: number;
+}
+
+export interface AworkTaskStatus {
+  id: string;
+  name: string;
+  type: string;
+  order: number;
+}
+
 class ApiClient {
   private token: string | null = null;
 
@@ -176,6 +222,27 @@ class ApiClient {
     return this.request(`/api/forms/${id}`, {
       method: 'DELETE',
     });
+  }
+
+  // awork API proxy endpoints
+  async getAworkProjects(): Promise<AworkProject[]> {
+    return this.request('/api/awork/projects');
+  }
+
+  async getAworkProjectTypes(): Promise<AworkProjectType[]> {
+    return this.request('/api/awork/project-types');
+  }
+
+  async getAworkUsers(): Promise<AworkUser[]> {
+    return this.request('/api/awork/users');
+  }
+
+  async getAworkProjectStatuses(projectTypeId: string): Promise<AworkProjectStatus[]> {
+    return this.request(`/api/awork/project-types/${projectTypeId}/statuses`);
+  }
+
+  async getAworkTaskStatuses(projectId: string): Promise<AworkTaskStatus[]> {
+    return this.request(`/api/awork/projects/${projectId}/task-statuses`);
   }
 }
 
