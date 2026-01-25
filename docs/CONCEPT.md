@@ -10,7 +10,7 @@
 |-------|------------|-----------|
 | Frontend | React + TypeScript + Vite | Fast dev, type safety, modern tooling |
 | UI Components | shadcn/ui + Tailwind CSS | awork-consistent styling (see form-craft) |
-| Backend | C# Minimal API (.NET 8) | Matches awork backend stack, simple deployment |
+| Backend | C# Minimal API (.NET 10) | Matches awork backend stack, simple deployment |
 | Database | SQLite | Single-file, no external DB needed for small-scale |
 | Auth | awork OAuth (DCR + PKCE) | Leverages existing awork login, no separate accounts |
 | Hosting | Hetzner K3s cluster | Existing internal tools infrastructure |
@@ -168,11 +168,11 @@ Map form fields to awork entity fields:
 
 ### Docker
 ```dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 # Build C# backend
-FROM node:20 AS frontend
+FROM node:22 AS frontend
 # Build React app
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 # Combine: serve frontend from wwwroot, API at /api
 ```
 

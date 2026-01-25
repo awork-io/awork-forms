@@ -67,7 +67,7 @@ A standalone web application for awork customers to create customizable forms th
 - TanStack Query for data fetching
 
 ### Backend
-- .NET 8 Minimal API
+- .NET 10 Minimal API
 - SQLite database (Microsoft.Data.Sqlite)
 - JWT authentication
 - HTTP client for awork API

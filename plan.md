@@ -26,9 +26,9 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
   },
   {
     "category": "setup",
-    "description": "Initialize backend project with .NET 8 Minimal API",
+    "description": "Initialize backend project with .NET 10 Minimal API",
     "steps": [
-      "Create backend directory with dotnet new web",
+      "Create backend directory with dotnet new web -f net10.0",
       "Add Microsoft.Data.Sqlite package",
       "Add System.IdentityModel.Tokens.Jwt for auth",
       "Create basic Program.cs with CORS and routing",
