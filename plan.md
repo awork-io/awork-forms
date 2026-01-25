@@ -103,7 +103,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Add edit/delete actions per form",
       "Style with cards layout"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

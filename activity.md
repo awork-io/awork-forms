@@ -2,8 +2,8 @@
 
 ## Current Status
 **Last Updated:** 2026-01-25
-**Tasks Completed:** 6/16
-**Current Task:** Forms CRUD API complete
+**Tasks Completed:** 7/16
+**Current Task:** Forms list (Dashboard) page complete
 
 ---
 
@@ -172,6 +172,40 @@
   - DELETE removes form and returns success message
   - Unauthenticated requests return 401
 - Verified API calls from frontend JavaScript work correctly
+- No console errors
+
+**Build Status:**
+- Frontend: `npm run lint && npm run build` passes
+- Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-25 - Forms List (Dashboard) Page Complete
+
+**Task:** Build forms list (Dashboard) page
+
+**Changes:**
+- Added Form types and API methods to `frontend/src/lib/api.ts`:
+  - `Form`, `FormDetail`, `CreateFormDto`, `UpdateFormDto` interfaces
+  - `getForms()`, `getForm()`, `createForm()`, `updateForm()`, `deleteForm()` methods
+- Added shadcn/ui components: `dropdown-menu`, `alert-dialog` for form actions
+- Completely rebuilt `frontend/src/pages/FormsPage.tsx`:
+  - Fetches and displays list of forms from API in responsive card grid layout
+  - Shows form name, description, field count, and submission count
+  - Displays Active/Inactive status badge and last updated date
+  - "Create Form" button opens dialog to create new form
+  - Each form card has actions dropdown with Edit, View Public Form, Delete options
+  - Delete action shows confirmation dialog before deletion
+  - Toast notifications for success/error feedback
+  - Empty state shown when no forms exist
+  - Loading state while fetching forms
+
+**Visual Verification:**
+- Screenshot: `screenshots/07-forms-list-with-form.png` - Forms page showing form card with details
+- Screenshot: `screenshots/07-forms-dropdown-menu.png` - Actions dropdown with Edit, View, Delete options
+- Screenshot: `screenshots/07-create-form-dialog.png` - Create New Form dialog with name input
+- Screenshot: `screenshots/07-delete-confirmation-dialog.png` - Delete confirmation with Cancel/Delete buttons
+- All interactions work correctly (dropdown, dialogs, navigation)
 - No console errors
 
 **Build Status:**

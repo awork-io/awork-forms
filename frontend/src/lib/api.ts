@@ -13,6 +13,55 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface Form {
+  id: number;
+  publicId: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  submissionCount: number;
+  fieldCount: number;
+}
+
+export interface FormDetail extends Form {
+  fieldsJson: string;
+  actionType?: string;
+  aworkProjectId?: string;
+  aworkProjectTypeId?: string;
+  fieldMappingsJson?: string;
+  primaryColor?: string;
+  backgroundColor?: string;
+  logoUrl?: string;
+}
+
+export interface CreateFormDto {
+  name: string;
+  description?: string;
+  fieldsJson?: string;
+  actionType?: string;
+  aworkProjectId?: string;
+  aworkProjectTypeId?: string;
+  fieldMappingsJson?: string;
+  primaryColor?: string;
+  backgroundColor?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateFormDto {
+  name?: string;
+  description?: string;
+  fieldsJson?: string;
+  actionType?: string;
+  aworkProjectId?: string;
+  aworkProjectTypeId?: string;
+  fieldMappingsJson?: string;
+  primaryColor?: string;
+  backgroundColor?: string;
+  isActive?: boolean;
+}
+
 export interface LoginInitResponse {
   authorizationUrl: string;
   state: string;
@@ -98,6 +147,35 @@ class ApiClient {
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     return this.request('/api/health');
+  }
+
+  // Forms endpoints
+  async getForms(): Promise<Form[]> {
+    return this.request('/api/forms');
+  }
+
+  async getForm(id: number): Promise<FormDetail> {
+    return this.request(`/api/forms/${id}`);
+  }
+
+  async createForm(data: CreateFormDto): Promise<FormDetail> {
+    return this.request('/api/forms', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateForm(id: number, data: UpdateFormDto): Promise<FormDetail> {
+    return this.request(`/api/forms/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteForm(id: number): Promise<{ message: string }> {
+    return this.request(`/api/forms/${id}`, {
+      method: 'DELETE',
+    });
   }
 }
 
