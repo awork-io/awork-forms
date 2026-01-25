@@ -47,7 +47,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Add migration runner on startup",
       "Verify tables are created on first run"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

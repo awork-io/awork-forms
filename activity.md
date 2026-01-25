@@ -2,8 +2,8 @@
 
 ## Current Status
 **Last Updated:** 2026-01-25
-**Tasks Completed:** 2/16
-**Current Task:** Backend setup complete
+**Tasks Completed:** 3/16
+**Current Task:** SQLite database and migrations complete
 
 ---
 
@@ -51,5 +51,30 @@
 - Screenshot: `screenshots/02-backend-root-endpoint.png` - Root endpoint returns "awork Forms API"
 - Tested both endpoints with curl and Playwright
 - API starts and responds correctly on port 5100
+
+**Build Status:** `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-25 - SQLite Database Setup Complete
+
+**Task:** Set up SQLite database and migrations
+
+**Changes:**
+- Database folder already existed with schema classes (Entities.cs)
+- AppDbContext.cs implements DbContextFactory pattern with SQLite connection
+- DatabaseMigrator.cs implements migration system with version tracking
+- Created Users table with awork integration fields (AworkUserId, AworkWorkspaceId, tokens)
+- Created Forms table with PublicId (GUID), styling fields, and awork mappings
+- Created Submissions table with status tracking and awork IDs
+- Migrations run automatically on startup via DatabaseMigrator.Migrate()
+- Added /api/db/info endpoint for database verification
+
+**Visual Verification:**
+- Screenshot: `screenshots/03-database-tables-api.png` - Shows all tables: Forms, Submissions, Users, __Migrations
+- Screenshot: `screenshots/03-database-health-check.png` - Health endpoint confirms API running
+- Verified database file created at backend/Data/awork-forms.db
+- All three migrations applied successfully on first run
+- No console errors
 
 **Build Status:** `dotnet build` passes with 0 warnings, 0 errors
