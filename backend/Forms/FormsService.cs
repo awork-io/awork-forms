@@ -298,6 +298,85 @@ public class FormsService
         };
     }
 
+    // Get submissions for a specific form
+    public List<SubmissionListDto> GetSubmissionsByForm(int formId, int userId)
+    {
+        using var ctx = _dbFactory.CreateContext();
+        using var cmd = ctx.Connection.CreateCommand();
+
+        cmd.CommandText = @"
+            SELECT s.Id, s.FormId, f.Name as FormName, s.DataJson, s.Status,
+                   s.AworkProjectId, s.AworkTaskId, s.ErrorMessage, s.CreatedAt, s.UpdatedAt
+            FROM Submissions s
+            JOIN Forms f ON s.FormId = f.Id
+            WHERE s.FormId = @formId AND f.UserId = @userId
+            ORDER BY s.CreatedAt DESC";
+
+        AddParameter(cmd, "@formId", formId);
+        AddParameter(cmd, "@userId", userId);
+
+        var submissions = new List<SubmissionListDto>();
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            submissions.Add(new SubmissionListDto
+            {
+                Id = reader.GetInt32(0),
+                FormId = reader.GetInt32(1),
+                FormName = reader.GetString(2),
+                DataJson = reader.GetString(3),
+                Status = reader.GetString(4),
+                AworkProjectId = reader.IsDBNull(5) ? null : reader.GetString(5),
+                AworkTaskId = reader.IsDBNull(6) ? null : reader.GetString(6),
+                ErrorMessage = reader.IsDBNull(7) ? null : reader.GetString(7),
+                CreatedAt = DateTime.Parse(reader.GetString(8)),
+                UpdatedAt = DateTime.Parse(reader.GetString(9))
+            });
+        }
+
+        return submissions;
+    }
+
+    // Get all submissions for a user (across all forms)
+    public List<SubmissionListDto> GetSubmissionsByUser(int userId)
+    {
+        using var ctx = _dbFactory.CreateContext();
+        using var cmd = ctx.Connection.CreateCommand();
+
+        cmd.CommandText = @"
+            SELECT s.Id, s.FormId, f.Name as FormName, s.DataJson, s.Status,
+                   s.AworkProjectId, s.AworkTaskId, s.ErrorMessage, s.CreatedAt, s.UpdatedAt
+            FROM Submissions s
+            JOIN Forms f ON s.FormId = f.Id
+            WHERE f.UserId = @userId
+            ORDER BY s.CreatedAt DESC";
+
+        AddParameter(cmd, "@userId", userId);
+
+        var submissions = new List<SubmissionListDto>();
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            submissions.Add(new SubmissionListDto
+            {
+                Id = reader.GetInt32(0),
+                FormId = reader.GetInt32(1),
+                FormName = reader.GetString(2),
+                DataJson = reader.GetString(3),
+                Status = reader.GetString(4),
+                AworkProjectId = reader.IsDBNull(5) ? null : reader.GetString(5),
+                AworkTaskId = reader.IsDBNull(6) ? null : reader.GetString(6),
+                ErrorMessage = reader.IsDBNull(7) ? null : reader.GetString(7),
+                CreatedAt = DateTime.Parse(reader.GetString(8)),
+                UpdatedAt = DateTime.Parse(reader.GetString(9))
+            });
+        }
+
+        return submissions;
+    }
+
     private static int CountFields(string fieldsJson)
     {
         // Simple count of field objects in JSON array
@@ -457,4 +536,19 @@ public class SubmissionDto
 public class CreateSubmissionDto
 {
     public Dictionary<string, object> Data { get; set; } = new();
+}
+
+// Submission list DTO with form name
+public class SubmissionListDto
+{
+    public int Id { get; set; }
+    public int FormId { get; set; }
+    public string FormName { get; set; } = string.Empty;
+    public string DataJson { get; set; } = "{}";
+    public string Status { get; set; } = "pending";
+    public string? AworkProjectId { get; set; }
+    public string? AworkTaskId { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }

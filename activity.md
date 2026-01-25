@@ -2,8 +2,8 @@
 
 ## Current Status
 **Last Updated:** 2026-01-25
-**Tasks Completed:** 13/16
-**Current Task:** awork project/task creation on submit complete
+**Tasks Completed:** 14/16
+**Current Task:** Submissions list page complete
 
 ---
 
@@ -494,6 +494,57 @@
 - API response includes aworkProjectId/aworkTaskId when integration succeeds
 - Error messages properly stored in ErrorMessage column
 - User receives success message even when integration fails (submission is recorded)
+- No console errors
+
+**Build Status:**
+- Frontend: `npm run lint && npm run build` passes
+- Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-25 - Submissions List Page Complete
+
+**Task:** Build submissions list page
+
+**Changes:**
+- Extended `backend/Forms/FormsService.cs` with:
+  - `GetSubmissionsByForm()` - Fetches submissions for a specific form
+  - `GetSubmissionsByUser()` - Fetches all submissions across all forms for a user
+  - `SubmissionListDto` - DTO with form name for display
+- Added submissions API endpoints in `backend/Program.cs`:
+  - GET /api/submissions - List all submissions for current user
+  - GET /api/forms/{id}/submissions - List submissions for a specific form
+  - Added test-login endpoint for development/testing
+- Added frontend API methods in `frontend/src/lib/api.ts`:
+  - `Submission` interface with status, awork IDs, and error message
+  - `getSubmissions()` - Fetches all submissions
+  - `getFormSubmissions()` - Fetches submissions for a form
+- Created `frontend/src/components/ui/table.tsx` - shadcn/ui Table component
+- Created `frontend/src/pages/SubmissionsPage.tsx`:
+  - Displays submissions in a table with columns: Form, Data Preview, Status, awork, Submitted, Actions
+  - Status badges (Completed - green, Failed - red, Pending - gray)
+  - Links to awork project/task when available
+  - Click "View" to open detail dialog with full submission data
+  - Form name links to form-specific submissions view
+  - Empty state with helpful message
+  - "Back to Forms" button when viewing form-specific submissions
+  - "Edit Form" button to navigate to form editor
+- Updated `frontend/src/App.tsx`:
+  - Added routes for /submissions and /forms/:formId/submissions
+- Updated `frontend/src/components/layout/AppLayout.tsx`:
+  - Added "Submissions" link in sidebar navigation
+- Updated `frontend/src/pages/FormsPage.tsx`:
+  - Added "View Submissions" option in form actions dropdown
+
+**Visual Verification:**
+- Screenshot: `screenshots/14-submissions-empty-state.png` - Empty state when no submissions
+- Screenshot: `screenshots/14-submissions-list-with-data.png` - Table with 3 test submissions
+- Screenshot: `screenshots/14-submission-detail-dialog.png` - Detail dialog showing full data
+- Screenshot: `screenshots/14-form-submissions-view.png` - Form-specific submissions view
+- Screenshot: `screenshots/14-forms-page-dropdown-with-submissions.png` - View Submissions in dropdown
+- All status badges display correctly (green for Completed)
+- Table columns properly aligned
+- Navigation between pages works correctly
 - No console errors
 
 **Build Status:**

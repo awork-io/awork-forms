@@ -9,6 +9,7 @@ import { FormsPage } from '@/pages/FormsPage';
 import { FormEditorPage } from '@/pages/FormEditorPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { PublicFormPage } from '@/pages/PublicFormPage';
+import { SubmissionsPage } from '@/pages/SubmissionsPage';
 import { Toaster } from '@/components/ui/toaster';
 
 const queryClient = new QueryClient();
@@ -111,6 +112,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/submissions"
+        element={
+          <ProtectedRoute>
+            <SubmissionsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/forms/:formId/submissions"
+        element={
+          <ProtectedRoute>
+            <SubmissionsPage />
           </ProtectedRoute>
         }
       />

@@ -210,7 +210,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Link to awork project/task if created",
       "Add pagination if needed"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

@@ -162,6 +162,19 @@ export interface SubmissionResponse {
   submissionId: number;
 }
 
+export interface Submission {
+  id: number;
+  formId: number;
+  formName: string;
+  dataJson: string;
+  status: 'pending' | 'completed' | 'failed';
+  aworkProjectId?: string;
+  aworkTaskId?: string;
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 class ApiClient {
   private token: string | null = null;
 
@@ -336,6 +349,15 @@ class ApiClient {
     return this.request(`/api/forms/${formId}/logo`, {
       method: 'DELETE',
     });
+  }
+
+  // Submissions endpoints
+  async getSubmissions(): Promise<Submission[]> {
+    return this.request('/api/submissions');
+  }
+
+  async getFormSubmissions(formId: number): Promise<Submission[]> {
+    return this.request(`/api/forms/${formId}/submissions`);
   }
 
   // Public form endpoints (no auth required)
