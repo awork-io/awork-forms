@@ -74,6 +74,7 @@ export interface UpdateFormDto {
   fieldMappingsJson?: string;
   primaryColor?: string;
   backgroundColor?: string;
+  logoUrl?: string;
   isActive?: boolean;
 }
 
@@ -280,6 +281,42 @@ class ApiClient {
 
   async getAworkTypesOfWork(): Promise<AworkTypeOfWork[]> {
     return this.request('/api/awork/typesofwork');
+  }
+
+  // Logo upload endpoints
+  async uploadLogo(formId: number, file: File): Promise<{ logoUrl: string }> {
+    const url = `${API_BASE_URL}/api/forms/${formId}/logo`;
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    const headers: Record<string, string> = {};
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        this.setToken(null);
+        throw new Error('Unauthorized');
+      }
+      const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    return response.json();
+  }
+
+  async deleteLogo(formId: number): Promise<{ message: string }> {
+    return this.request(`/api/forms/${formId}/logo`, {
+      method: 'DELETE',
+    });
   }
 }
 

@@ -373,8 +373,8 @@ app.MapGet("/api/awork/projects/{id}/tasklists", async (HttpContext context, Awo
     }
 }).RequireAuth();
 
-// GET /api/awork/types-of-work - Get all types of work
-app.MapGet("/api/awork/types-of-work", async (HttpContext context, AworkApiService aworkService) =>
+// GET /api/awork/typesofwork - Get all types of work
+app.MapGet("/api/awork/typesofwork", async (HttpContext context, AworkApiService aworkService) =>
 {
     var userId = context.GetCurrentUserId();
     if (userId == null) return Results.Unauthorized();
@@ -392,6 +392,118 @@ app.MapGet("/api/awork/types-of-work", async (HttpContext context, AworkApiServi
     {
         return Results.Json(new { error = ex.Message }, statusCode: 502);
     }
+}).RequireAuth();
+
+// =====================
+// Logo Upload Endpoint
+// =====================
+
+// Create uploads directory path
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
+Directory.CreateDirectory(uploadsPath);
+
+// Serve static files from uploads directory
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
+
+// POST /api/forms/{id}/logo - Upload a logo for a form
+app.MapPost("/api/forms/{id:int}/logo", async (HttpContext context, FormsService formsService, int id) =>
+{
+    var userId = context.GetCurrentUserId();
+    if (userId == null) return Results.Unauthorized();
+
+    // Verify form exists and belongs to user
+    var form = formsService.GetFormById(id, userId.Value);
+    if (form == null)
+    {
+        return Results.NotFound(new { error = "Form not found" });
+    }
+
+    // Check if request has a file
+    if (!context.Request.HasFormContentType)
+    {
+        return Results.BadRequest(new { error = "Request must be multipart/form-data" });
+    }
+
+    var formFile = context.Request.Form.Files.GetFile("logo");
+    if (formFile == null || formFile.Length == 0)
+    {
+        return Results.BadRequest(new { error = "No file uploaded" });
+    }
+
+    // Validate file type (only allow images)
+    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
+    var extension = Path.GetExtension(formFile.FileName).ToLowerInvariant();
+    if (!allowedExtensions.Contains(extension))
+    {
+        return Results.BadRequest(new { error = "Invalid file type. Allowed: jpg, jpeg, png, gif, webp, svg" });
+    }
+
+    // Validate file size (max 5MB)
+    if (formFile.Length > 5 * 1024 * 1024)
+    {
+        return Results.BadRequest(new { error = "File size must be less than 5MB" });
+    }
+
+    // Generate unique filename
+    var fileName = $"{form.PublicId}-logo{extension}";
+    var filePath = Path.Combine(uploadsPath, fileName);
+
+    // Delete old logo if exists
+    if (!string.IsNullOrEmpty(form.LogoUrl))
+    {
+        var oldFileName = Path.GetFileName(form.LogoUrl);
+        var oldFilePath = Path.Combine(uploadsPath, oldFileName);
+        if (File.Exists(oldFilePath))
+        {
+            File.Delete(oldFilePath);
+        }
+    }
+
+    // Save new file
+    using (var stream = new FileStream(filePath, FileMode.Create))
+    {
+        await formFile.CopyToAsync(stream);
+    }
+
+    // Update form with logo URL
+    var logoUrl = $"/uploads/{fileName}";
+    formsService.UpdateForm(id, new UpdateFormDto { LogoUrl = logoUrl }, userId.Value);
+
+    return Results.Ok(new { logoUrl });
+}).RequireAuth().DisableAntiforgery();
+
+// DELETE /api/forms/{id}/logo - Remove logo from a form
+app.MapDelete("/api/forms/{id:int}/logo", (HttpContext context, FormsService formsService, int id) =>
+{
+    var userId = context.GetCurrentUserId();
+    if (userId == null) return Results.Unauthorized();
+
+    // Verify form exists and belongs to user
+    var form = formsService.GetFormById(id, userId.Value);
+    if (form == null)
+    {
+        return Results.NotFound(new { error = "Form not found" });
+    }
+
+    // Delete logo file if exists
+    if (!string.IsNullOrEmpty(form.LogoUrl))
+    {
+        var fileName = Path.GetFileName(form.LogoUrl);
+        var filePath = Path.Combine(uploadsPath, fileName);
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    // Clear logo URL from form
+    formsService.UpdateForm(id, new UpdateFormDto { LogoUrl = "" }, userId.Value);
+
+    return Results.Ok(new { message = "Logo removed successfully" });
 }).RequireAuth();
 
 app.Run();

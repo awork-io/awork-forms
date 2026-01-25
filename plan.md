@@ -165,7 +165,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Add live preview panel showing styled form",
       "Save styling with form"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",

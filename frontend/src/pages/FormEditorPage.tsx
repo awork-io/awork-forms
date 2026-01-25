@@ -43,6 +43,12 @@ import {
   serializeAworkConfig,
 } from '@/components/form-editor/AworkIntegrationSettings';
 import {
+  StyleEditor,
+  type FormStyling,
+  parseStyling,
+  serializeStyling,
+} from '@/components/form-editor/StyleEditor';
+import {
   ArrowLeft,
   Save,
   Eye,
@@ -75,6 +81,11 @@ export function FormEditorPage() {
     isPriority: false,
     taskFieldMappings: [],
     projectFieldMappings: [],
+  });
+  const [styling, setStyling] = useState<FormStyling>({
+    primaryColor: '#3B82F6',
+    backgroundColor: '#F8FAFC',
+    logoUrl: null,
   });
 
   const sensors = useSensors(
@@ -118,6 +129,13 @@ export function FormEditorPage() {
         data.aworkTaskIsPriority,
         data.fieldMappingsJson
       ));
+
+      // Parse styling config
+      setStyling(parseStyling(
+        data.primaryColor,
+        data.backgroundColor,
+        data.logoUrl
+      ));
     } catch {
       toast({
         title: 'Error',
@@ -149,12 +167,14 @@ export function FormEditorPage() {
     setIsSaving(true);
     try {
       const aworkData = serializeAworkConfig(aworkConfig);
+      const stylingData = serializeStyling(styling);
       await api.updateForm(parseInt(id), {
         name: formName.trim(),
         description: formDescription.trim() || undefined,
         fieldsJson: JSON.stringify(fields),
         isActive,
         ...aworkData,
+        ...stylingData,
       });
       toast({
         title: 'Saved',
@@ -372,6 +392,20 @@ export function FormEditorPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Form Styling */}
+              {form && (
+                <div className="mb-6">
+                  <StyleEditor
+                    formId={form.id}
+                    formName={formName}
+                    formDescription={formDescription}
+                    styling={styling}
+                    onChange={setStyling}
+                    fields={fields}
+                  />
+                </div>
+              )}
 
               {/* awork Integration Settings */}
               <div className="mb-6">

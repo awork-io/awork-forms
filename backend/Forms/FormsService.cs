@@ -170,6 +170,7 @@ public class FormsService
                 FieldMappingsJson = @fieldMappingsJson,
                 PrimaryColor = @primaryColor,
                 BackgroundColor = @backgroundColor,
+                LogoUrl = @logoUrl,
                 IsActive = @isActive,
                 UpdatedAt = @now,
                 AworkTaskListId = @aworkTaskListId,
@@ -190,6 +191,11 @@ public class FormsService
         AddParameter(cmd, "@fieldMappingsJson", dto.FieldMappingsJson ?? existing.FieldMappingsJson ?? (object)DBNull.Value);
         AddParameter(cmd, "@primaryColor", dto.PrimaryColor ?? existing.PrimaryColor ?? (object)DBNull.Value);
         AddParameter(cmd, "@backgroundColor", dto.BackgroundColor ?? existing.BackgroundColor ?? (object)DBNull.Value);
+        // Handle logo URL: allow explicit empty string to clear the value
+        var logoUrlValue = dto.LogoUrl != null
+            ? (dto.LogoUrl == "" ? (object)DBNull.Value : dto.LogoUrl)
+            : (existing.LogoUrl ?? (object)DBNull.Value);
+        AddParameter(cmd, "@logoUrl", logoUrlValue);
         AddParameter(cmd, "@isActive", dto.IsActive ?? existing.IsActive);
         AddParameter(cmd, "@now", now);
         AddParameter(cmd, "@aworkTaskListId", dto.AworkTaskListId ?? existing.AworkTaskListId ?? (object)DBNull.Value);
@@ -350,5 +356,6 @@ public class UpdateFormDto
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }
+    public string? LogoUrl { get; set; }
     public bool? IsActive { get; set; }
 }
