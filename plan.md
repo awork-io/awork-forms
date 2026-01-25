@@ -63,7 +63,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Add login page with awork button",
       "Handle OAuth callback redirect"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
