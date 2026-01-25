@@ -30,6 +30,11 @@ export interface FormDetail extends Form {
   actionType?: string;
   aworkProjectId?: string;
   aworkProjectTypeId?: string;
+  aworkTaskListId?: string;
+  aworkTaskStatusId?: string;
+  aworkTypeOfWorkId?: string;
+  aworkAssigneeId?: string;
+  aworkTaskIsPriority?: boolean;
   fieldMappingsJson?: string;
   primaryColor?: string;
   backgroundColor?: string;
@@ -43,6 +48,11 @@ export interface CreateFormDto {
   actionType?: string;
   aworkProjectId?: string;
   aworkProjectTypeId?: string;
+  aworkTaskListId?: string;
+  aworkTaskStatusId?: string;
+  aworkTypeOfWorkId?: string;
+  aworkAssigneeId?: string;
+  aworkTaskIsPriority?: boolean;
   fieldMappingsJson?: string;
   primaryColor?: string;
   backgroundColor?: string;
@@ -56,6 +66,11 @@ export interface UpdateFormDto {
   actionType?: string;
   aworkProjectId?: string;
   aworkProjectTypeId?: string;
+  aworkTaskListId?: string;
+  aworkTaskStatusId?: string;
+  aworkTypeOfWorkId?: string;
+  aworkAssigneeId?: string;
+  aworkTaskIsPriority?: boolean;
   fieldMappingsJson?: string;
   primaryColor?: string;
   backgroundColor?: string;
@@ -111,6 +126,20 @@ export interface AworkTaskStatus {
   name: string;
   type: string;
   order: number;
+}
+
+export interface AworkTaskList {
+  id: string;
+  name: string;
+  order: number;
+  orderOfNewTasks: number;
+}
+
+export interface AworkTypeOfWork {
+  id: string;
+  name: string;
+  icon?: string;
+  isArchived: boolean;
 }
 
 class ApiClient {
@@ -230,7 +259,7 @@ class ApiClient {
   }
 
   async getAworkProjectTypes(): Promise<AworkProjectType[]> {
-    return this.request('/api/awork/project-types');
+    return this.request('/api/awork/projecttypes');
   }
 
   async getAworkUsers(): Promise<AworkUser[]> {
@@ -238,11 +267,19 @@ class ApiClient {
   }
 
   async getAworkProjectStatuses(projectTypeId: string): Promise<AworkProjectStatus[]> {
-    return this.request(`/api/awork/project-types/${projectTypeId}/statuses`);
+    return this.request(`/api/awork/projecttypes/${projectTypeId}/projectstatuses`);
   }
 
   async getAworkTaskStatuses(projectId: string): Promise<AworkTaskStatus[]> {
-    return this.request(`/api/awork/projects/${projectId}/task-statuses`);
+    return this.request(`/api/awork/projects/${projectId}/taskstatuses`);
+  }
+
+  async getAworkTaskLists(projectId: string): Promise<AworkTaskList[]> {
+    return this.request(`/api/awork/projects/${projectId}/tasklists`);
+  }
+
+  async getAworkTypesOfWork(): Promise<AworkTypeOfWork[]> {
+    return this.request('/api/awork/typesofwork');
   }
 }
 

@@ -62,7 +62,8 @@ public class FormsService
         cmd.CommandText = @"
             SELECT Id, PublicId, Name, Description, FieldsJson, ActionType,
                    AworkProjectId, AworkProjectTypeId, FieldMappingsJson,
-                   PrimaryColor, BackgroundColor, LogoUrl, IsActive, CreatedAt, UpdatedAt
+                   PrimaryColor, BackgroundColor, LogoUrl, IsActive, CreatedAt, UpdatedAt,
+                   AworkTaskListId, AworkTaskStatusId, AworkTypeOfWorkId, AworkAssigneeId, AworkTaskIsPriority
             FROM Forms
             WHERE Id = @id AND UserId = @userId";
 
@@ -92,7 +93,12 @@ public class FormsService
             LogoUrl = reader.IsDBNull(11) ? null : reader.GetString(11),
             IsActive = reader.GetBoolean(12),
             CreatedAt = DateTime.Parse(reader.GetString(13)),
-            UpdatedAt = DateTime.Parse(reader.GetString(14))
+            UpdatedAt = DateTime.Parse(reader.GetString(14)),
+            AworkTaskListId = reader.IsDBNull(15) ? null : reader.GetString(15),
+            AworkTaskStatusId = reader.IsDBNull(16) ? null : reader.GetString(16),
+            AworkTypeOfWorkId = reader.IsDBNull(17) ? null : reader.GetString(17),
+            AworkAssigneeId = reader.IsDBNull(18) ? null : reader.GetString(18),
+            AworkTaskIsPriority = reader.IsDBNull(19) ? null : reader.GetBoolean(19)
         };
     }
 
@@ -107,10 +113,12 @@ public class FormsService
         cmd.CommandText = @"
             INSERT INTO Forms (PublicId, UserId, Name, Description, FieldsJson, ActionType,
                               AworkProjectId, AworkProjectTypeId, FieldMappingsJson,
-                              PrimaryColor, BackgroundColor, IsActive, CreatedAt, UpdatedAt)
+                              PrimaryColor, BackgroundColor, IsActive, CreatedAt, UpdatedAt,
+                              AworkTaskListId, AworkTaskStatusId, AworkTypeOfWorkId, AworkAssigneeId, AworkTaskIsPriority)
             VALUES (@publicId, @userId, @name, @description, @fieldsJson, @actionType,
                     @aworkProjectId, @aworkProjectTypeId, @fieldMappingsJson,
-                    @primaryColor, @backgroundColor, @isActive, @now, @now);
+                    @primaryColor, @backgroundColor, @isActive, @now, @now,
+                    @aworkTaskListId, @aworkTaskStatusId, @aworkTypeOfWorkId, @aworkAssigneeId, @aworkTaskIsPriority);
             SELECT last_insert_rowid();";
 
         AddParameter(cmd, "@publicId", publicId.ToString());
@@ -126,6 +134,11 @@ public class FormsService
         AddParameter(cmd, "@backgroundColor", dto.BackgroundColor ?? (object)DBNull.Value);
         AddParameter(cmd, "@isActive", dto.IsActive ?? true);
         AddParameter(cmd, "@now", now);
+        AddParameter(cmd, "@aworkTaskListId", dto.AworkTaskListId ?? (object)DBNull.Value);
+        AddParameter(cmd, "@aworkTaskStatusId", dto.AworkTaskStatusId ?? (object)DBNull.Value);
+        AddParameter(cmd, "@aworkTypeOfWorkId", dto.AworkTypeOfWorkId ?? (object)DBNull.Value);
+        AddParameter(cmd, "@aworkAssigneeId", dto.AworkAssigneeId ?? (object)DBNull.Value);
+        AddParameter(cmd, "@aworkTaskIsPriority", dto.AworkTaskIsPriority ?? (object)DBNull.Value);
 
         var formId = Convert.ToInt32(cmd.ExecuteScalar());
 
@@ -158,7 +171,12 @@ public class FormsService
                 PrimaryColor = @primaryColor,
                 BackgroundColor = @backgroundColor,
                 IsActive = @isActive,
-                UpdatedAt = @now
+                UpdatedAt = @now,
+                AworkTaskListId = @aworkTaskListId,
+                AworkTaskStatusId = @aworkTaskStatusId,
+                AworkTypeOfWorkId = @aworkTypeOfWorkId,
+                AworkAssigneeId = @aworkAssigneeId,
+                AworkTaskIsPriority = @aworkTaskIsPriority
             WHERE Id = @id AND UserId = @userId";
 
         AddParameter(cmd, "@id", formId);
@@ -174,6 +192,11 @@ public class FormsService
         AddParameter(cmd, "@backgroundColor", dto.BackgroundColor ?? existing.BackgroundColor ?? (object)DBNull.Value);
         AddParameter(cmd, "@isActive", dto.IsActive ?? existing.IsActive);
         AddParameter(cmd, "@now", now);
+        AddParameter(cmd, "@aworkTaskListId", dto.AworkTaskListId ?? existing.AworkTaskListId ?? (object)DBNull.Value);
+        AddParameter(cmd, "@aworkTaskStatusId", dto.AworkTaskStatusId ?? existing.AworkTaskStatusId ?? (object)DBNull.Value);
+        AddParameter(cmd, "@aworkTypeOfWorkId", dto.AworkTypeOfWorkId ?? existing.AworkTypeOfWorkId ?? (object)DBNull.Value);
+        AddParameter(cmd, "@aworkAssigneeId", dto.AworkAssigneeId ?? existing.AworkAssigneeId ?? (object)DBNull.Value);
+        AddParameter(cmd, "@aworkTaskIsPriority", dto.AworkTaskIsPriority ?? existing.AworkTaskIsPriority ?? (object)DBNull.Value);
 
         cmd.ExecuteNonQuery();
 
@@ -278,6 +301,11 @@ public class FormDetailDto
     public string? ActionType { get; set; }
     public string? AworkProjectId { get; set; }
     public string? AworkProjectTypeId { get; set; }
+    public string? AworkTaskListId { get; set; }
+    public string? AworkTaskStatusId { get; set; }
+    public string? AworkTypeOfWorkId { get; set; }
+    public string? AworkAssigneeId { get; set; }
+    public bool? AworkTaskIsPriority { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }
@@ -295,6 +323,11 @@ public class CreateFormDto
     public string? ActionType { get; set; }
     public string? AworkProjectId { get; set; }
     public string? AworkProjectTypeId { get; set; }
+    public string? AworkTaskListId { get; set; }
+    public string? AworkTaskStatusId { get; set; }
+    public string? AworkTypeOfWorkId { get; set; }
+    public string? AworkAssigneeId { get; set; }
+    public bool? AworkTaskIsPriority { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }
@@ -309,6 +342,11 @@ public class UpdateFormDto
     public string? ActionType { get; set; }
     public string? AworkProjectId { get; set; }
     public string? AworkProjectTypeId { get; set; }
+    public string? AworkTaskListId { get; set; }
+    public string? AworkTaskStatusId { get; set; }
+    public string? AworkTypeOfWorkId { get; set; }
+    public string? AworkAssigneeId { get; set; }
+    public bool? AworkTaskIsPriority { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }

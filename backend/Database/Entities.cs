@@ -26,6 +26,11 @@ public class Form
     public string? ActionType { get; set; } // "task", "project", or "both"
     public string? AworkProjectId { get; set; }
     public string? AworkProjectTypeId { get; set; }
+    public string? AworkTaskListId { get; set; }
+    public string? AworkTaskStatusId { get; set; }
+    public string? AworkTypeOfWorkId { get; set; }
+    public string? AworkAssigneeId { get; set; }
+    public bool? AworkTaskIsPriority { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }

@@ -268,8 +268,8 @@ app.MapGet("/api/awork/projects", async (HttpContext context, AworkApiService aw
     }
 }).RequireAuth();
 
-// GET /api/awork/project-types - List all project types from awork
-app.MapGet("/api/awork/project-types", async (HttpContext context, AworkApiService aworkService) =>
+// GET /api/awork/projecttypes - List all project types from awork
+app.MapGet("/api/awork/projecttypes", async (HttpContext context, AworkApiService aworkService) =>
 {
     var userId = context.GetCurrentUserId();
     if (userId == null) return Results.Unauthorized();
@@ -310,8 +310,8 @@ app.MapGet("/api/awork/users", async (HttpContext context, AworkApiService awork
     }
 }).RequireAuth();
 
-// GET /api/awork/project-types/{id}/statuses - Get project statuses for a project type
-app.MapGet("/api/awork/project-types/{id}/statuses", async (HttpContext context, AworkApiService aworkService, string id) =>
+// GET /api/awork/projecttypes/{id}/projectstatuses - Get project statuses for a project type
+app.MapGet("/api/awork/projecttypes/{id}/projectstatuses", async (HttpContext context, AworkApiService aworkService, string id) =>
 {
     var userId = context.GetCurrentUserId();
     if (userId == null) return Results.Unauthorized();
@@ -331,8 +331,8 @@ app.MapGet("/api/awork/project-types/{id}/statuses", async (HttpContext context,
     }
 }).RequireAuth();
 
-// GET /api/awork/projects/{id}/task-statuses - Get task statuses for a project
-app.MapGet("/api/awork/projects/{id}/task-statuses", async (HttpContext context, AworkApiService aworkService, string id) =>
+// GET /api/awork/projects/{id}/taskstatuses - Get task statuses for a project
+app.MapGet("/api/awork/projects/{id}/taskstatuses", async (HttpContext context, AworkApiService aworkService, string id) =>
 {
     var userId = context.GetCurrentUserId();
     if (userId == null) return Results.Unauthorized();
@@ -352,66 +352,46 @@ app.MapGet("/api/awork/projects/{id}/task-statuses", async (HttpContext context,
     }
 }).RequireAuth();
 
-// Test endpoint for visual verification (only in development)
-if (app.Environment.IsDevelopment())
+// GET /api/awork/projects/{id}/tasklists - Get task lists for a project
+app.MapGet("/api/awork/projects/{id}/tasklists", async (HttpContext context, AworkApiService aworkService, string id) =>
 {
-    app.MapGet("/api/auth/test-login", (DbContextFactory dbFactory, JwtService jwtService) =>
+    var userId = context.GetCurrentUserId();
+    if (userId == null) return Results.Unauthorized();
+
+    try
     {
-        using var ctx = dbFactory.CreateContext();
+        var lists = await aworkService.GetTaskListsAsync(userId.Value, id);
+        return Results.Ok(lists);
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return Results.Json(new { error = ex.Message, code = "TOKEN_EXPIRED" }, statusCode: 401);
+    }
+    catch (HttpRequestException ex)
+    {
+        return Results.Json(new { error = ex.Message }, statusCode: 502);
+    }
+}).RequireAuth();
 
-        // Create or get test user
-        var testEmail = "test@awork-forms.dev";
-        using var checkCmd = ctx.Connection.CreateCommand();
-        checkCmd.CommandText = "SELECT Id, Email, Name, AvatarUrl, AworkWorkspaceId FROM Users WHERE Email = @email";
-        var emailParam = checkCmd.CreateParameter();
-        emailParam.ParameterName = "@email";
-        emailParam.Value = testEmail;
-        checkCmd.Parameters.Add(emailParam);
+// GET /api/awork/types-of-work - Get all types of work
+app.MapGet("/api/awork/types-of-work", async (HttpContext context, AworkApiService aworkService) =>
+{
+    var userId = context.GetCurrentUserId();
+    if (userId == null) return Results.Unauthorized();
 
-        int userId;
-        string? avatarUrl = null;
-
-        using var reader = checkCmd.ExecuteReader();
-        if (reader.Read())
-        {
-            userId = reader.GetInt32(0);
-            avatarUrl = reader.IsDBNull(3) ? null : reader.GetString(3);
-        }
-        else
-        {
-            reader.Close();
-            // Create test user
-            using var insertCmd = ctx.Connection.CreateCommand();
-            insertCmd.CommandText = @"
-                INSERT INTO Users (Email, Name, AworkUserId, AworkWorkspaceId, CreatedAt, UpdatedAt)
-                VALUES (@email, @name, @aworkUserId, @workspaceId, @now, @now);
-                SELECT last_insert_rowid();";
-
-            var p1 = insertCmd.CreateParameter(); p1.ParameterName = "@email"; p1.Value = testEmail; insertCmd.Parameters.Add(p1);
-            var p2 = insertCmd.CreateParameter(); p2.ParameterName = "@name"; p2.Value = "Test User"; insertCmd.Parameters.Add(p2);
-            var p3 = insertCmd.CreateParameter(); p3.ParameterName = "@aworkUserId"; p3.Value = "test-awork-user-id"; insertCmd.Parameters.Add(p3);
-            var p4 = insertCmd.CreateParameter(); p4.ParameterName = "@workspaceId"; p4.Value = "test-workspace"; insertCmd.Parameters.Add(p4);
-            var p5 = insertCmd.CreateParameter(); p5.ParameterName = "@now"; p5.Value = DateTime.UtcNow.ToString("o"); insertCmd.Parameters.Add(p5);
-
-            userId = Convert.ToInt32(insertCmd.ExecuteScalar());
-        }
-
-        // Generate JWT token
-        var token = jwtService.GenerateToken(userId, "test-awork-user-id", "test-workspace");
-
-        return Results.Ok(new
-        {
-            token = token,
-            user = new UserDto
-            {
-                Id = userId,
-                Email = testEmail,
-                Name = "Test User",
-                AvatarUrl = avatarUrl,
-                WorkspaceId = "test-workspace"
-            }
-        });
-    });
-}
+    try
+    {
+        var types = await aworkService.GetTypesOfWorkAsync(userId.Value);
+        return Results.Ok(types);
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return Results.Json(new { error = ex.Message, code = "TOKEN_EXPIRED" }, statusCode: 401);
+    }
+    catch (HttpRequestException ex)
+    {
+        return Results.Json(new { error = ex.Message }, statusCode: 502);
+    }
+}).RequireAuth();
 
 app.Run();

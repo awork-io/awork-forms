@@ -68,6 +68,11 @@ export function FormEditorPage() {
     actionType: null,
     projectId: null,
     projectTypeId: null,
+    taskListId: null,
+    taskStatusId: null,
+    typeOfWorkId: null,
+    assigneeId: null,
+    isPriority: false,
     taskFieldMappings: [],
     projectFieldMappings: [],
   });
@@ -106,6 +111,11 @@ export function FormEditorPage() {
         data.actionType,
         data.aworkProjectId,
         data.aworkProjectTypeId,
+        data.aworkTaskListId,
+        data.aworkTaskStatusId,
+        data.aworkTypeOfWorkId,
+        data.aworkAssigneeId,
+        data.aworkTaskIsPriority,
         data.fieldMappingsJson
       ));
     } catch {

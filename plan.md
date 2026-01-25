@@ -151,7 +151,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Save all settings with form",
       "Verify settings persist correctly"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
@@ -190,12 +190,12 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
     "description": "Implement awork project/task creation on submit",
     "steps": [
       "Process submission based on action type",
-      "Create project in awork if configured",
-      "Create task in awork if configured",
-      "Apply field mappings",
-      "Store awork IDs in submission record",
-      "Update submission status",
-      "Handle errors gracefully"
+      "Create project in awork if configured (with project type, field mappings)",
+      "Create task in awork if configured (with task list, status, type of work, assignee, priority, field mappings)",
+      "Apply field mappings for name, description, dates, duration",
+      "Store awork project/task IDs in submission record",
+      "Update submission status (pending/completed/failed)",
+      "Handle errors gracefully with retry logic"
     ],
     "passes": false
   },
@@ -279,6 +279,10 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
 **Important:** 
 - Only modify the `passes` field. Do not remove or rewrite tasks.
 - Never mark a task passing without Playwright visual verification.
+
+**Testing OAuth:**
+- Use the test account credentials from `.env` file (`AWORK_TEST_EMAIL` and `AWORK_TEST_PASSWORD`)
+- Do NOT use fake/mock test endpoints - always test with real awork OAuth flow
 
 ---
 

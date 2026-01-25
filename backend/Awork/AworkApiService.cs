@@ -237,6 +237,24 @@ public class AworkApiService
         var result = await MakeAworkRequestAsync<List<AworkTaskStatus>>(userId, $"projects/{projectId}/taskstatuses");
         return result ?? new List<AworkTaskStatus>();
     }
+
+    /// <summary>
+    /// Gets task lists for a specific project
+    /// </summary>
+    public async Task<List<AworkTaskList>> GetTaskListsAsync(int userId, string projectId)
+    {
+        var result = await MakeAworkRequestAsync<List<AworkTaskList>>(userId, $"projects/{projectId}/tasklists");
+        return result ?? new List<AworkTaskList>();
+    }
+
+    /// <summary>
+    /// Gets all types of work from awork workspace
+    /// </summary>
+    public async Task<List<AworkTypeOfWork>> GetTypesOfWorkAsync(int userId)
+    {
+        var result = await MakeAworkRequestAsync<List<AworkTypeOfWork>>(userId, "typeofwork");
+        return result ?? new List<AworkTypeOfWork>();
+    }
 }
 
 // DTOs for awork API responses
@@ -288,6 +306,22 @@ public class AworkTaskStatus
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty; // "todo", "progress", "done", "review"
     public int Order { get; set; }
+}
+
+public class AworkTaskList
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public int Order { get; set; }
+    public int OrderOfNewTasks { get; set; }
+}
+
+public class AworkTypeOfWork
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Icon { get; set; }
+    public bool IsArchived { get; set; }
 }
 
 public class AworkTokenResponse

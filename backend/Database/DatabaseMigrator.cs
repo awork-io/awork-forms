@@ -22,6 +22,7 @@ public static class DatabaseMigrator
         ApplyMigration(connection, "001_CreateUsersTable", CreateUsersTable);
         ApplyMigration(connection, "002_CreateFormsTable", CreateFormsTable);
         ApplyMigration(connection, "003_CreateSubmissionsTable", CreateSubmissionsTable);
+        ApplyMigration(connection, "004_AddTaskSettingsToForms", AddTaskSettingsToForms);
     }
 
     private static void ApplyMigration(SqliteConnection connection, string name, Action<SqliteConnection> migration)
@@ -127,6 +128,16 @@ public static class DatabaseMigrator
         ExecuteNonQuery(connection, @"
             CREATE INDEX IX_Submissions_Status ON Submissions(Status)
         ");
+    }
+
+    private static void AddTaskSettingsToForms(SqliteConnection connection)
+    {
+        // Add new columns for task settings
+        ExecuteNonQuery(connection, "ALTER TABLE Forms ADD COLUMN AworkTaskListId TEXT");
+        ExecuteNonQuery(connection, "ALTER TABLE Forms ADD COLUMN AworkTaskStatusId TEXT");
+        ExecuteNonQuery(connection, "ALTER TABLE Forms ADD COLUMN AworkTypeOfWorkId TEXT");
+        ExecuteNonQuery(connection, "ALTER TABLE Forms ADD COLUMN AworkAssigneeId TEXT");
+        ExecuteNonQuery(connection, "ALTER TABLE Forms ADD COLUMN AworkTaskIsPriority INTEGER");
     }
 
     private static void ExecuteNonQuery(SqliteConnection connection, string sql)

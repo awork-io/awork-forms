@@ -12,11 +12,16 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
 import { Loader2, Link2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import {
   api,
   type AworkProject,
   type AworkProjectType,
+  type AworkTaskStatus,
+  type AworkTaskList,
+  type AworkTypeOfWork,
+  type AworkUser,
 } from '@/lib/api';
 import type { FormField } from '@/lib/form-types';
 
@@ -32,6 +37,11 @@ export interface AworkIntegrationConfig {
   actionType: ActionType;
   projectId: string | null;
   projectTypeId: string | null;
+  taskListId: string | null;
+  taskStatusId: string | null;
+  typeOfWorkId: string | null;
+  assigneeId: string | null;
+  isPriority: boolean;
   taskFieldMappings: FieldMapping[];
   projectFieldMappings: FieldMapping[];
 }
@@ -49,6 +59,7 @@ const AWORK_TASK_FIELDS = [
   { value: 'name', label: 'Task Name' },
   { value: 'description', label: 'Description' },
   { value: 'dueOn', label: 'Due Date' },
+  { value: 'startOn', label: 'Start Date' },
   { value: 'plannedDuration', label: 'Planned Duration (seconds)' },
 ];
 
@@ -65,8 +76,13 @@ export function AworkIntegrationSettings({
 }: AworkIntegrationSettingsProps) {
   const [projects, setProjects] = useState<AworkProject[]>([]);
   const [projectTypes, setProjectTypes] = useState<AworkProjectType[]>([]);
+  const [taskStatuses, setTaskStatuses] = useState<AworkTaskStatus[]>([]);
+  const [taskLists, setTaskLists] = useState<AworkTaskList[]>([]);
+  const [typesOfWork, setTypesOfWork] = useState<AworkTypeOfWork[]>([]);
+  const [users, setUsers] = useState<AworkUser[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [isLoadingProjectTypes, setIsLoadingProjectTypes] = useState(false);
+  const [isLoadingTaskData, setIsLoadingTaskData] = useState(false);
   const [aworkError, setAworkError] = useState<string | null>(null);
 
   // Fetch awork projects
@@ -107,6 +123,33 @@ export function AworkIntegrationSettings({
     }
   }, []);
 
+  // Fetch task-related data (statuses, lists, types of work, users)
+  const fetchTaskData = useCallback(async (projectId: string) => {
+    setIsLoadingTaskData(true);
+    setAworkError(null);
+    try {
+      const [statusesData, listsData, typesData, usersData] = await Promise.all([
+        api.getAworkTaskStatuses(projectId),
+        api.getAworkTaskLists(projectId),
+        api.getAworkTypesOfWork(),
+        api.getAworkUsers(),
+      ]);
+      setTaskStatuses(statusesData);
+      setTaskLists(listsData);
+      setTypesOfWork(typesData.filter(t => !t.isArchived));
+      setUsers(usersData.filter(u => !u.isArchived && !u.isExternal));
+    } catch (err) {
+      const error = err as Error;
+      if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
+        setAworkError('Your awork session has expired. Please re-authenticate with awork.');
+      } else {
+        setAworkError('Failed to load task configuration data.');
+      }
+    } finally {
+      setIsLoadingTaskData(false);
+    }
+  }, []);
+
   // Load awork data when action type requires it
   useEffect(() => {
     if (config.actionType === 'task' || config.actionType === 'both') {
@@ -117,6 +160,19 @@ export function AworkIntegrationSettings({
     }
   }, [config.actionType, fetchProjects, fetchProjectTypes]);
 
+  // Load task-specific data when project is selected
+  useEffect(() => {
+    if (config.projectId && (config.actionType === 'task' || config.actionType === 'both')) {
+      fetchTaskData(config.projectId);
+    } else {
+      // Reset task data when no project is selected
+      setTaskStatuses([]);
+      setTaskLists([]);
+      setTypesOfWork([]);
+      setUsers([]);
+    }
+  }, [config.projectId, config.actionType, fetchTaskData]);
+
   const handleActionTypeChange = (value: string) => {
     const actionType = value === 'none' ? null : (value as ActionType);
     onChange({
@@ -125,6 +181,11 @@ export function AworkIntegrationSettings({
       // Reset selections when action type changes
       projectId: null,
       projectTypeId: null,
+      taskListId: null,
+      taskStatusId: null,
+      typeOfWorkId: null,
+      assigneeId: null,
+      isPriority: false,
       taskFieldMappings: [],
       projectFieldMappings: [],
     });
@@ -134,6 +195,9 @@ export function AworkIntegrationSettings({
     onChange({
       ...config,
       projectId: projectId === 'none' ? null : projectId,
+      // Reset task-specific settings when project changes
+      taskListId: null,
+      taskStatusId: null,
     });
   };
 
@@ -141,6 +205,41 @@ export function AworkIntegrationSettings({
     onChange({
       ...config,
       projectTypeId: projectTypeId === 'none' ? null : projectTypeId,
+    });
+  };
+
+  const handleTaskListChange = (taskListId: string) => {
+    onChange({
+      ...config,
+      taskListId: taskListId === 'none' ? null : taskListId,
+    });
+  };
+
+  const handleTaskStatusChange = (taskStatusId: string) => {
+    onChange({
+      ...config,
+      taskStatusId: taskStatusId === 'none' ? null : taskStatusId,
+    });
+  };
+
+  const handleTypeOfWorkChange = (typeOfWorkId: string) => {
+    onChange({
+      ...config,
+      typeOfWorkId: typeOfWorkId === 'none' ? null : typeOfWorkId,
+    });
+  };
+
+  const handleAssigneeChange = (assigneeId: string) => {
+    onChange({
+      ...config,
+      assigneeId: assigneeId === 'none' ? null : assigneeId,
+    });
+  };
+
+  const handlePriorityChange = (isPriority: boolean) => {
+    onChange({
+      ...config,
+      isPriority,
     });
   };
 
@@ -199,6 +298,13 @@ export function AworkIntegrationSettings({
   const showTaskSettings = config.actionType === 'task' || config.actionType === 'both';
   const showProjectSettings = config.actionType === 'project' || config.actionType === 'both';
 
+  const getUserDisplayName = (user: AworkUser): string => {
+    if (user.firstName || user.lastName) {
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    }
+    return user.email || 'Unknown User';
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -248,6 +354,7 @@ export function AworkIntegrationSettings({
                 <span className="text-sm font-medium">Task Settings</span>
               </div>
 
+              {/* Project Selector */}
               <div className="space-y-2">
                 <Label>Add task to project</Label>
                 {isLoadingProjects ? (
@@ -284,6 +391,142 @@ export function AworkIntegrationSettings({
                   </Button>
                 )}
               </div>
+
+              {/* Task List Selector */}
+              {config.projectId && (
+                <div className="space-y-2">
+                  <Label>Task list</Label>
+                  {isLoadingTaskData ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading task lists...
+                    </div>
+                  ) : (
+                    <Select
+                      value={config.taskListId || 'none'}
+                      onValueChange={handleTaskListChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a task list" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Default (no specific list)</SelectItem>
+                        {taskLists.map((list) => (
+                          <SelectItem key={list.id} value={list.id}>
+                            {list.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+
+              {/* Task Status Selector */}
+              {config.projectId && (
+                <div className="space-y-2">
+                  <Label>Initial task status</Label>
+                  {isLoadingTaskData ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading statuses...
+                    </div>
+                  ) : (
+                    <Select
+                      value={config.taskStatusId || 'none'}
+                      onValueChange={handleTaskStatusChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Default status</SelectItem>
+                        {taskStatuses.map((status) => (
+                          <SelectItem key={status.id} value={status.id}>
+                            {status.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+
+              {/* Type of Work Selector */}
+              {config.projectId && (
+                <div className="space-y-2">
+                  <Label>Type of work</Label>
+                  {isLoadingTaskData ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading types of work...
+                    </div>
+                  ) : (
+                    <Select
+                      value={config.typeOfWorkId || 'none'}
+                      onValueChange={handleTypeOfWorkChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type of work" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No type of work</SelectItem>
+                        {typesOfWork.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+
+              {/* Assignee Selector */}
+              {config.projectId && (
+                <div className="space-y-2">
+                  <Label>Assign to</Label>
+                  {isLoadingTaskData ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading users...
+                    </div>
+                  ) : (
+                    <Select
+                      value={config.assigneeId || 'none'}
+                      onValueChange={handleAssigneeChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select assignee" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Unassigned</SelectItem>
+                        {users.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {getUserDisplayName(user)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+
+              {/* Priority Toggle */}
+              {config.projectId && (
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Mark as priority</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Created tasks will be marked as high priority
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.isPriority}
+                    onCheckedChange={handlePriorityChange}
+                  />
+                </div>
+              )}
 
               {/* Task Field Mappings */}
               {formFields.length > 0 && (
@@ -439,6 +682,11 @@ export function parseAworkConfig(
   actionType: string | null | undefined,
   projectId: string | null | undefined,
   projectTypeId: string | null | undefined,
+  taskListId: string | null | undefined,
+  taskStatusId: string | null | undefined,
+  typeOfWorkId: string | null | undefined,
+  assigneeId: string | null | undefined,
+  isPriority: boolean | null | undefined,
   fieldMappingsJson: string | null | undefined
 ): AworkIntegrationConfig {
   let taskFieldMappings: FieldMapping[] = [];
@@ -458,6 +706,11 @@ export function parseAworkConfig(
     actionType: (actionType as ActionType) || null,
     projectId: projectId || null,
     projectTypeId: projectTypeId || null,
+    taskListId: taskListId || null,
+    taskStatusId: taskStatusId || null,
+    typeOfWorkId: typeOfWorkId || null,
+    assigneeId: assigneeId || null,
+    isPriority: isPriority || false,
     taskFieldMappings,
     projectFieldMappings,
   };
@@ -468,6 +721,11 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
   actionType: string | undefined;
   aworkProjectId: string | undefined;
   aworkProjectTypeId: string | undefined;
+  aworkTaskListId: string | undefined;
+  aworkTaskStatusId: string | undefined;
+  aworkTypeOfWorkId: string | undefined;
+  aworkAssigneeId: string | undefined;
+  aworkTaskIsPriority: boolean | undefined;
   fieldMappingsJson: string | undefined;
 } {
   const hasTaskMappings = config.taskFieldMappings.length > 0;
@@ -477,6 +735,11 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
     actionType: config.actionType || undefined,
     aworkProjectId: config.projectId || undefined,
     aworkProjectTypeId: config.projectTypeId || undefined,
+    aworkTaskListId: config.taskListId || undefined,
+    aworkTaskStatusId: config.taskStatusId || undefined,
+    aworkTypeOfWorkId: config.typeOfWorkId || undefined,
+    aworkAssigneeId: config.assigneeId || undefined,
+    aworkTaskIsPriority: config.isPriority || undefined,
     fieldMappingsJson: (hasTaskMappings || hasProjectMappings)
       ? JSON.stringify({
           taskFieldMappings: config.taskFieldMappings,

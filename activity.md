@@ -2,8 +2,8 @@
 
 ## Current Status
 **Last Updated:** 2026-01-25
-**Tasks Completed:** 9/16
-**Current Task:** awork API proxy complete
+**Tasks Completed:** 10/16
+**Current Task:** awork integration settings complete
 
 ---
 
@@ -300,6 +300,62 @@
   - Frontend can successfully call all proxy endpoints via CORS
 - Token refresh logic implemented and ready for real awork authentication
 - No console errors
+
+**Build Status:**
+- Frontend: `npm run lint && npm run build` passes
+- Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-25 - awork Integration Settings Complete
+
+**Task:** Add awork integration settings to form editor
+
+**Changes:**
+- Added database migration (004_AddTaskSettingsToForms) with new columns:
+  - AworkTaskListId, AworkTaskStatusId, AworkTypeOfWorkId, AworkAssigneeId, AworkTaskIsPriority
+- Extended `backend/Database/Entities.cs` Form entity with new task settings fields
+- Added new awork API endpoints in `backend/Awork/AworkApiService.cs`:
+  - `GetTaskListsAsync()` - Fetches task lists for a project
+  - `GetTypesOfWorkAsync()` - Fetches all types of work from workspace
+- Added new DTOs: AworkTaskList, AworkTypeOfWork
+- Added proxy endpoints in Program.cs:
+  - GET /api/awork/projects/{id}/task-lists - Returns task lists for a project
+  - GET /api/awork/types-of-work - Returns all types of work
+- Updated `backend/Forms/FormsService.cs`:
+  - Extended FormDetailDto, CreateFormDto, UpdateFormDto with task settings fields
+  - Updated GetFormById, CreateForm, UpdateForm to handle new fields
+- Updated frontend API (`frontend/src/lib/api.ts`):
+  - Added AworkTaskList, AworkTypeOfWork interfaces
+  - Added `getAworkTaskLists()`, `getAworkTypesOfWork()` methods
+  - Extended FormDetail, CreateFormDto, UpdateFormDto with task settings fields
+- Completely rebuilt `frontend/src/components/form-editor/AworkIntegrationSettings.tsx`:
+  - Action type selector (task/project/both/none)
+  - Project selector for task creation
+  - Task list selector within selected project
+  - Task status selector for initial task status
+  - Type of work selector for task categorization
+  - Assignee selector for task assignment
+  - Priority toggle for marking tasks as high priority
+  - Project type selector for project creation
+  - Field mapping UI for task fields (name, description, dueOn, startOn, plannedDuration)
+  - Field mapping UI for project fields (name, description, startDate, dueDate)
+  - Automatic loading of awork data when project is selected
+  - Error handling for expired awork sessions
+- Updated `frontend/src/pages/FormEditorPage.tsx`:
+  - Extended aworkConfig state with new task settings
+  - Updated parseAworkConfig call with new parameters
+
+**Visual Verification:**
+- Screenshot: `screenshots/10-awork-integration-task-settings.png` - Task settings with project selector and field mappings
+- Screenshot: `screenshots/10-awork-integration-project-settings.png` - Project settings with project type selector
+- Screenshot: `screenshots/10-awork-integration-both-settings.png` - Both task and project settings visible
+- Action type dropdown shows all 4 options correctly
+- Task Settings section shows when "Create a Task" or "Create both" is selected
+- Project Settings section shows when "Create a Project" or "Create both" is selected
+- Field mapping dropdowns work for all form fields
+- Settings dynamically update when action type changes
+- No console errors (API errors expected for test user without real awork tokens)
 
 **Build Status:**
 - Frontend: `npm run lint && npm run build` passes
