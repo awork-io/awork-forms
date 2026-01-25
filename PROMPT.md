@@ -44,4 +44,7 @@ To start services:
 - Work on multiple tasks at once
 - Mark a task as passing without visual verification via Playwright
 
+**IMPORTANT: After completing ONE task and committing, EXIT immediately.**
+The Ralph loop will restart you with fresh context for the next task.
+
 **When ALL tasks have `passes: true`**, output: <promise>COMPLETE</promise>

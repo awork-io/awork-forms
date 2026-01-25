@@ -31,9 +31,9 @@ while [ $i -lt $MAX_ITERATIONS ]; do
   echo "  Progress: $COMPLETED / $TOTAL tasks"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   
-  # The original Ralph loop - pipe prompt to claude
-  # This runs interactively so you see everything
-  cat PROMPT.md | claude --dangerously-skip-permissions --model opus
+  # Run one iteration then exit (fresh context each time)
+  # -p = print mode (exits after response)
+  claude -p "$(cat PROMPT.md)" --dangerously-skip-permissions --model opus
   
   # Check if all tasks complete
   if grep -q "COMPLETE" /tmp/ralph_last_output.txt 2>/dev/null; then
