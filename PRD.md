@@ -72,11 +72,7 @@ A standalone web application for awork customers to create customizable forms th
 - JWT authentication
 - HTTP client for awork API
 
-### Infrastructure
-- Single Docker container
-- Kubernetes deployment on Hetzner K3s
-- Persistent volume for SQLite
-- Tailscale for secure access
+
 
 ## Non-Goals (v1)
 
@@ -123,7 +119,4 @@ A standalone web application for awork customers to create customizable forms th
 - [ ] Unit tests for frontend (Vitest)
 - [ ] Integration tests for critical paths
 
-### Phase 6: Deployment
-- [ ] Docker build
-- [ ] Kubernetes manifests
-- [ ] Hetzner deployment
+

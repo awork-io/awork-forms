@@ -248,20 +248,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
     ],
     "passes": false
   },
-  {
-    "category": "deployment",
-    "description": "Create Docker build and Kubernetes manifests",
-    "steps": [
-      "Create multi-stage Dockerfile",
-      "Build frontend and include in backend wwwroot",
-      "Add health check endpoint",
-      "Create Kubernetes Deployment manifest",
-      "Create Service and Ingress manifests",
-      "Add PersistentVolumeClaim for SQLite",
-      "Test local docker build"
-    ],
-    "passes": false
-  }
+
 ]
 ```
 
