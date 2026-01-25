@@ -19,21 +19,29 @@ To start services:
 
 1. Open plan.md and find the single highest priority task where `passes` is false
 2. Work on exactly ONE task: implement all steps for that task
-3. After implementing, verify the changes:
-   - For frontend: run `npm run lint` and `npm run build`
-   - For backend: run `dotnet build`
-   - Use Playwright to take a screenshot of relevant UI state if applicable
-4. Append a dated progress entry to activity.md describing:
+3. After implementing, **ALWAYS verify visually with Playwright**:
+   - Start the dev servers if not running (frontend: port 5173, backend: port 5000)
+   - Use Playwright MCP to navigate to the relevant page
+   - Take screenshots to verify the UI looks correct
+   - Test user interactions (clicks, form submissions, navigation)
+   - Check for console errors
+   - For backend-only changes: test API endpoints with curl or Playwright
+4. Run build checks:
+   - Frontend: `cd frontend && npm run lint && npm run build`
+   - Backend: `cd backend && dotnet build`
+   - Run tests: `npm test` / `dotnet test`
+5. Append a dated progress entry to activity.md describing:
    - What you changed
-   - Which commands you ran
-   - What you verified
-5. Update that task's `passes` in plan.md from `false` to `true`
-6. Make one git commit for that task only with a clear message (conventional commits: feat, fix, chore, etc.)
+   - What you verified visually (include screenshot filenames)
+   - Any issues found and fixed
+6. Update that task's `passes` in plan.md from `false` to `true`
+7. Make one git commit for that task only with a clear message (conventional commits: feat, fix, chore, etc.)
 
 **Do not:**
 - Run git init (already done)
 - Change git remotes
 - Push to remote
 - Work on multiple tasks at once
+- Mark a task as passing without visual verification via Playwright
 
 **When ALL tasks have `passes: true`**, output: <promise>COMPLETE</promise>

@@ -259,12 +259,21 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
 1. Read `activity.md` first to understand current state
 2. Find next task with `"passes": false`
 3. Complete all steps for that task
-4. Verify in browser using Playwright
-5. Update task to `"passes": true`
-6. Log completion in `activity.md`
-7. Repeat until all tasks pass
+4. **ALWAYS verify visually using Playwright MCP:**
+   - Navigate to the page in browser
+   - Take screenshot and save to `screenshots/`
+   - Test interactions (clicks, forms, navigation)
+   - Check browser console for errors
+   - Fix any visual or functional issues before proceeding
+5. Run lint, build, and tests
+6. Update task to `"passes": true`
+7. Log completion in `activity.md` with screenshot references
+8. Commit with conventional commit message
+9. Repeat until all tasks pass
 
-**Important:** Only modify the `passes` field. Do not remove or rewrite tasks.
+**Important:** 
+- Only modify the `passes` field. Do not remove or rewrite tasks.
+- Never mark a task passing without Playwright visual verification.
 
 ---
 
