@@ -8,6 +8,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { FormsPage } from '@/pages/FormsPage';
 import { FormEditorPage } from '@/pages/FormEditorPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { PublicFormPage } from '@/pages/PublicFormPage';
 import { Toaster } from '@/components/ui/toaster';
 
 const queryClient = new QueryClient();
@@ -113,6 +114,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      {/* Public form page (no auth required) */}
+      <Route path="/f/:publicId" element={<PublicFormPage />} />
       {/* Fallback - redirect to dashboard or login */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

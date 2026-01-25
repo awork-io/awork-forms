@@ -143,6 +143,25 @@ export interface AworkTypeOfWork {
   isArchived: boolean;
 }
 
+// Public form types (no auth required)
+export interface PublicForm {
+  id: number;
+  publicId: string;
+  name: string;
+  description?: string;
+  fieldsJson: string;
+  primaryColor?: string;
+  backgroundColor?: string;
+  logoUrl?: string;
+  isActive: boolean;
+}
+
+export interface SubmissionResponse {
+  success: boolean;
+  message: string;
+  submissionId: number;
+}
+
 class ApiClient {
   private token: string | null = null;
 
@@ -317,6 +336,37 @@ class ApiClient {
     return this.request(`/api/forms/${formId}/logo`, {
       method: 'DELETE',
     });
+  }
+
+  // Public form endpoints (no auth required)
+  async getPublicForm(publicId: string): Promise<PublicForm> {
+    const url = `${API_BASE_URL}/api/f/${publicId}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Form not found' }));
+      throw new Error(error.error || 'Form not found');
+    }
+
+    return response.json();
+  }
+
+  async submitPublicForm(publicId: string, data: Record<string, unknown>): Promise<SubmissionResponse> {
+    const url = `${API_BASE_URL}/api/f/${publicId}/submit`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ data }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Submission failed' }));
+      throw new Error(error.error || 'Submission failed');
+    }
+
+    return response.json();
   }
 }
 

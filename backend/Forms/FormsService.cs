@@ -232,6 +232,72 @@ public class FormsService
         return rowsAffected > 0;
     }
 
+    // Public form access (no auth required)
+    public PublicFormDto? GetPublicFormByPublicId(Guid publicId)
+    {
+        using var ctx = _dbFactory.CreateContext();
+        using var cmd = ctx.Connection.CreateCommand();
+
+        cmd.CommandText = @"
+            SELECT Id, PublicId, Name, Description, FieldsJson,
+                   PrimaryColor, BackgroundColor, LogoUrl, IsActive
+            FROM Forms
+            WHERE PublicId = @publicId";
+
+        AddParameter(cmd, "@publicId", publicId.ToString());
+
+        using var reader = cmd.ExecuteReader();
+
+        if (!reader.Read())
+        {
+            return null;
+        }
+
+        return new PublicFormDto
+        {
+            Id = reader.GetInt32(0),
+            PublicId = reader.GetGuid(1),
+            Name = reader.GetString(2),
+            Description = reader.IsDBNull(3) ? null : reader.GetString(3),
+            FieldsJson = reader.GetString(4),
+            PrimaryColor = reader.IsDBNull(5) ? null : reader.GetString(5),
+            BackgroundColor = reader.IsDBNull(6) ? null : reader.GetString(6),
+            LogoUrl = reader.IsDBNull(7) ? null : reader.GetString(7),
+            IsActive = reader.GetBoolean(8)
+        };
+    }
+
+    // Create a submission for a public form
+    public SubmissionDto CreateSubmission(int formId, string dataJson)
+    {
+        using var ctx = _dbFactory.CreateContext();
+        using var cmd = ctx.Connection.CreateCommand();
+
+        var now = DateTime.UtcNow.ToString("o");
+
+        cmd.CommandText = @"
+            INSERT INTO Submissions (FormId, DataJson, Status, CreatedAt, UpdatedAt)
+            VALUES (@formId, @dataJson, @status, @now, @now);
+            SELECT last_insert_rowid();";
+
+        AddParameter(cmd, "@formId", formId);
+        AddParameter(cmd, "@dataJson", dataJson);
+        AddParameter(cmd, "@status", "pending");
+        AddParameter(cmd, "@now", now);
+
+        var submissionId = Convert.ToInt32(cmd.ExecuteScalar());
+
+        return new SubmissionDto
+        {
+            Id = submissionId,
+            FormId = formId,
+            DataJson = dataJson,
+            Status = "pending",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
     private static int CountFields(string fieldsJson)
     {
         // Simple count of field objects in JSON array
@@ -358,4 +424,37 @@ public class UpdateFormDto
     public string? BackgroundColor { get; set; }
     public string? LogoUrl { get; set; }
     public bool? IsActive { get; set; }
+}
+
+// Public form DTO (no auth required)
+public class PublicFormDto
+{
+    public int Id { get; set; }
+    public Guid PublicId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string FieldsJson { get; set; } = "[]";
+    public string? PrimaryColor { get; set; }
+    public string? BackgroundColor { get; set; }
+    public string? LogoUrl { get; set; }
+    public bool IsActive { get; set; }
+}
+
+// Submission DTOs
+public class SubmissionDto
+{
+    public int Id { get; set; }
+    public int FormId { get; set; }
+    public string DataJson { get; set; } = "{}";
+    public string Status { get; set; } = "pending";
+    public string? AworkProjectId { get; set; }
+    public string? AworkTaskId { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class CreateSubmissionDto
+{
+    public Dictionary<string, object> Data { get; set; } = new();
 }

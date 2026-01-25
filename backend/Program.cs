@@ -506,4 +506,54 @@ app.MapDelete("/api/forms/{id:int}/logo", (HttpContext context, FormsService for
     return Results.Ok(new { message = "Logo removed successfully" });
 }).RequireAuth();
 
+// =====================
+// Public Form Endpoints (No Auth Required)
+// =====================
+
+// GET /api/f/{publicId} - Get a public form by its public ID
+app.MapGet("/api/f/{publicId:guid}", (FormsService formsService, Guid publicId) =>
+{
+    var form = formsService.GetPublicFormByPublicId(publicId);
+
+    if (form == null)
+    {
+        return Results.NotFound(new { error = "Form not found" });
+    }
+
+    if (!form.IsActive)
+    {
+        return Results.NotFound(new { error = "This form is no longer accepting submissions" });
+    }
+
+    return Results.Ok(form);
+});
+
+// POST /api/f/{publicId}/submit - Submit data to a public form
+app.MapPost("/api/f/{publicId:guid}/submit", (FormsService formsService, Guid publicId, CreateSubmissionDto dto) =>
+{
+    var form = formsService.GetPublicFormByPublicId(publicId);
+
+    if (form == null)
+    {
+        return Results.NotFound(new { error = "Form not found" });
+    }
+
+    if (!form.IsActive)
+    {
+        return Results.BadRequest(new { error = "This form is no longer accepting submissions" });
+    }
+
+    // Convert data to JSON string
+    var dataJson = System.Text.Json.JsonSerializer.Serialize(dto.Data);
+
+    var submission = formsService.CreateSubmission(form.Id, dataJson);
+
+    return Results.Created($"/api/submissions/{submission.Id}", new
+    {
+        success = true,
+        message = "Thank you for your submission!",
+        submissionId = submission.Id
+    });
+});
+
 app.Run();
