@@ -22,7 +22,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Set up basic folder structure: pages, components, lib, hooks",
       "Verify dev server runs correctly"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "setup",
