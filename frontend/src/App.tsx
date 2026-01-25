@@ -6,6 +6,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { AuthCallbackPage } from '@/pages/AuthCallbackPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { FormsPage } from '@/pages/FormsPage';
+import { FormEditorPage } from '@/pages/FormEditorPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -28,6 +29,25 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   return <AppLayout>{children}</AppLayout>;
+}
+
+// Protected route wrapper without AppLayout (for pages with custom layouts)
+function ProtectedRouteNoLayout({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 // Public route wrapper (redirects to dashboard if already authenticated)
@@ -75,6 +95,14 @@ function AppRoutes() {
           <ProtectedRoute>
             <FormsPage />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/forms/:id/edit"
+        element={
+          <ProtectedRouteNoLayout>
+            <FormEditorPage />
+          </ProtectedRouteNoLayout>
         }
       />
       <Route

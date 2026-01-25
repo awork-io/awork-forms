@@ -2,8 +2,8 @@
 
 ## Current Status
 **Last Updated:** 2026-01-25
-**Tasks Completed:** 7/16
-**Current Task:** Forms list (Dashboard) page complete
+**Tasks Completed:** 8/16
+**Current Task:** Form editor with field types complete
 
 ---
 
@@ -206,6 +206,53 @@
 - Screenshot: `screenshots/07-create-form-dialog.png` - Create New Form dialog with name input
 - Screenshot: `screenshots/07-delete-confirmation-dialog.png` - Delete confirmation with Cancel/Delete buttons
 - All interactions work correctly (dropdown, dialogs, navigation)
+- No console errors
+
+**Build Status:**
+- Frontend: `npm run lint && npm run build` passes
+- Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-25 - Form Editor with Field Types Complete
+
+**Task:** Build form editor with field types
+
+**Changes:**
+- Installed @dnd-kit packages for drag-and-drop functionality (`@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`)
+- Added shadcn/ui components: `tabs`, `separator`, `textarea`, `select`, `checkbox`, `switch`, `scroll-area`, `badge`
+- Created form field type definitions in `frontend/src/lib/form-types.ts`:
+  - `FieldType` union type (text, email, number, textarea, select, checkbox, date)
+  - `FormField` interface with id, type, label, placeholder, required, options
+  - `FIELD_TYPES` array with metadata for sidebar display
+  - `createField()` helper to create new fields with defaults
+- Created `frontend/src/components/form-editor/` with:
+  - `FieldTypeSidebar.tsx` - Left sidebar with draggable field type buttons
+  - `FieldCard.tsx` - Display component for form fields with preview
+  - `SortableFieldCard.tsx` - Wrapper for drag-and-drop sorting
+  - `FieldConfigPanel.tsx` - Right sidebar for editing field properties
+  - `FormCanvas.tsx` - Droppable zone for form fields with useDroppable hook
+- Created `frontend/src/pages/FormEditorPage.tsx`:
+  - Three-panel layout: field types sidebar, form canvas, field config panel
+  - Form settings card with name, description, and active/inactive toggle
+  - Drag-and-drop from sidebar to add new fields
+  - Drag-and-drop to reorder existing fields
+  - Click field to select and show config panel
+  - Field actions: duplicate, delete via dropdown menu
+  - Save button persists fields to backend as JSON
+  - Preview button to view public form
+- Added route `/forms/:id/edit` with `ProtectedRouteNoLayout` wrapper
+- All 7 field types supported with appropriate previews and icons
+
+**Visual Verification:**
+- Screenshot: `screenshots/08-form-editor-empty.png` - Empty form editor with sidebar and settings
+- Screenshot: `screenshots/08-form-editor-with-field.png` - Form editor after adding a text field
+- Screenshot: `screenshots/08-form-editor-multiple-fields.png` - Multiple fields with dropdown options editor
+- Screenshot: `screenshots/08-form-editor-save-success.png` - Save success toast notification
+- Drag-and-drop works correctly for adding and reordering fields
+- Field config panel updates fields in real-time
+- Dropdown options can be added, edited, reordered, and deleted
+- Save persists form to backend successfully
 - No console errors
 
 **Build Status:**

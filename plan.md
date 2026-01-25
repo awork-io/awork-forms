@@ -119,7 +119,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Add field config panel for editing properties",
       "Add save form button"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
