@@ -1,26 +1,7 @@
 {
-  "env": {
-    "XDG_CACHE_HOME": ".cache",
-    "npm_config_cache": ".cache/npm"
-  },
   "permissions": {
-    "allow": [
-      "WebFetch(*)",
-      "mcp__playwright__*",
-      "Bash(*)",
-      "Read(*)",
-      "Write(*)",
-      "Edit(*)"
-    ],
-    "deny": [
-      "Bash(sudo *)",
-      "Bash(rm -rf /)*",
-      "Read(~/.ssh/**)",
-      "Read(~/.aws/**)"
-    ],
+    "allow": ["*"],
+    "deny": [],
     "defaultMode": "bypassPermissions"
-  },
-  "sandbox": {
-    "enabled": false
   }
 }
