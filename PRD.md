@@ -10,6 +10,7 @@ A standalone web application for awork customers to create customizable forms th
 2. Automatically create awork projects/tasks from submissions
 3. Provide simple form management without awork app complexity
 4. **Multi-tenant**: Forms and config stored per awork workspace (all workspace users share access)
+5. **Beautiful UI**: Match app.awork.com visual design language - clean, modern, professional
 
 ## User Stories
 
@@ -32,9 +33,14 @@ A standalone web application for awork customers to create customizable forms th
 ### awork Integration
 - [ ] As a user, I can configure a form to create a task on submission
 - [ ] As a user, I can select which awork project receives the tasks
+- [ ] As a user, I can select which task list within the project to add tasks to
+- [ ] As a user, I can select the initial task status for created tasks
+- [ ] As a user, I can select the type of work for created tasks
+- [ ] As a user, I can select a default assignee for created tasks
+- [ ] As a user, I can mark created tasks as priority
 - [ ] As a user, I can configure a form to create a project on submission
 - [ ] As a user, I can select the project type for created projects
-- [ ] As a user, I can map form fields to project/task fields (name, description, due date, assignee)
+- [ ] As a user, I can map form fields to project/task fields (name, description, due date, start date, planned duration)
 - [ ] As a user, I can configure a form to create both a project and a task
 
 ### Form Sharing
@@ -49,6 +55,15 @@ A standalone web application for awork customers to create customizable forms th
 - [ ] As a user, I can set a custom background color
 - [ ] As a user, I can preview styling changes before saving
 - [ ] As an anonymous user, I see the branded form with custom styling
+
+### UI/UX Design
+- [ ] The app should visually match app.awork.com design language
+- [ ] Use awork's color palette, typography, and spacing conventions
+- [ ] Clean, modern interface with attention to detail
+- [ ] Smooth animations and transitions
+- [ ] Responsive design that works on desktop and tablet
+- [ ] Loading states and feedback for all async operations
+- [ ] Empty states with helpful guidance
 
 ### Submissions
 - [ ] As an anonymous user, I can fill out and submit a public form

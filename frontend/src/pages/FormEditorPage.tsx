@@ -37,6 +37,12 @@ import { FieldCard } from '@/components/form-editor/FieldCard';
 import { FieldConfigPanel } from '@/components/form-editor/FieldConfigPanel';
 import { FormCanvas } from '@/components/form-editor/FormCanvas';
 import {
+  AworkIntegrationSettings,
+  type AworkIntegrationConfig,
+  parseAworkConfig,
+  serializeAworkConfig,
+} from '@/components/form-editor/AworkIntegrationSettings';
+import {
   ArrowLeft,
   Save,
   Eye,
@@ -58,6 +64,13 @@ export function FormEditorPage() {
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [draggedFieldType, setDraggedFieldType] = useState<FieldType | null>(null);
+  const [aworkConfig, setAworkConfig] = useState<AworkIntegrationConfig>({
+    actionType: null,
+    projectId: null,
+    projectTypeId: null,
+    taskFieldMappings: [],
+    projectFieldMappings: [],
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -87,6 +100,14 @@ export function FormEditorPage() {
           setFields([]);
         }
       }
+
+      // Parse awork integration config
+      setAworkConfig(parseAworkConfig(
+        data.actionType,
+        data.aworkProjectId,
+        data.aworkProjectTypeId,
+        data.fieldMappingsJson
+      ));
     } catch {
       toast({
         title: 'Error',
@@ -117,11 +138,13 @@ export function FormEditorPage() {
 
     setIsSaving(true);
     try {
+      const aworkData = serializeAworkConfig(aworkConfig);
       await api.updateForm(parseInt(id), {
         name: formName.trim(),
         description: formDescription.trim() || undefined,
         fieldsJson: JSON.stringify(fields),
         isActive,
+        ...aworkData,
       });
       toast({
         title: 'Saved',
@@ -339,6 +362,15 @@ export function FormEditorPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* awork Integration Settings */}
+              <div className="mb-6">
+                <AworkIntegrationSettings
+                  formFields={fields}
+                  config={aworkConfig}
+                  onChange={setAworkConfig}
+                />
+              </div>
 
               <Separator className="my-6" />
 

@@ -35,18 +35,16 @@ var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] ??
 
 builder.Services.AddSingleton(new JwtService(jwtSecretKey));
 
-// Configure AuthService
+// Configure AuthService (uses DCR for dynamic client registration)
 var frontendUrl = builder.Configuration["Frontend:Url"] ?? "http://localhost:5173";
 var redirectUri = $"{frontendUrl}/auth/callback";
-var aworkClientId = builder.Configuration["Awork:ClientId"] ?? Environment.GetEnvironmentVariable("AWORK_CLIENT_ID");
-var aworkClientSecret = builder.Configuration["Awork:ClientSecret"] ?? Environment.GetEnvironmentVariable("AWORK_CLIENT_SECRET");
 
 builder.Services.AddSingleton(sp =>
 {
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
     var dbFactory = sp.GetRequiredService<DbContextFactory>();
     var jwtService = sp.GetRequiredService<JwtService>();
-    return new AuthService(httpClientFactory.CreateClient(), dbFactory, jwtService, redirectUri, aworkClientId, aworkClientSecret);
+    return new AuthService(httpClientFactory.CreateClient(), dbFactory, jwtService, redirectUri);
 });
 
 // Configure FormsService
@@ -56,12 +54,12 @@ builder.Services.AddSingleton(sp =>
     return new FormsService(dbFactory);
 });
 
-// Configure AworkApiService
+// Configure AworkApiService (uses DCR client_id from database)
 builder.Services.AddSingleton(sp =>
 {
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
     var dbFactory = sp.GetRequiredService<DbContextFactory>();
-    return new AworkApiService(httpClientFactory.CreateClient(), dbFactory, aworkClientId, aworkClientSecret);
+    return new AworkApiService(httpClientFactory.CreateClient(), dbFactory);
 });
 
 var app = builder.Build();

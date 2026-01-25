@@ -11,29 +11,35 @@ public class AuthService
     private readonly DbContextFactory _dbFactory;
     private readonly JwtService _jwtService;
     private readonly string _redirectUri;
-    private readonly string? _clientId;
-    private readonly string? _clientSecret;
 
     // awork OAuth endpoints
     private const string AworkAuthUrl = "https://api.awork.com/api/v1/accounts/authorize";
     private const string AworkTokenUrl = "https://api.awork.com/api/v1/accounts/token";
     private const string AworkUserInfoUrl = "https://api.awork.com/api/v1/me";
-    private const string AworkDcrUrl = "https://api.awork.com/api/v1/clients";
+    private const string AworkDcrUrl = "https://api.awork.com/api/v1/clientapplications/register";
+
+    // DCR configuration
+    private const string DcrClientName = "awork Forms";
+    private const string DcrScope = "full_access offline_access";
+    private const string DcrApplicationType = "native";
+    private const string DcrSoftwareVersion = "1.0.0";
+
+    // Settings keys
+    private const string SettingsKeySoftwareId = "software_id";
+    private const string SettingsKeyDcrClientId = "dcr_client_id";
 
     // In-memory storage for PKCE state (in production, use Redis or DB)
     private static readonly Dictionary<string, PkceState> _pkceStates = new();
 
-    // DCR client credentials (cached per workspace)
-    private static readonly Dictionary<string, ClientCredentials> _clientCredentials = new();
+    // DCR client ID (cached after first registration)
+    private static string? _dcrClientId;
 
-    public AuthService(HttpClient httpClient, DbContextFactory dbFactory, JwtService jwtService, string redirectUri, string? clientId = null, string? clientSecret = null)
+    public AuthService(HttpClient httpClient, DbContextFactory dbFactory, JwtService jwtService, string redirectUri)
     {
         _httpClient = httpClient;
         _dbFactory = dbFactory;
         _jwtService = jwtService;
         _redirectUri = redirectUri;
-        _clientId = clientId;
-        _clientSecret = clientSecret;
     }
 
     /// <summary>
@@ -81,30 +87,32 @@ public class AuthService
 
     /// <summary>
     /// Initiates the OAuth flow - returns the authorization URL
+    /// Uses DCR (Dynamic Client Registration) to get a client_id first
     /// </summary>
     public async Task<AuthInitResult> InitiateAuthAsync()
     {
-        // Generate PKCE values
+        // Step 1: Get or register DCR client
+        var clientId = await GetOrRegisterDcrClientAsync();
+
+        // Step 2: Generate PKCE values
         var codeVerifier = GenerateCodeVerifier();
         var codeChallenge = GenerateCodeChallenge(codeVerifier);
         var state = GenerateState();
 
-        // Store PKCE state for callback verification
+        // Store PKCE state for callback verification (includes client_id)
         _pkceStates[state] = new PkceState
         {
             CodeVerifier = codeVerifier,
+            ClientId = clientId,
             CreatedAt = DateTime.UtcNow
         };
+        Console.WriteLine($"PKCE: Stored state {state}, total states: {_pkceStates.Count}");
 
         // Clean up old states (older than 10 minutes)
         CleanupOldStates();
 
-        // For DCR, we need to get client credentials first
-        // If we don't have them cached, we'll use a temporary client
-        // The user will need to authorize, and we'll register the client on callback
-
-        // Build authorization URL with PKCE
-        var authUrl = BuildAuthorizationUrl(codeChallenge, state);
+        // Build authorization URL with PKCE and client_id
+        var authUrl = BuildAuthorizationUrl(clientId, codeChallenge, state);
 
         return new AuthInitResult
         {
@@ -113,23 +121,155 @@ public class AuthService
         };
     }
 
-    private string BuildAuthorizationUrl(string codeChallenge, string state)
+    /// <summary>
+    /// Register a new OAuth client using DCR (RFC 7591) or return cached client_id
+    /// </summary>
+    private async Task<string> GetOrRegisterDcrClientAsync()
+    {
+        // Return cached client_id if available
+        if (!string.IsNullOrEmpty(_dcrClientId))
+        {
+            return _dcrClientId;
+        }
+
+        // Try to load from database
+        var storedClientId = LoadDcrClientId();
+        if (!string.IsNullOrEmpty(storedClientId))
+        {
+            _dcrClientId = storedClientId;
+            return storedClientId;
+        }
+
+        // Generate a unique software_id for this installation
+        var softwareId = GetOrCreateSoftwareId();
+
+        var registrationPayload = new Dictionary<string, object>
+        {
+            ["redirect_uris"] = new[] { _redirectUri },
+            ["client_name"] = DcrClientName,
+            ["token_endpoint_auth_method"] = "none", // Public client (no secret needed with PKCE)
+            ["grant_types"] = new[] { "authorization_code", "refresh_token" },
+            ["response_types"] = new[] { "code" },
+            ["application_type"] = DcrApplicationType,
+            ["software_id"] = softwareId,
+            ["software_version"] = DcrSoftwareVersion
+        };
+
+        // Only add scope if specified
+        if (!string.IsNullOrEmpty(DcrScope))
+        {
+            registrationPayload["scope"] = DcrScope;
+        }
+
+        var content = new StringContent(
+            JsonSerializer.Serialize(registrationPayload),
+            Encoding.UTF8,
+            "application/json"
+        );
+
+        Console.WriteLine($"DCR: Registering client with software_id: {softwareId}");
+
+        var response = await _httpClient.PostAsync(AworkDcrUrl, content);
+        var responseBody = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"DCR response: {responseBody}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"DCR registration failed: {response.StatusCode} - {responseBody}");
+            throw new InvalidOperationException($"Failed to register OAuth client: {responseBody}");
+        }
+
+        var result = JsonSerializer.Deserialize<DcrResponse>(responseBody, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        if (result == null || string.IsNullOrEmpty(result.ClientId))
+        {
+            throw new InvalidOperationException("DCR response missing client_id");
+        }
+
+        Console.WriteLine($"DCR: Successfully registered client_id: {result.ClientId}, scope: {result.Scope}");
+
+        // Cache and persist the client_id
+        _dcrClientId = result.ClientId;
+        StoreDcrClientId(result.ClientId);
+
+        return result.ClientId;
+    }
+
+    /// <summary>
+    /// Store the DCR client_id in the database for token refresh
+    /// </summary>
+    private void StoreDcrClientId(string clientId)
+    {
+        using var ctx = _dbFactory.CreateContext();
+        using var cmd = ctx.Connection.CreateCommand();
+
+        cmd.CommandText = @"
+            INSERT OR REPLACE INTO Settings (Key, Value) VALUES (@key, @clientId)";
+        cmd.Parameters.AddWithValue("@key", SettingsKeyDcrClientId);
+        cmd.Parameters.AddWithValue("@clientId", clientId);
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Load the DCR client_id from the database
+    /// </summary>
+    private string? LoadDcrClientId()
+    {
+        try
+        {
+            using var ctx = _dbFactory.CreateContext();
+            using var cmd = ctx.Connection.CreateCommand();
+            cmd.CommandText = "SELECT Value FROM Settings WHERE Key = @key";
+            cmd.Parameters.AddWithValue("@key", SettingsKeyDcrClientId);
+            return cmd.ExecuteScalar()?.ToString();
+        }
+        catch
+        {
+            // Settings table might not exist yet
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Get or create a unique software ID for this installation (stored in DB)
+    /// </summary>
+    private string GetOrCreateSoftwareId()
+    {
+        using var ctx = _dbFactory.CreateContext();
+        using var cmd = ctx.Connection.CreateCommand();
+
+        // Try to get existing software_id from a settings table or create one
+        cmd.CommandText = @"
+            CREATE TABLE IF NOT EXISTS Settings (Key TEXT PRIMARY KEY, Value TEXT);
+            INSERT OR IGNORE INTO Settings (Key, Value) VALUES (@key, @newId);
+            SELECT Value FROM Settings WHERE Key = @key;";
+        cmd.Parameters.AddWithValue("@key", SettingsKeySoftwareId);
+        cmd.Parameters.AddWithValue("@newId", Guid.NewGuid().ToString());
+
+        var result = cmd.ExecuteScalar();
+        return result?.ToString() ?? Guid.NewGuid().ToString();
+    }
+
+    private string BuildAuthorizationUrl(string clientId, string codeChallenge, string state)
     {
         // awork uses standard OAuth 2.0 with PKCE
         var queryParams = new Dictionary<string, string>
         {
             ["response_type"] = "code",
+            ["client_id"] = clientId,
             ["redirect_uri"] = _redirectUri,
             ["state"] = state,
             ["code_challenge"] = codeChallenge,
-            ["code_challenge_method"] = "S256",
-            ["scope"] = "offline_access"  // Request refresh token
+            ["code_challenge_method"] = "S256"
         };
 
-        // Add client_id if configured
-        if (!string.IsNullOrEmpty(_clientId))
+        // Only add scope if specified
+        if (!string.IsNullOrEmpty(DcrScope))
         {
-            queryParams["client_id"] = _clientId;
+            queryParams["scope"] = DcrScope;
         }
 
         var queryString = string.Join("&", queryParams.Select(kvp =>
@@ -144,6 +284,7 @@ public class AuthService
     public async Task<AuthCallbackResult> HandleCallbackAsync(string code, string state)
     {
         // Verify state and get PKCE verifier
+        Console.WriteLine($"PKCE: Looking for state {state}, available states: {string.Join(", ", _pkceStates.Keys)}");
         if (!_pkceStates.TryGetValue(state, out var pkceState))
         {
             return new AuthCallbackResult { Success = false, Error = "Invalid state parameter" };
@@ -160,8 +301,8 @@ public class AuthService
 
         try
         {
-            // Exchange authorization code for tokens
-            var tokenResult = await ExchangeCodeForTokensAsync(code, pkceState.CodeVerifier);
+            // Exchange authorization code for tokens (using client_id from PKCE state)
+            var tokenResult = await ExchangeCodeForTokensAsync(code, pkceState.CodeVerifier, pkceState.ClientId);
             if (!tokenResult.Success)
             {
                 return new AuthCallbackResult { Success = false, Error = tokenResult.Error };
@@ -201,37 +342,29 @@ public class AuthService
         }
     }
 
-    private async Task<TokenResult> ExchangeCodeForTokensAsync(string code, string codeVerifier)
+    private async Task<TokenResult> ExchangeCodeForTokensAsync(string code, string codeVerifier, string clientId)
     {
+        // For public clients with PKCE, we don't need client_secret
         var requestBody = new Dictionary<string, string>
         {
             ["grant_type"] = "authorization_code",
             ["code"] = code,
+            ["client_id"] = clientId,
             ["redirect_uri"] = _redirectUri,
             ["code_verifier"] = codeVerifier
         };
 
-        // Add client credentials if configured
-        if (!string.IsNullOrEmpty(_clientId))
-        {
-            requestBody["client_id"] = _clientId;
-        }
-        if (!string.IsNullOrEmpty(_clientSecret))
-        {
-            requestBody["client_secret"] = _clientSecret;
-        }
-
         var content = new FormUrlEncodedContent(requestBody);
         var response = await _httpClient.PostAsync(AworkTokenUrl, content);
+        var json = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorBody = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Token exchange failed: {response.StatusCode} - {errorBody}");
+            Console.WriteLine($"Token exchange failed: {response.StatusCode} - {json}");
             return new TokenResult { Success = false, Error = "Token exchange failed" };
         }
 
-        var json = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"Token response: {json}");
         var tokenResponse = JsonSerializer.Deserialize<AworkTokenResponse>(json, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -311,8 +444,7 @@ public class AuthService
         cmd.CommandText = @"
             INSERT INTO Users (AworkUserId, AworkWorkspaceId, Email, Name, AvatarUrl, AccessToken, RefreshToken, TokenExpiresAt, CreatedAt, UpdatedAt)
             VALUES (@aworkUserId, @workspaceId, @email, @name, @avatar, @accessToken, @refreshToken, @tokenExpires, @now, @now)
-            ON CONFLICT(AworkUserId) DO UPDATE SET
-                AworkWorkspaceId = @workspaceId,
+            ON CONFLICT(AworkUserId, AworkWorkspaceId) DO UPDATE SET
                 Email = @email,
                 Name = @name,
                 AvatarUrl = @avatar,
@@ -343,20 +475,19 @@ public class AuthService
     /// </summary>
     public async Task<TokenResult> RefreshTokenAsync(string refreshToken)
     {
+        // Get the DCR client_id for public client token refresh
+        var clientId = LoadDcrClientId();
+
         var requestBody = new Dictionary<string, string>
         {
             ["grant_type"] = "refresh_token",
             ["refresh_token"] = refreshToken
         };
 
-        // Add client credentials if configured
-        if (!string.IsNullOrEmpty(_clientId))
+        // Public clients with PKCE need client_id but no secret
+        if (!string.IsNullOrEmpty(clientId))
         {
-            requestBody["client_id"] = _clientId;
-        }
-        if (!string.IsNullOrEmpty(_clientSecret))
-        {
-            requestBody["client_secret"] = _clientSecret;
+            requestBody["client_id"] = clientId;
         }
 
         var content = new FormUrlEncodedContent(requestBody);
@@ -438,13 +569,20 @@ public class AuthService
 public class PkceState
 {
     public required string CodeVerifier { get; set; }
+    public required string ClientId { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 
-public class ClientCredentials
+public class DcrResponse
 {
-    public required string ClientId { get; set; }
-    public required string ClientSecret { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("client_id")]
+    public string ClientId { get; set; } = string.Empty;
+
+    [System.Text.Json.Serialization.JsonPropertyName("client_secret")]
+    public string? ClientSecret { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("scope")]
+    public string? Scope { get; set; }
 }
 
 public class AuthInitResult
@@ -481,9 +619,16 @@ public class UserDto
 
 public class AworkTokenResponse
 {
+    [System.Text.Json.Serialization.JsonPropertyName("access_token")]
     public string AccessToken { get; set; } = string.Empty;
+
+    [System.Text.Json.Serialization.JsonPropertyName("refresh_token")]
     public string? RefreshToken { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("expires_in")]
     public int ExpiresIn { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("token_type")]
     public string TokenType { get; set; } = string.Empty;
 }
 

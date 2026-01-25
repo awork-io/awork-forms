@@ -140,11 +140,16 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
     "steps": [
       "Add action type selector (task/project/both)",
       "Add project selector for task forms",
+      "Add task list selector within selected project",
+      "Add task status selector for created tasks",
+      "Add type of work selector for created tasks",
+      "Add assignee selector for created tasks",
+      "Add priority toggle for created tasks",
       "Add project type selector for project forms",
-      "Create field mapping UI for project fields",
-      "Create field mapping UI for task fields",
-      "Save mappings with form",
-      "Verify mappings persist correctly"
+      "Create field mapping UI for task fields (name, description, dueOn, startOn, plannedDuration)",
+      "Create field mapping UI for project fields (name, description, startDate, dueDate)",
+      "Save all settings with form",
+      "Verify settings persist correctly"
     ],
     "passes": false
   },

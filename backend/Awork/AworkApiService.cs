@@ -8,18 +8,15 @@ public class AworkApiService
 {
     private const string AworkApiBaseUrl = "https://api.awork.com/api/v1";
     private const string AworkTokenUrl = "https://api.awork.com/api/v1/accounts/token";
+    private const string SettingsKeyDcrClientId = "dcr_client_id";
 
     private readonly HttpClient _httpClient;
     private readonly DbContextFactory _dbFactory;
-    private readonly string? _clientId;
-    private readonly string? _clientSecret;
 
-    public AworkApiService(HttpClient httpClient, DbContextFactory dbFactory, string? clientId = null, string? clientSecret = null)
+    public AworkApiService(HttpClient httpClient, DbContextFactory dbFactory)
     {
         _httpClient = httpClient;
         _dbFactory = dbFactory;
-        _clientId = clientId;
-        _clientSecret = clientSecret;
     }
 
     /// <summary>
@@ -78,23 +75,35 @@ public class AworkApiService
     }
 
     /// <summary>
+    /// Gets the DCR client_id from the Settings table
+    /// </summary>
+    private string? GetDcrClientId()
+    {
+        using var ctx = _dbFactory.CreateContext();
+        using var cmd = ctx.Connection.CreateCommand();
+        cmd.CommandText = "SELECT Value FROM Settings WHERE Key = @key";
+        cmd.Parameters.AddWithValue("@key", SettingsKeyDcrClientId);
+        return cmd.ExecuteScalar()?.ToString();
+    }
+
+    /// <summary>
     /// Refreshes an expired access token
     /// </summary>
     private async Task<TokenRefreshResult?> RefreshAccessTokenAsync(string refreshToken)
     {
+        // Get the DCR client_id (required for public client token refresh)
+        var clientId = GetDcrClientId();
+
         var requestBody = new Dictionary<string, string>
         {
             ["grant_type"] = "refresh_token",
             ["refresh_token"] = refreshToken
         };
 
-        if (!string.IsNullOrEmpty(_clientId))
+        // Public clients with PKCE need client_id but no secret
+        if (!string.IsNullOrEmpty(clientId))
         {
-            requestBody["client_id"] = _clientId;
-        }
-        if (!string.IsNullOrEmpty(_clientSecret))
-        {
-            requestBody["client_secret"] = _clientSecret;
+            requestBody["client_id"] = clientId;
         }
 
         var content = new FormUrlEncodedContent(requestBody);
