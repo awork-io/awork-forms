@@ -14,9 +14,9 @@ A form builder application that integrates with [awork](https://www.awork.com/) 
 ## Tech Stack
 
 - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui
-- **Backend**: .NET 9 Minimal API, C#
-- **Database**: SQLite
-- **Authentication**: awork OAuth 2.0 with PKCE
+- **Backend**: .NET 9 Minimal API, C#, Entity Framework Core
+- **Database**: SQLite (development) / PostgreSQL (production)
+- **Authentication**: awork OAuth 2.0 with PKCE + DCR
 
 ## Prerequisites
 
@@ -38,9 +38,14 @@ cd awork-forms
 Create a `.env` file in the root directory:
 
 ```env
-AWORK_CLIENT_ID=your_client_id
-AWORK_CLIENT_SECRET=your_client_secret
+# JWT secret for session tokens (min 32 chars)
+JWT_SECRET_KEY=your-secret-key-min-32-characters
+
+# Optional: Base URL for file attachments (default: http://localhost:5000)
+BASE_URL=https://your-domain.com
 ```
+
+**Note:** awork OAuth uses Dynamic Client Registration (DCR), so no client ID/secret is needed.
 
 ### 3. Install dependencies
 
@@ -76,6 +81,30 @@ npm run dev
 
 Navigate to http://localhost:5173 and sign in with your awork account.
 
+## Database Configuration
+
+The app uses **SQLite** by default for local development. For production, set the `DATABASE_URL` environment variable to use **PostgreSQL**.
+
+### SQLite (Development - Default)
+
+No configuration needed. Database is created automatically at `backend/Data/awork-forms.db`.
+
+### PostgreSQL (Production)
+
+Set the `DATABASE_URL` environment variable:
+
+```env
+DATABASE_URL=Host=localhost;Database=awork_forms;Username=postgres;Password=secret
+```
+
+Or use a connection string format:
+
+```env
+DATABASE_URL=postgres://user:password@host:5432/awork_forms
+```
+
+EF Core migrations are applied automatically on startup.
+
 ## Project Structure
 
 ```
@@ -90,11 +119,13 @@ awork-forms/
 ├── backend/                  # .NET backend
 │   ├── Auth/                 # Authentication services
 │   ├── Awork/                # awork API integration
-│   ├── Database/             # SQLite database and migrations
+│   ├── Data/                 # EF Core DbContext, entities, migrations
+│   ├── Endpoints/            # Structured minimal API endpoints
 │   ├── Forms/                # Form CRUD services
 │   ├── Submissions/          # Submission processing
-│   └── Program.cs            # API endpoints
+│   └── Program.cs            # App configuration
 ├── backend.Tests/            # Backend unit tests
+├── Dockerfile                # Production container build
 ├── dev.sh                    # Development startup script
 └── README.md
 ```
