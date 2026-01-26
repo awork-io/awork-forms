@@ -31,6 +31,7 @@ import { Label } from '@/components/ui/label';
 import { api, type Form } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
+import { Plus, MoreVertical, Pencil, ClipboardList, Eye, Share2, Trash2, FileText, Layers, Inbox } from 'lucide-react';
 
 export function FormsPage() {
   const navigate = useNavigate();
@@ -138,96 +139,82 @@ export function FormsPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 lg:p-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold">Forms</h1>
-          <p className="text-muted-foreground">Create and manage your forms</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Forms</h1>
+          <p className="text-muted-foreground mt-1">Create and manage your forms</p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+        <Button onClick={() => setIsCreateDialogOpen(true)} className="shadow-sm">
+          <Plus className="w-4 h-4 mr-2" />
           Create Form
         </Button>
       </div>
 
       {forms.length === 0 ? (
-        <Card className="border-dashed">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+        <Card className="border-dashed border-2 bg-white/60">
+          <CardHeader className="text-center py-12">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4">
+              <FileText className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle>No forms yet</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl">No forms yet</CardTitle>
+            <CardDescription className="max-w-sm mx-auto">
               Create your first form to start collecting submissions and creating tasks in awork.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
+          <CardContent className="text-center pb-12">
+            <Button onClick={() => setIsCreateDialogOpen(true)} size="lg">
+              <Plus className="w-4 h-4 mr-2" />
               Create Your First Form
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {forms.map((form) => (
-            <Card key={form.id} className="relative group hover:shadow-md transition-shadow">
+            <Card 
+              key={form.id} 
+              className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 cursor-pointer bg-white/80 backdrop-blur-sm"
+              onClick={() => navigate(`/forms/${form.id}/edit`)}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0 pr-2">
-                    <CardTitle className="text-lg truncate">{form.name}</CardTitle>
+                    <CardTitle className="text-lg truncate group-hover:text-primary transition-colors">{form.name}</CardTitle>
                     {form.description && (
-                      <CardDescription className="mt-1 line-clamp-2">{form.description}</CardDescription>
+                      <CardDescription className="mt-1.5 line-clamp-2">{form.description}</CardDescription>
                     )}
                   </div>
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                        </svg>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <MoreVertical className="w-4 h-4" />
                         <span className="sr-only">Actions</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenuItem onClick={() => navigate(`/forms/${form.id}/edit`)}>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        <Pencil className="w-4 h-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate(`/forms/${form.id}/submissions`)}>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                        </svg>
+                        <ClipboardList className="w-4 h-4 mr-2" />
                         View Submissions
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => window.open(`/f/${form.publicId}`, '_blank')}>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
+                        <Eye className="w-4 h-4 mr-2" />
                         View Public Form
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setShareForm(form)}>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                        </svg>
+                        <Share2 className="w-4 h-4 mr-2" />
                         Share
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onClick={() => setDeleteFormId(form.id)}
                       >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-4 h-4 mr-2" />
                         Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -235,27 +222,21 @@ export function FormsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                      </svg>
-                      <span>{form.fieldCount} fields</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                      </svg>
-                      <span>{form.submissionCount} submissions</span>
-                    </div>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Layers className="w-4 h-4" />
+                    <span>{form.fieldCount} fields</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Inbox className="w-4 h-4" />
+                    <span>{form.submissionCount} submissions</span>
                   </div>
                 </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                <div className="mt-4 flex items-center justify-between">
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                     form.isActive
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                      ? 'bg-green-50 text-green-900 border border-green-100'
+                      : 'bg-muted text-muted-foreground'
                   }`}>
                     {form.isActive ? 'Active' : 'Inactive'}
                   </span>

@@ -20,7 +20,8 @@ public class MeEndpoint : IEndpoint
                 Email = user.Email,
                 Name = user.Name,
                 AvatarUrl = user.AvatarUrl,
-                WorkspaceId = user.AworkWorkspaceId
+                WorkspaceId = user.AworkWorkspaceId,
+                WorkspaceName = user.WorkspaceName
             });
         }).RequireAuth();
     }

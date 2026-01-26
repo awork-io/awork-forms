@@ -208,6 +208,9 @@ namespace backend.Data.Migrations
                     b.Property<Guid>("AworkWorkspaceId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("WorkspaceName")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 

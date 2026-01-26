@@ -48,6 +48,7 @@ namespace backend.Data.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     AworkUserId = table.Column<Guid>(type: "TEXT", nullable: false),
                     AworkWorkspaceId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    WorkspaceName = table.Column<string>(type: "TEXT", nullable: true),
                     Email = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     AvatarUrl = table.Column<string>(type: "TEXT", nullable: true),

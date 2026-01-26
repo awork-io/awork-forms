@@ -6,6 +6,7 @@ export interface User {
   name: string;
   avatarUrl?: string;
   workspaceId: string;
+  workspaceName?: string;
 }
 
 export interface AuthResponse {
@@ -146,8 +147,8 @@ export interface AworkTypeOfWork {
 export interface AworkCustomFieldDefinition {
   id: string;
   name: string;
-  type: string; // text, number, date, selection, multiselection, link, user
-  entityType: string;
+  type: string; // text, number, date, datetime, select, coloredSelect, link, boolean, user
+  entity?: string;
   isRequired: boolean;
   isArchived: boolean;
   selectionOptions?: AworkCustomFieldSelectionOption[];
@@ -157,6 +158,7 @@ export interface AworkCustomFieldSelectionOption {
   id: string;
   value: string;
   order: number;
+  color?: string;
 }
 
 // Public form types (no auth required)
@@ -335,8 +337,8 @@ class ApiClient {
     return this.request('/api/awork/typesofwork');
   }
 
-  async getAworkCustomFields(): Promise<AworkCustomFieldDefinition[]> {
-    return this.request('/api/awork/customfields');
+  async getAworkCustomFields(projectId: string): Promise<AworkCustomFieldDefinition[]> {
+    return this.request(`/api/awork/projects/${projectId}/customfields`);
   }
 
   // Logo upload endpoints

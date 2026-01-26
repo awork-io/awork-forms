@@ -137,7 +137,7 @@ export function AworkIntegrationSettings({
         api.getAworkTaskLists(projectId),
         api.getAworkTypesOfWork(),
         api.getAworkUsers(),
-        api.getAworkCustomFields(),
+        api.getAworkCustomFields(projectId),
       ]);
       setTaskStatuses(statusesData);
       setTaskLists(listsData);

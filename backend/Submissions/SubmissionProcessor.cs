@@ -91,6 +91,9 @@ public class SubmissionProcessor
                         await _aworkService.LinkCustomFieldToProject(userId.Value, targetProjectId.Value, cfId.Value);
                     }
 
+                    var customFieldDefinitions = await _aworkService.GetProjectCustomFields(userId.Value, targetProjectId.Value);
+                    var customFieldDefinitionMap = customFieldDefinitions.ToDictionary(c => c.Id, c => c);
+
                     var taskRequest = BuildTaskRequest(formData, formFields, fieldMappings.TaskFieldMappings,
                         targetProjectId.Value, form.AworkTaskStatusId, form.AworkTypeOfWorkId, form.AworkTaskListId,
                         form.AworkAssigneeId, form.AworkTaskIsPriority ?? false);
@@ -102,7 +105,7 @@ public class SubmissionProcessor
                         result.AworkTaskId = task.Id;
 
                         // Set custom field values
-                        var customFieldValues = BuildCustomFieldValues(formData, formFields, customFieldMappings);
+                        var customFieldValues = BuildCustomFieldValues(formData, formFields, customFieldMappings, customFieldDefinitionMap);
                         if (customFieldValues.Count > 0)
                         {
                             await _aworkService.SetTaskCustomFields(userId.Value, task.Id, customFieldValues);
@@ -336,7 +339,11 @@ public class SubmissionProcessor
         return Guid.TryParse(value, out var id) ? id : null;
     }
 
-    private static List<CustomFieldValue> BuildCustomFieldValues(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> customFieldMappings)
+    private static List<CustomFieldValue> BuildCustomFieldValues(
+        Dictionary<string, object?> formData,
+        List<FormFieldInfo> formFields,
+        List<FieldMapping> customFieldMappings,
+        Dictionary<Guid, AworkCustomFieldDefinition> customFieldDefinitions)
     {
         var result = new List<CustomFieldValue>();
 
@@ -347,14 +354,97 @@ public class SubmissionProcessor
 
             var customFieldId = GetCustomFieldId(mapping.AworkField);
             if (customFieldId == null) continue;
-            result.Add(new CustomFieldValue
-            {
-                CustomFieldDefinitionId = customFieldId.Value,
-                TextValue = value
-            });
+            if (!customFieldDefinitions.TryGetValue(customFieldId.Value, out var definition))
+                continue;
+
+            var customFieldValue = BuildCustomFieldValue(definition, value);
+            if (customFieldValue == null) continue;
+            customFieldValue.CustomFieldDefinitionId = customFieldId.Value;
+            result.Add(customFieldValue);
         }
 
         return result;
+    }
+
+    private static CustomFieldValue? BuildCustomFieldValue(AworkCustomFieldDefinition definition, string value)
+    {
+        var type = definition.Type?.Trim().ToLowerInvariant();
+        switch (type)
+        {
+            case "text":
+            case "link":
+                return new CustomFieldValue { TextValue = value };
+            case "number":
+                if (TryParseNumber(value, out var number))
+                    return new CustomFieldValue { NumberValue = number };
+                return null;
+            case "date":
+            case "datetime":
+                if (TryParseDate(value, out var date))
+                    return new CustomFieldValue { DateValue = date };
+                return null;
+            case "select":
+            case "coloredselect":
+                if (TryResolveSelectionOptionId(definition, value, out var selectionId))
+                    return new CustomFieldValue { SelectionOptionIdValue = selectionId };
+                return null;
+            case "boolean":
+                if (TryParseBoolean(value, out var booleanValue))
+                    return new CustomFieldValue { BooleanValue = booleanValue };
+                return null;
+            case "user":
+                if (Guid.TryParse(value, out var userId))
+                    return new CustomFieldValue { UserIdValue = userId };
+                return null;
+            case "client":
+                if (Guid.TryParse(value, out var clientId))
+                    return new CustomFieldValue { ClientIdValue = clientId };
+                return null;
+            default:
+                return new CustomFieldValue { TextValue = value };
+        }
+    }
+
+    private static bool TryParseNumber(string value, out double number)
+    {
+        return double.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out number);
+    }
+
+    private static bool TryParseDate(string value, out DateTime date)
+    {
+        return DateTime.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal, out date);
+    }
+
+    private static bool TryParseBoolean(string value, out bool result)
+    {
+        var normalized = value.Trim().ToLowerInvariant();
+        if (normalized is "true" or "yes" or "1" or "on")
+        {
+            result = true;
+            return true;
+        }
+        if (normalized is "false" or "no" or "0" or "off")
+        {
+            result = false;
+            return true;
+        }
+        return bool.TryParse(value, out result);
+    }
+
+    private static bool TryResolveSelectionOptionId(AworkCustomFieldDefinition definition, string value, out Guid selectionId)
+    {
+        if (Guid.TryParse(value, out selectionId))
+            return true;
+
+        if (definition.SelectionOptions == null)
+            return false;
+
+        var match = definition.SelectionOptions.FirstOrDefault(o =>
+            string.Equals(o.Value, value, StringComparison.OrdinalIgnoreCase));
+
+        if (match == null) return false;
+        selectionId = match.Id;
+        return true;
     }
 
     private static async Task<Guid?> GetWorkspaceUserId(AppDbContext db, Guid workspaceId)

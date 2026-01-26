@@ -6,14 +6,14 @@ public class CustomFieldsEndpoint : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/awork/customfields", async (HttpContext context, AworkApiService aworkService) =>
+        app.MapGet("/api/awork/projects/{id:guid}/customfields", async (HttpContext context, AworkApiService aworkService, Guid id) =>
         {
             var userId = context.GetCurrentUserId();
             if (userId == null) return Results.Unauthorized();
 
             try
             {
-                return Results.Ok(await aworkService.GetTaskCustomFields(userId.Value));
+                return Results.Ok(await aworkService.GetProjectCustomFields(userId.Value, id));
             }
             catch (UnauthorizedAccessException ex)
             {

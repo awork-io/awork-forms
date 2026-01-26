@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  /* awork color palette */
-  --color-blue: #4d9aff;
+  /* awork brand colors - from official palette */
+  --color-awork-blue: #006dfa;
+  --color-awork-night: #081934;
+  
+  /* Blue scale - awork primary */
   --color-blue-900: #006dfa;
   --color-blue-700: #4d9aff;
   --color-blue-500: #94c2ff;
@@ -10,7 +13,7 @@
   --color-blue-100: #dbebff;
   --color-blue-50: #edf5ff;
 
-  /* awork neutrals */
+  /* awork neutral scale */
   --color-white: #ffffff;
   --color-smoke: #f9fcff;
   --color-ice: #f2f9ff;
@@ -41,27 +44,110 @@
   --color-input: var(--color-white);
   --color-ring: var(--color-blue-700);
 
-  /* awork accent colors */
+  /* awork status/accent colors */
   --color-green: #45e59f;
+  --color-green-900: #16d982;
+  --color-green-100: #dafaec;
+  --color-green-50: #ecfcf5;
   --color-yellow: #ffd466;
+  --color-yellow-900: #ffba1a;
+  --color-yellow-100: #fff6e0;
   --color-orange: #ff7666;
+  --color-orange-900: #ff4933;
+  --color-orange-100: #ffe4e0;
   --color-purple: #a157f6;
+  --color-purple-900: #7d1ded;
+  --color-purple-100: #ecddfd;
   --color-red: #ff4398;
+  --color-red-900: #ff1a82;
+  --color-red-100: #ffdbec;
   --color-cyan: #5ce2f1;
+  --color-cyan-900: #0bd0e5;
+  --color-cyan-100: #def9fc;
 
   --radius: 0.625rem;
-  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --radius-sm: 0.5rem;
+  --radius-lg: 0.875rem;
+  --font-family: "Sofia Pro", sofia-pro, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
+  
   body {
-    background: linear-gradient(135deg, #dce2ff 0%, #e4d5ff 33%, #fadcff 66%, #fddfeb 100%);
+    /* awork gradient-purple from official palette */
+    background: linear-gradient(135deg, #e0d7fe 0%, #efdaf6 53%, #fdf3e9 100%);
     background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-family);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* Glass morphism card effect */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  
+  /* Sidebar glass effect */
+  .glass-sidebar {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(226, 232, 240, 0.8);
+  }
+  
+  /* Page header glass effect */
+  .glass-header {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  }
+  
+  /* Hover card lift effect */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(0, 109, 250, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  /* Status badge styles */
+  .badge-active {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+  .badge-inactive {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    color: #475569;
+    border: 1px solid rgba(100, 116, 139, 0.2);
+  }
+  
+  /* Primary gradient button */
+  .btn-gradient {
+    background: linear-gradient(135deg, #006dfa 0%, #4d9aff 100%);
+    box-shadow: 0 2px 8px -2px rgba(0, 109, 250, 0.4);
+    transition: all 0.2s ease;
+  }
+  .btn-gradient:hover {
+    box-shadow: 0 4px 12px -2px rgba(0, 109, 250, 0.5);
+    transform: translateY(-1px);
+  }
+  
+  /* Subtle grid pattern for empty states */
+  .pattern-grid {
+    background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 }

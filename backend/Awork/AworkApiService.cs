@@ -75,9 +75,9 @@ public class AworkApiService
         return result ?? [];
     }
 
-    public async Task<List<AworkCustomFieldDefinition>> GetTaskCustomFields(Guid userId)
+    public async Task<List<AworkCustomFieldDefinition>> GetProjectCustomFields(Guid userId, Guid projectId)
     {
-        var result = await MakeAworkRequest<List<AworkCustomFieldDefinition>>(userId, "customfielddefinitions?filterby=entityType eq 'tasks'");
+        var result = await MakeAworkRequest<List<AworkCustomFieldDefinition>>(userId, $"projects/{projectId}/customfielddefinitions");
         return result ?? [];
     }
 

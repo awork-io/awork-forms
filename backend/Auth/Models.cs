@@ -44,6 +44,7 @@ public class UserDto
     public string Name { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }
     public Guid WorkspaceId { get; set; }
+    public string? WorkspaceName { get; set; }
 }
 
 public class AuthTokenResponse

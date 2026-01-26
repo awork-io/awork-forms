@@ -146,7 +146,7 @@ public class AworkCustomFieldDefinition
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
-    public string EntityType { get; set; } = string.Empty;
+    public string Entity { get; set; } = string.Empty;
     public bool IsRequired { get; set; }
     public bool IsArchived { get; set; }
     public List<AworkCustomFieldSelectionOption>? SelectionOptions { get; set; }
@@ -157,16 +157,17 @@ public class AworkCustomFieldSelectionOption
     public Guid Id { get; set; }
     public string Value { get; set; } = string.Empty;
     public int Order { get; set; }
+    public string? Color { get; set; }
 }
 
 public class CustomFieldValue
 {
     public Guid CustomFieldDefinitionId { get; set; }
+    public Guid? UserIdValue { get; set; }
+    public Guid? ClientIdValue { get; set; }
+    public double? NumberValue { get; set; }
+    public Guid? SelectionOptionIdValue { get; set; }
     public string? TextValue { get; set; }
-    public decimal? NumberValue { get; set; }
     public DateTime? DateValue { get; set; }
-    public Guid? SelectionOptionId { get; set; }
-    public List<Guid>? MultiSelectionOptionIds { get; set; }
-    public Guid? UserId { get; set; }
-    public string? LinkValue { get; set; }
+    public bool? BooleanValue { get; set; }
 }

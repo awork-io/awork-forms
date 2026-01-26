@@ -31,18 +31,17 @@ export function AddFieldZone({ onAddField, isFirst }: AddFieldZoneProps) {
   };
 
   return (
-    <div className={`group relative ${isFirst ? 'pt-0' : 'py-1'}`}>
+    <div className={`group relative ${isFirst ? 'pt-0' : 'py-2'}`}>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-md
-              text-muted-foreground/50 hover:text-primary hover:bg-primary/5
-              transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border-2 border-dashed
+              border-gray-200 hover:border-primary/40 hover:bg-primary/5
+              text-gray-400 hover:text-primary
+              transition-all duration-200"
           >
-            <div className="h-px flex-1 bg-current opacity-30" />
             <Plus className="w-4 h-4" />
             <span className="text-xs font-medium">Add field</span>
-            <div className="h-px flex-1 bg-current opacity-30" />
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-72 p-2" align="center">

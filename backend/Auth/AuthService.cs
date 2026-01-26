@@ -128,7 +128,8 @@ public class AuthService
                     Email = user.Email,
                     Name = user.Name,
                     AvatarUrl = user.AvatarUrl,
-                    WorkspaceId = user.AworkWorkspaceId
+                    WorkspaceId = user.AworkWorkspaceId,
+                    WorkspaceName = user.WorkspaceName
                 }
             };
         }
@@ -242,6 +243,7 @@ public class AuthService
             {
                 AworkUserId = userInfo.Id,
                 AworkWorkspaceId = workspaceId,
+                WorkspaceName = userInfo.Workspace?.Name,
                 Email = userInfo.Email ?? "",
                 Name = $"{userInfo.FirstName} {userInfo.LastName}".Trim(),
                 AvatarUrl = userInfo.ProfileImage,
@@ -260,6 +262,8 @@ public class AuthService
             user.Email = userInfo.Email ?? user.Email;
             user.Name = $"{userInfo.FirstName} {userInfo.LastName}".Trim();
             user.AvatarUrl = userInfo.ProfileImage;
+            if (!string.IsNullOrWhiteSpace(userInfo.Workspace?.Name))
+                user.WorkspaceName = userInfo.Workspace.Name;
             user.AccessToken = tokenResult.AccessToken;
             user.RefreshToken = tokenResult.RefreshToken;
             user.TokenExpiresAt = now.AddSeconds(tokenResult.ExpiresIn);
