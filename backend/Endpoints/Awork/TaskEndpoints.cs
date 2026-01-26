@@ -1,0 +1,66 @@
+using Backend.Awork;
+
+namespace Backend.Endpoints.Awork;
+
+public class TaskEndpoints : IEndpoint
+{
+    public static void Map(IEndpointRouteBuilder app)
+    {
+        app.MapGet("/api/awork/projects/{id}/taskstatuses", async (HttpContext context, AworkApiService aworkService, string id) =>
+        {
+            var userId = context.GetCurrentUserId();
+            if (userId == null) return Results.Unauthorized();
+
+            try
+            {
+                return Results.Ok(await aworkService.GetTaskStatusesAsync(userId.Value, id));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Results.Json(new { error = ex.Message, code = "TOKEN_EXPIRED" }, statusCode: 401);
+            }
+            catch (HttpRequestException ex)
+            {
+                return Results.Json(new { error = ex.Message }, statusCode: 502);
+            }
+        }).RequireAuth();
+
+        app.MapGet("/api/awork/projects/{id}/tasklists", async (HttpContext context, AworkApiService aworkService, string id) =>
+        {
+            var userId = context.GetCurrentUserId();
+            if (userId == null) return Results.Unauthorized();
+
+            try
+            {
+                return Results.Ok(await aworkService.GetTaskListsAsync(userId.Value, id));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Results.Json(new { error = ex.Message, code = "TOKEN_EXPIRED" }, statusCode: 401);
+            }
+            catch (HttpRequestException ex)
+            {
+                return Results.Json(new { error = ex.Message }, statusCode: 502);
+            }
+        }).RequireAuth();
+
+        app.MapGet("/api/awork/typesofwork", async (HttpContext context, AworkApiService aworkService) =>
+        {
+            var userId = context.GetCurrentUserId();
+            if (userId == null) return Results.Unauthorized();
+
+            try
+            {
+                return Results.Ok(await aworkService.GetTypesOfWorkAsync(userId.Value));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Results.Json(new { error = ex.Message, code = "TOKEN_EXPIRED" }, statusCode: 401);
+            }
+            catch (HttpRequestException ex)
+            {
+                return Results.Json(new { error = ex.Message }, statusCode: 502);
+            }
+        }).RequireAuth();
+    }
+}

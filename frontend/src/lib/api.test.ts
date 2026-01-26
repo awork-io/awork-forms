@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { api } from './api';
 
 describe('ApiClient', () => {
-  const originalFetch = global.fetch;
+  const originalFetch = globalThis.fetch;
   const mockFetch = vi.fn();
 
   beforeEach(() => {
-    global.fetch = mockFetch;
+    globalThis.fetch = mockFetch;
     // Clear localStorage
     localStorage.clear();
     // Reset api token
@@ -14,7 +14,7 @@ describe('ApiClient', () => {
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
+    globalThis.fetch = originalFetch;
     mockFetch.mockReset();
   });
 

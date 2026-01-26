@@ -32,7 +32,18 @@ while [ $i -lt $MAX_ITERATIONS ]; do
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   
   # Run one iteration - pipe prompt to claude for normal interactive output
-  echo "$(cat PROMPT.md)" | claude --dangerously-skip-permissions --model opus 2>&1 | tee /tmp/ralph_output_${i}.log
+  if ! echo "$(cat PROMPT.md)" | claude --dangerously-skip-permissions --model opus 2>&1 | tee /tmp/ralph_output_${i}.log; then
+    echo "⚠️  Claude CLI returned error, waiting 10s before retry..."
+    sleep 10
+    continue
+  fi
+  
+  # Check for "No messages returned" error
+  if grep -q "No messages returned" /tmp/ralph_output_${i}.log 2>/dev/null; then
+    echo "⚠️  Empty response from Claude, waiting 10s before retry..."
+    sleep 10
+    continue
+  fi
   
   # Check if all tasks complete
   if grep -q "COMPLETE" /tmp/ralph_output_${i}.log 2>/dev/null; then

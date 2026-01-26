@@ -6,7 +6,8 @@ export type FieldType =
   | 'textarea'
   | 'select'
   | 'checkbox'
-  | 'date';
+  | 'date'
+  | 'file';
 
 export interface SelectOption {
   label: string;
@@ -20,6 +21,8 @@ export interface FormField {
   placeholder?: string;
   required: boolean;
   options?: SelectOption[]; // For select fields
+  acceptedFileTypes?: string; // For file fields (e.g., ".pdf,.doc,.docx")
+  maxFileSizeMB?: number; // For file fields
 }
 
 export interface FormFieldWithPosition extends FormField {
@@ -77,6 +80,12 @@ export const FIELD_TYPES: FieldTypeInfo[] = [
     icon: 'Calendar',
     description: 'Date picker',
   },
+  {
+    type: 'file',
+    label: 'File Upload',
+    icon: 'Paperclip',
+    description: 'Upload files',
+  },
 ];
 
 // Create a new field with default values
@@ -99,6 +108,14 @@ export function createField(type: FieldType): FormField {
     };
   }
 
+  if (type === 'file') {
+    return {
+      ...baseField,
+      acceptedFileTypes: '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg',
+      maxFileSizeMB: 10,
+    };
+  }
+
   return baseField;
 }
 
@@ -118,6 +135,8 @@ function getDefaultLabel(type: FieldType): string {
       return 'I agree';
     case 'date':
       return 'Date';
+    case 'file':
+      return 'Attachment';
     default:
       return 'Field';
   }

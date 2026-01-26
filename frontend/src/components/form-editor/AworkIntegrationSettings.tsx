@@ -22,8 +22,10 @@ import {
   type AworkTaskList,
   type AworkTypeOfWork,
   type AworkUser,
+  type AworkCustomFieldDefinition,
 } from '@/lib/api';
 import type { FormField } from '@/lib/form-types';
+import { ArrowRight } from 'lucide-react';
 
 export type ActionType = 'task' | 'project' | 'both' | null;
 
@@ -80,6 +82,7 @@ export function AworkIntegrationSettings({
   const [taskLists, setTaskLists] = useState<AworkTaskList[]>([]);
   const [typesOfWork, setTypesOfWork] = useState<AworkTypeOfWork[]>([]);
   const [users, setUsers] = useState<AworkUser[]>([]);
+  const [customFields, setCustomFields] = useState<AworkCustomFieldDefinition[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [isLoadingProjectTypes, setIsLoadingProjectTypes] = useState(false);
   const [isLoadingTaskData, setIsLoadingTaskData] = useState(false);
@@ -123,21 +126,23 @@ export function AworkIntegrationSettings({
     }
   }, []);
 
-  // Fetch task-related data (statuses, lists, types of work, users)
+  // Fetch task-related data (statuses, lists, types of work, users, custom fields)
   const fetchTaskData = useCallback(async (projectId: string) => {
     setIsLoadingTaskData(true);
     setAworkError(null);
     try {
-      const [statusesData, listsData, typesData, usersData] = await Promise.all([
+      const [statusesData, listsData, typesData, usersData, customFieldsData] = await Promise.all([
         api.getAworkTaskStatuses(projectId),
         api.getAworkTaskLists(projectId),
         api.getAworkTypesOfWork(),
         api.getAworkUsers(),
+        api.getAworkCustomFields(),
       ]);
       setTaskStatuses(statusesData);
       setTaskLists(listsData);
       setTypesOfWork(typesData.filter(t => !t.isArchived));
       setUsers(usersData.filter(u => !u.isArchived && !u.isExternal));
+      setCustomFields(customFieldsData.filter(f => !f.isArchived));
     } catch (err) {
       const error = err as Error;
       if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
@@ -540,27 +545,50 @@ export function AworkIntegrationSettings({
                       </Badge>
                     )}
                   </div>
-                  <div className="space-y-2 pl-2 border-l-2 border-muted">
+                  <div className="space-y-2">
                     {formFields.map((field) => (
-                      <div key={field.id} className="flex items-center gap-2">
-                        <span className="text-sm w-32 truncate" title={field.label}>
+                      <div key={field.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
+                        <span className="text-sm min-w-[140px] font-medium truncate" title={field.label}>
                           {field.label}
                         </span>
-                        <span className="text-muted-foreground">→</span>
+                        <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
                         <Select
                           value={getTaskMappingForField(field.id)}
                           onValueChange={(value) => updateTaskMapping(field.id, value)}
                         >
-                          <SelectTrigger className="w-40 h-8 text-xs">
+                          <SelectTrigger className="flex-1 h-9">
                             <SelectValue placeholder="Not mapped" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">Not mapped</SelectItem>
+                            <SelectItem value="none">
+                              <span className="text-muted-foreground">Not mapped</span>
+                            </SelectItem>
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              Default Fields
+                            </div>
                             {AWORK_TASK_FIELDS.map((aworkField) => (
                               <SelectItem key={aworkField.value} value={aworkField.value}>
                                 {aworkField.label}
                               </SelectItem>
                             ))}
+                            {customFields.length > 0 && (
+                              <>
+                                <Separator className="my-1" />
+                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                  Custom Fields
+                                </div>
+                                {customFields.map((cf) => (
+                                  <SelectItem key={`custom:${cf.id}`} value={`custom:${cf.id}`}>
+                                    <div className="flex items-center gap-2">
+                                      <span>{cf.name}</span>
+                                      <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                        {cf.type}
+                                      </Badge>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>

@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Node
+frontend/node_modules
+frontend/dist
+
+# .NET
+backend/bin
+backend/obj
+backend/Data
+
+# Build artifacts
+*.log
+screenshots
+
+# Documentation
+*.md
+!README.md

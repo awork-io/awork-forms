@@ -3,7 +3,7 @@ import { createField, FIELD_TYPES, type FieldType } from './form-types';
 
 describe('FIELD_TYPES', () => {
   it('should contain all expected field types', () => {
-    const expectedTypes: FieldType[] = ['text', 'email', 'number', 'textarea', 'select', 'checkbox', 'date'];
+    const expectedTypes: FieldType[] = ['text', 'email', 'number', 'textarea', 'select', 'checkbox', 'date', 'file'];
     const actualTypes = FIELD_TYPES.map(f => f.type);
 
     expect(actualTypes).toEqual(expectedTypes);
@@ -17,8 +17,8 @@ describe('FIELD_TYPES', () => {
     });
   });
 
-  it('should have 7 field types', () => {
-    expect(FIELD_TYPES).toHaveLength(7);
+  it('should have 8 field types', () => {
+    expect(FIELD_TYPES).toHaveLength(8);
   });
 });
 

@@ -143,6 +143,22 @@ export interface AworkTypeOfWork {
   isArchived: boolean;
 }
 
+export interface AworkCustomFieldDefinition {
+  id: string;
+  name: string;
+  type: string; // text, number, date, selection, multiselection, link, user
+  entityType: string;
+  isRequired: boolean;
+  isArchived: boolean;
+  selectionOptions?: AworkCustomFieldSelectionOption[];
+}
+
+export interface AworkCustomFieldSelectionOption {
+  id: string;
+  value: string;
+  order: number;
+}
+
 // Public form types (no auth required)
 export interface PublicForm {
   id: number;
@@ -317,6 +333,10 @@ class ApiClient {
 
   async getAworkTypesOfWork(): Promise<AworkTypeOfWork[]> {
     return this.request('/api/awork/typesofwork');
+  }
+
+  async getAworkCustomFields(): Promise<AworkCustomFieldDefinition[]> {
+    return this.request('/api/awork/customfields');
   }
 
   // Logo upload endpoints

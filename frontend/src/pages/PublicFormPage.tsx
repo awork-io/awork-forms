@@ -4,8 +4,6 @@ import { api } from '@/lib/api';
 import type { PublicForm, SubmissionResponse } from '@/lib/api';
 import type { FormField } from '@/lib/form-types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import {
@@ -16,6 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+
+const aworkGradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)';
 
 export function PublicFormPage() {
   const { publicId } = useParams<{ publicId: string }>();
@@ -28,6 +28,7 @@ export function PublicFormPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<SubmissionResponse | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   // Load form data
   useEffect(() => {
@@ -288,275 +289,425 @@ export function PublicFormPage() {
     );
   }
 
-  // Form view
-  return (
-    <div
-      className="min-h-screen py-8 px-4 sm:py-12"
-      style={{ backgroundColor }}
-    >
-      <div className="max-w-2xl mx-auto">
-        {/* Form card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Header with accent color */}
-          <div
-            className="h-2"
-            style={{ backgroundColor: primaryColor }}
-          />
+  // Render field input
+  const renderField = (field: FormField, index: number) => {
+    const isFocused = focusedField === field.id;
+    const hasError = !!validationErrors[field.id];
+    
+    const inputClasses = cn(
+      'w-full px-3 py-3 text-base bg-white border-2 rounded-xl transition-all duration-300 outline-none',
+      'placeholder:text-gray-400',
+      isFocused && !hasError && 'border-blue-500 shadow-[0_0_0_3px_rgba(77,154,255,0.1)]',
+      !isFocused && !hasError && 'border-gray-200 hover:border-gray-300',
+      hasError && 'border-red-400 shadow-[0_0_0_3px_rgba(255,67,152,0.1)]'
+    );
 
-          <div className="p-6 sm:p-8 md:p-10">
-            {/* Logo */}
-            {logoUrl && (
-              <div className="flex justify-center mb-6">
-                <img
-                  src={logoUrl}
-                  alt="Logo"
-                  className="max-h-16 max-w-[200px] object-contain"
-                />
+    const commonProps = {
+      onFocus: () => setFocusedField(field.id),
+      onBlur: () => setFocusedField(null),
+    };
+
+    return (
+      <div
+        key={field.id}
+        className="group"
+        style={{ 
+          animationDelay: `${index * 80}ms`,
+          animation: 'fadeInUp 0.6s ease-out forwards',
+          opacity: 0,
+        }}
+      >
+        {/* Field container with subtle hover effect */}
+        <div className={cn(
+          'p-2 rounded-xl transition-all duration-300',
+          isFocused ? 'bg-blue-50/50' : 'bg-transparent hover:bg-gray-50/40'
+        )}>
+          {field.type !== 'checkbox' && (
+            <Label
+              htmlFor={field.id}
+              className={cn(
+                'block text-sm font-semibold mb-2 transition-colors duration-200',
+                isFocused ? 'text-blue-600' : 'text-gray-700'
+              )}
+            >
+              {field.label}
+              {field.required && (
+                <span className="text-red-400 ml-1">*</span>
+              )}
+            </Label>
+          )}
+
+          {field.type === 'text' && (
+            <input
+              id={field.id}
+              type="text"
+              placeholder={field.placeholder || 'Type your answer here...'}
+              value={(formData[field.id] as string) || ''}
+              onChange={(e) => updateField(field.id, e.target.value)}
+              className={inputClasses}
+              {...commonProps}
+            />
+          )}
+
+          {field.type === 'email' && (
+            <input
+              id={field.id}
+              type="email"
+              placeholder={field.placeholder || 'name@example.com'}
+              value={(formData[field.id] as string) || ''}
+              onChange={(e) => updateField(field.id, e.target.value)}
+              className={inputClasses}
+              {...commonProps}
+            />
+          )}
+
+          {field.type === 'number' && (
+            <input
+              id={field.id}
+              type="number"
+              placeholder={field.placeholder || '0'}
+              value={(formData[field.id] as string) || ''}
+              onChange={(e) => updateField(field.id, e.target.value)}
+              className={inputClasses}
+              {...commonProps}
+            />
+          )}
+
+          {field.type === 'textarea' && (
+            <textarea
+              id={field.id}
+              placeholder={field.placeholder || 'Type your answer here...'}
+              value={(formData[field.id] as string) || ''}
+              onChange={(e) => updateField(field.id, e.target.value)}
+              rows={4}
+              className={cn(inputClasses, 'resize-none')}
+              {...commonProps}
+            />
+          )}
+
+          {field.type === 'select' && (
+            <Select
+              value={(formData[field.id] as string) || ''}
+              onValueChange={(value) => updateField(field.id, value)}
+            >
+              <SelectTrigger className={inputClasses}>
+                <SelectValue placeholder={field.placeholder || 'Select an option'} />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {field.options?.map((option) => (
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="py-3 px-4 text-base cursor-pointer"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {field.type === 'checkbox' && (
+            <label
+              htmlFor={field.id}
+              className="flex items-center gap-3 cursor-pointer group/checkbox"
+            >
+              <div className={cn(
+                'w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200',
+                formData[field.id] 
+                  ? 'bg-blue-500 border-blue-500' 
+                  : 'border-gray-300 group-hover/checkbox:border-blue-400'
+              )}>
+                {Boolean(formData[field.id]) && (
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
               </div>
-            )}
+              <Checkbox
+                id={field.id}
+                checked={(formData[field.id] as boolean) || false}
+                onCheckedChange={(checked) => updateField(field.id, checked)}
+                className="sr-only"
+              />
+              <span className="text-sm text-gray-700">
+                {field.label}
+                {field.required && <span className="text-red-400 ml-1">*</span>}
+              </span>
+            </label>
+          )}
 
-            {/* Title and description */}
-            <div className="text-center mb-8">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                {form?.name}
-              </h1>
-              {form?.description && (
-                <p className="text-gray-500 text-base sm:text-lg">
-                  {form.description}
-                </p>
+          {field.type === 'date' && (
+            <input
+              id={field.id}
+              type="date"
+              value={(formData[field.id] as string) || ''}
+              onChange={(e) => updateField(field.id, e.target.value)}
+              className={inputClasses}
+              {...commonProps}
+            />
+          )}
+
+          {field.type === 'file' && (
+            <div
+              className={cn(
+                'relative border-2 border-dashed rounded-xl p-6 transition-all duration-200 text-center cursor-pointer',
+                isFocused ? 'border-blue-400 bg-blue-50/50' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50/50'
+              )}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setFocusedField(field.id);
+              }}
+              onDragLeave={() => setFocusedField(null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setFocusedField(null);
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                  updateField(field.id, files[0]);
+                }
+              }}
+              onClick={() => document.getElementById(`file-${field.id}`)?.click()}
+            >
+              <input
+                id={`file-${field.id}`}
+                type="file"
+                className="sr-only"
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (files && files.length > 0) {
+                    updateField(field.id, files[0]);
+                  }
+                }}
+              />
+              {formData[field.id] ? (
+                <div className="flex items-center justify-center gap-2 text-gray-700">
+                  <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-sm font-medium">{(formData[field.id] as File).name}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateField(field.id, null);
+                    }}
+                    className="ml-2 text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="mx-auto w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium text-blue-600">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-gray-400">PNG, JPG, PDF up to 10MB</p>
+                </div>
               )}
             </div>
+          )}
 
-            {/* Error message */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                {error}
-              </div>
-            )}
+          {/* Validation error */}
+          {validationErrors[field.id] && (
+            <p className="mt-3 text-sm text-red-500 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {validationErrors[field.id]}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
 
-            {/* Form fields */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="animate-in fade-in slide-in-from-bottom-2 duration-300"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <Label
-                    htmlFor={field.id}
-                    className={cn(
-                      'text-sm font-medium text-gray-700 mb-2 block',
-                      field.type === 'checkbox' && 'sr-only'
-                    )}
-                  >
-                    {field.label}
-                    {field.required && (
-                      <span className="text-red-500 ml-1">*</span>
-                    )}
-                  </Label>
+  // Progress calculation
+  const filledFields = fields.filter(f => {
+    const val = formData[f.id];
+    return f.type === 'checkbox' ? val === true : val && String(val).trim() !== '';
+  }).length;
+  const progress = fields.length > 0 ? (filledFields / fields.length) * 100 : 0;
 
-                  {/* Text input */}
-                  {field.type === 'text' && (
-                    <Input
-                      id={field.id}
-                      type="text"
-                      placeholder={field.placeholder}
-                      value={(formData[field.id] as string) || ''}
-                      onChange={(e) => updateField(field.id, e.target.value)}
-                      className={cn(
-                        'h-12 text-base rounded-xl border-gray-200 focus:ring-2 transition-all',
-                        validationErrors[field.id] && 'border-red-500 focus:ring-red-200'
-                      )}
-                      style={{
-                        '--tw-ring-color': `${primaryColor}40`,
-                      } as React.CSSProperties}
+  // Form view
+  return (
+    <div className="min-h-screen" style={{ backgroundColor }}>
+      {/* CSS for animations */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes pulse-ring {
+          0% { transform: scale(0.95); opacity: 1; }
+          50% { transform: scale(1); opacity: 0.8; }
+          100% { transform: scale(0.95); opacity: 1; }
+        }
+      `}</style>
+
+      {/* Decorative background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div 
+          className="absolute -top-1/3 -right-1/4 w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"
+          style={{ background: aworkGradient }}
+        />
+        <div 
+          className="absolute -bottom-1/3 -left-1/4 w-[400px] h-[400px] rounded-full opacity-15 blur-3xl"
+          style={{ background: 'linear-gradient(135deg, #4d9aff 0%, #a157f6 100%)' }}
+        />
+      </div>
+
+      {/* Main content */}
+      <div className="relative min-h-screen flex flex-col">
+        {/* Progress bar */}
+        {fields.length > 1 && (
+          <div className="fixed top-0 left-0 right-0 z-50">
+            <div className="h-1 bg-gray-200/50 backdrop-blur-sm">
+              <div 
+                className="h-full transition-all duration-500 ease-out"
+                style={{ 
+                  width: `${progress}%`,
+                  background: aworkGradient,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Form container */}
+        <div className="flex-1 flex items-center justify-center py-12 px-4 sm:py-16">
+          <div className="w-full max-w-2xl">
+            {/* Form card */}
+            <div 
+              className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-gray-900/10 overflow-hidden"
+              style={{ animation: 'fadeInUp 0.8s ease-out forwards' }}
+            >
+              {/* Header gradient bar */}
+              <div 
+                className="h-2"
+                style={{ background: aworkGradient }}
+              />
+
+              {/* Form content */}
+              <div className="p-6 sm:p-8">
+                {/* Logo */}
+                {logoUrl && (
+                  <div className="flex justify-center mb-6">
+                    <img
+                      src={logoUrl}
+                      alt="Logo"
+                      className="max-h-10 max-w-[140px] object-contain"
                     />
-                  )}
+                  </div>
+                )}
 
-                  {/* Email input */}
-                  {field.type === 'email' && (
-                    <Input
-                      id={field.id}
-                      type="email"
-                      placeholder={field.placeholder || 'email@example.com'}
-                      value={(formData[field.id] as string) || ''}
-                      onChange={(e) => updateField(field.id, e.target.value)}
-                      className={cn(
-                        'h-12 text-base rounded-xl border-gray-200 focus:ring-2 transition-all',
-                        validationErrors[field.id] && 'border-red-500 focus:ring-red-200'
-                      )}
-                      style={{
-                        '--tw-ring-color': `${primaryColor}40`,
-                      } as React.CSSProperties}
-                    />
-                  )}
-
-                  {/* Number input */}
-                  {field.type === 'number' && (
-                    <Input
-                      id={field.id}
-                      type="number"
-                      placeholder={field.placeholder}
-                      value={(formData[field.id] as string) || ''}
-                      onChange={(e) => updateField(field.id, e.target.value)}
-                      className={cn(
-                        'h-12 text-base rounded-xl border-gray-200 focus:ring-2 transition-all',
-                        validationErrors[field.id] && 'border-red-500 focus:ring-red-200'
-                      )}
-                      style={{
-                        '--tw-ring-color': `${primaryColor}40`,
-                      } as React.CSSProperties}
-                    />
-                  )}
-
-                  {/* Textarea */}
-                  {field.type === 'textarea' && (
-                    <Textarea
-                      id={field.id}
-                      placeholder={field.placeholder}
-                      value={(formData[field.id] as string) || ''}
-                      onChange={(e) => updateField(field.id, e.target.value)}
-                      rows={4}
-                      className={cn(
-                        'text-base rounded-xl border-gray-200 focus:ring-2 transition-all resize-none',
-                        validationErrors[field.id] && 'border-red-500 focus:ring-red-200'
-                      )}
-                      style={{
-                        '--tw-ring-color': `${primaryColor}40`,
-                      } as React.CSSProperties}
-                    />
-                  )}
-
-                  {/* Select dropdown */}
-                  {field.type === 'select' && (
-                    <Select
-                      value={(formData[field.id] as string) || ''}
-                      onValueChange={(value) => updateField(field.id, value)}
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          'h-12 text-base rounded-xl border-gray-200 focus:ring-2 transition-all',
-                          validationErrors[field.id] && 'border-red-500 focus:ring-red-200'
-                        )}
-                        style={{
-                          '--tw-ring-color': `${primaryColor}40`,
-                        } as React.CSSProperties}
-                      >
-                        <SelectValue placeholder={field.placeholder || 'Select an option'} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {field.options?.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-
-                  {/* Checkbox */}
-                  {field.type === 'checkbox' && (
-                    <div className="flex items-start space-x-3">
-                      <Checkbox
-                        id={field.id}
-                        checked={(formData[field.id] as boolean) || false}
-                        onCheckedChange={(checked) => updateField(field.id, checked)}
-                        className={cn(
-                          'mt-0.5 h-5 w-5 rounded border-gray-300',
-                          validationErrors[field.id] && 'border-red-500'
-                        )}
-                        style={{
-                          '--primary': primaryColor,
-                        } as React.CSSProperties}
-                      />
-                      <label
-                        htmlFor={field.id}
-                        className="text-sm text-gray-700 cursor-pointer leading-relaxed"
-                      >
-                        {field.label}
-                        {field.required && (
-                          <span className="text-red-500 ml-1">*</span>
-                        )}
-                      </label>
-                    </div>
-                  )}
-
-                  {/* Date input */}
-                  {field.type === 'date' && (
-                    <Input
-                      id={field.id}
-                      type="date"
-                      value={(formData[field.id] as string) || ''}
-                      onChange={(e) => updateField(field.id, e.target.value)}
-                      className={cn(
-                        'h-12 text-base rounded-xl border-gray-200 focus:ring-2 transition-all',
-                        validationErrors[field.id] && 'border-red-500 focus:ring-red-200'
-                      )}
-                      style={{
-                        '--tw-ring-color': `${primaryColor}40`,
-                      } as React.CSSProperties}
-                    />
-                  )}
-
-                  {/* Validation error */}
-                  {validationErrors[field.id] && (
-                    <p className="mt-1.5 text-sm text-red-500 animate-in fade-in slide-in-from-top-1 duration-200">
-                      {validationErrors[field.id]}
+                {/* Title and description */}
+                <div className="text-center mb-6">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 tracking-tight">
+                    {form?.name}
+                  </h1>
+                  {form?.description && (
+                    <p className="text-base text-gray-500 max-w-md mx-auto leading-relaxed">
+                      {form.description}
                     </p>
                   )}
                 </div>
-              ))}
 
-              {/* Submit button */}
-              <div className="pt-4">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-12 text-base font-semibold rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  style={{
-                    backgroundColor: primaryColor,
-                    color: 'white',
-                  }}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-3 h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Submitting...
+                {/* Field counter */}
+                {fields.length > 1 && (
+                  <div className="flex justify-center mb-6">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-600">
+                      <span className="font-semibold text-blue-600">{filledFields}</span>
+                      <span>/</span>
+                      <span>{fields.length}</span>
+                      <span>completed</span>
                     </span>
-                  ) : (
-                    'Submit'
-                  )}
-                </Button>
+                  </div>
+                )}
+
+                {/* Error message */}
+                {error && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-start gap-2">
+                    <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Form fields */}
+                <form onSubmit={handleSubmit} className="space-y-2">
+                  {fields.map((field, index) => renderField(field, index))}
+
+                  {/* Submit button */}
+                  <div className="pt-4">
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className={cn(
+                        'w-full h-11 text-base font-semibold rounded-xl transition-all duration-300',
+                        'shadow-md hover:shadow-lg',
+                        'disabled:opacity-50 disabled:cursor-not-allowed',
+                        !isSubmitting && 'hover:scale-[1.01] active:scale-[0.99]'
+                      )}
+                      style={{
+                        background: aworkGradient,
+                        color: 'white',
+                      }}
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Submitting...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-1.5">
+                          Submit
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                </form>
               </div>
-            </form>
+            </div>
+
+            {/* Footer */}
+            <p className="text-center text-xs text-gray-400 mt-6">
+              Powered by{' '}
+              <a 
+                href="https://awork.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="font-semibold text-blue-500 hover:text-blue-600 transition-colors"
+              >
+                awork Forms
+              </a>
+            </p>
           </div>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-sm text-gray-400 mt-6">
-          Powered by{' '}
-          <span className="font-medium" style={{ color: primaryColor }}>
-            awork Forms
-          </span>
-        </p>
       </div>
     </div>
   );

@@ -20,7 +20,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -32,9 +31,8 @@ import {
   FIELD_TYPES,
   createField,
 } from '@/lib/form-types';
-import { FieldTypeSidebar } from '@/components/form-editor/FieldTypeSidebar';
 import { FieldCard } from '@/components/form-editor/FieldCard';
-import { FieldConfigPanel } from '@/components/form-editor/FieldConfigPanel';
+import { FieldConfigDialog } from '@/components/form-editor/FieldConfigDialog';
 import { FormCanvas } from '@/components/form-editor/FormCanvas';
 import {
   AworkIntegrationSettings,
@@ -90,6 +88,7 @@ export function FormEditorPage() {
     logoUrl: null,
   });
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [isFieldDialogOpen, setIsFieldDialogOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -255,7 +254,8 @@ export function FormEditorPage() {
   };
 
   const handleFieldSelect = (fieldId: string) => {
-    setSelectedFieldId(fieldId === selectedFieldId ? null : fieldId);
+    setSelectedFieldId(fieldId);
+    setIsFieldDialogOpen(true);
   };
 
   const handleFieldUpdate = (fieldId: string, updates: Partial<FormField>) => {
@@ -285,6 +285,14 @@ export function FormEditorPage() {
       setFields(newFields);
       setSelectedFieldId(newField.id);
     }
+  };
+
+  const handleAddField = (fieldType: FieldType, atIndex: number) => {
+    const newField = createField(fieldType);
+    const newFields = [...fields];
+    newFields.splice(atIndex, 0, newField);
+    setFields(newFields);
+    setSelectedFieldId(newField.id);
   };
 
   const selectedField = fields.find((f) => f.id === selectedFieldId);
@@ -360,9 +368,6 @@ export function FormEditorPage() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          {/* Left Sidebar - Field Types */}
-          <FieldTypeSidebar fieldTypes={FIELD_TYPES} />
-
           {/* Center - Form Canvas */}
           <div className="flex-1 overflow-auto bg-muted/30">
             <div className="max-w-2xl mx-auto p-6">
@@ -433,12 +438,7 @@ export function FormEditorPage() {
 
               {/* Form Fields */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold">Form Fields</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Drag fields from the sidebar to add them
-                  </p>
-                </div>
+                <h2 className="text-base font-semibold">Form Fields</h2>
 
                 <FormCanvas
                   fields={fields}
@@ -446,52 +446,10 @@ export function FormEditorPage() {
                   onFieldSelect={handleFieldSelect}
                   onFieldDelete={handleFieldDelete}
                   onFieldDuplicate={handleFieldDuplicate}
+                  onAddField={handleAddField}
                 />
               </div>
             </div>
-          </div>
-
-          {/* Right Sidebar - Field Configuration */}
-          <div className="w-80 border-l bg-background shrink-0">
-            <ScrollArea className="h-full">
-              <div className="p-4">
-                {selectedField ? (
-                  <FieldConfigPanel
-                    field={selectedField}
-                    onUpdate={(updates) =>
-                      handleFieldUpdate(selectedField.id, updates)
-                    }
-                    onClose={() => setSelectedFieldId(null)}
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <svg
-                      className="w-10 h-10 mb-3 opacity-50"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    <p className="text-sm font-medium">No field selected</p>
-                    <p className="text-xs mt-1 text-center px-4">
-                      Click on a field to configure its properties
-                    </p>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
           </div>
 
           {/* Drag Overlay */}
@@ -524,6 +482,15 @@ export function FormEditorPage() {
           isActive={isActive}
         />
       )}
+
+      {/* Field Config Dialog */}
+      <FieldConfigDialog
+        field={selectedField || null}
+        open={isFieldDialogOpen}
+        onOpenChange={setIsFieldDialogOpen}
+        onUpdate={handleFieldUpdate}
+        onDelete={handleFieldDelete}
+      />
     </div>
   );
 }
