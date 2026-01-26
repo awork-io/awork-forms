@@ -237,7 +237,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Add test for awork token refresh",
       "Verify all tests pass"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "testing",
@@ -251,7 +251,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Add test for API hooks",
       "Verify all tests pass with npm test"
     ],
-    "passes": false
+    "passes": true
   },
 
 ]

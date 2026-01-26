@@ -1,9 +1,9 @@
 # awork Forms - Activity Log
 
 ## Current Status
-**Last Updated:** 2026-01-25
-**Tasks Completed:** 14/16
-**Current Task:** Submissions list page complete
+**Last Updated:** 2026-01-26
+**Tasks Completed:** 16/16 (ALL COMPLETE)
+**Current Task:** All tasks finished
 
 ---
 
@@ -591,3 +591,109 @@
 **Build Status:**
 - Frontend: `npm run lint && npm run build` passes
 - Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-26 - awork Task Creation Fix and Error Display
+
+**Issue:** awork tasks were not being created on form submission (404 NotFound error)
+
+**Root Cause:**
+- Incorrect awork API endpoint: was using `POST /projects/{projectId}/tasks`
+- Should be `POST /tasks` with `entityId` and `baseType` in the request body
+
+**Changes:**
+- Updated `backend/Awork/AworkApiService.cs`:
+  - Fixed `CreateTaskAsync()` to use `POST /tasks` endpoint
+  - Added `EntityId` and `BaseType` to `AworkCreateTaskRequest`
+  - `BaseType` is set to "projecttask" for project tasks
+  - `ListId` renamed from `TaskListId` to match awork API
+- Updated `backend/Submissions/SubmissionProcessor.cs`:
+  - Updated to use new `ListId` property name
+- Updated `frontend/src/lib/api.ts`:
+  - Extended `SubmissionResponse` interface with `integrationStatus` and `integrationError`
+  - Added `aworkProjectId` and `aworkTaskId` fields
+- Updated `frontend/src/pages/PublicFormPage.tsx`:
+  - Added state to track submission result
+  - Updated success screen to show warning when integration fails
+  - Displays "Submission Received" with amber warning banner on error
+  - Shows "Thank You!" with confetti on full success
+
+**Visual Verification:**
+- Tested form submission with real awork OAuth
+- Task successfully created in awork (verified in awork UI)
+- Backend logs show: `Created awork task: 4c41e2bc-b54e-426f-8bc7-4f37bf7a28a1`
+- Success message displays correctly on public form
+
+**Build Status:**
+- Frontend: `npm run lint && npm run build` passes
+- Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-26 - Backend Unit Tests Complete
+
+**Task:** Add backend unit tests (xUnit)
+
+**Changes:**
+- Created `backend.Tests/backend.Tests.csproj` with xUnit and Moq dependencies
+- Created `backend.Tests/JwtServiceTests.cs`:
+  - 10 tests for JWT token generation and validation
+  - Tests: GenerateToken, ValidateToken (valid, invalid, tampered), GetUserId, GetAworkUserId, GetWorkspaceId, null principal handling, unique keys
+- Created `backend.Tests/FormsServiceTests.cs`:
+  - 21 tests for form CRUD and submission operations
+  - Tests: CreateForm, GetFormById, GetFormsByUser, UpdateForm, DeleteForm, GetPublicFormByPublicId, CreateSubmission, GetSubmissionsByForm, GetSubmissionsByUser
+  - Uses in-memory SQLite database with shared cache
+  - Fixed connection persistence issue by keeping a connection open during tests
+
+**Test Coverage:**
+- JwtService: Token generation, validation, and claim extraction
+- FormsService: Full CRUD lifecycle, user isolation, cascading deletes
+
+**Test Results:**
+```
+Passed!  - Failed: 0, Passed: 31, Skipped: 0, Total: 31
+```
+
+**Build Status:**
+- Backend tests: `dotnet test` passes (31/31 tests)
+- Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-26 - Frontend Unit Tests Complete
+
+**Task:** Add frontend unit tests (Vitest)
+
+**Changes:**
+- Updated `frontend/package.json` with test scripts:
+  - `npm test` - Run tests once
+  - `npm run test:watch` - Run tests in watch mode
+  - `npm run test:coverage` - Run tests with coverage report
+- Created `frontend/vitest.config.ts`:
+  - jsdom environment for React testing
+  - Path aliases matching Vite config
+  - Test setup file configuration
+- Created `frontend/src/test/setup.ts`:
+  - @testing-library/jest-dom matchers
+  - localStorage mock for API client tests
+  - ResizeObserver and matchMedia polyfills
+- Created `frontend/src/lib/utils.test.ts`:
+  - 8 tests for `cn()` class name utility
+  - Tests: class merging, conditional classes, arrays, objects, tailwind class handling, undefined/null handling
+- Created `frontend/src/lib/form-types.test.ts`:
+  - 12 tests for form field types
+  - Tests: FIELD_TYPES completeness, createField for all types, default values, select options, unique IDs
+- Created `frontend/src/lib/api.test.ts`:
+  - 10 tests for ApiClient
+  - Tests: token management, localStorage persistence, healthCheck, getPublicForm, submitPublicForm, authentication headers, 401 handling
+
+**Test Results:**
+```
+Test Files: 3 passed (3)
+Tests: 30 passed (30)
+```
+
+**Build Status:**
+- Frontend tests: `npm test` passes (30/30 tests)
+- Frontend: `npm run lint && npm run build` passes
