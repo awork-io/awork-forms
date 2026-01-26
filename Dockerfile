@@ -9,9 +9,8 @@ RUN npm run build
 # Build backend
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS backend-build
 WORKDIR /app
-COPY backend/*.csproj ./
-RUN dotnet restore
 COPY backend/ ./
+RUN dotnet restore
 RUN dotnet publish -c Release -o /app/publish
 
 # Final image

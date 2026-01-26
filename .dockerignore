@@ -15,7 +15,9 @@ frontend/dist
 # .NET
 backend/bin
 backend/obj
-backend/Data
+backend/Data/*.db
+backend/Data/*.db-shm
+backend/Data/*.db-wal
 
 # Build artifacts
 *.log
