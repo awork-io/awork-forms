@@ -73,8 +73,18 @@ public class SubmissionProcessor
 
                 if (!string.IsNullOrEmpty(targetProjectId))
                 {
+                    // Extract custom field mappings and link them to project first
+                    var customFieldMappings = GetCustomFieldMappings(fieldMappings.TaskFieldMappings);
+                    foreach (var cfMapping in customFieldMappings)
+                    {
+                        var cfId = cfMapping.AworkField.StartsWith("custom:") 
+                            ? cfMapping.AworkField.Substring(7) 
+                            : cfMapping.AworkField;
+                        await _aworkService.LinkCustomFieldToProject(userId, targetProjectId, cfId);
+                    }
+
                     var taskRequest = BuildTaskRequest(formData, formFields, fieldMappings.TaskFieldMappings,
-                        form.AworkTaskStatusId, form.AworkTypeOfWorkId, form.AworkTaskListId,
+                        targetProjectId, form.AworkTaskStatusId, form.AworkTypeOfWorkId, form.AworkTaskListId,
                         form.AworkAssigneeId, form.AworkTaskIsPriority ?? false);
 
                     var task = await _aworkService.CreateTaskAsync(userId, targetProjectId, taskRequest);
@@ -82,6 +92,21 @@ public class SubmissionProcessor
                     {
                         createdTaskId = task.Id;
                         result.AworkTaskId = task.Id;
+
+                        // Set custom field values
+                        var customFieldValues = BuildCustomFieldValues(formData, formFields, customFieldMappings);
+                        if (customFieldValues.Count > 0)
+                        {
+                            await _aworkService.SetTaskCustomFields(userId, task.Id, customFieldValues);
+                        }
+
+                        // Handle tags
+                        var tags = GetTagsFromMappings(formData, formFields, fieldMappings.TaskFieldMappings);
+                        if (tags.Count > 0)
+                        {
+                            await _aworkService.AddTagsToTask(userId, task.Id, tags);
+                        }
+
                         await AttachFilesToTaskAsync(userId, task.Id, formData, formFields);
                     }
                 }
@@ -229,15 +254,19 @@ public class SubmissionProcessor
     }
 
     private static AworkCreateTaskRequest BuildTaskRequest(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings,
-        string? taskStatusId, string? typeOfWorkId, string? taskListId, string? assigneeId, bool isPriority)
+        string projectId, string? taskStatusId, string? typeOfWorkId, string? taskListId, string? assigneeId, bool isPriority)
     {
         var request = new AworkCreateTaskRequest
         {
+            ProjectId = projectId,
+            EntityId = projectId,
             TaskStatusId = taskStatusId,
             TypeOfWorkId = typeOfWorkId,
-            ListId = taskListId,
             IsPriority = isPriority
         };
+
+        if (!string.IsNullOrEmpty(taskListId))
+            request.Lists = [new AworkTaskListAssignment { Id = taskListId }];
 
         if (!string.IsNullOrEmpty(assigneeId))
             request.Assignments = [new AworkTaskAssignment { UserId = assigneeId }];
@@ -277,6 +306,61 @@ public class SubmissionProcessor
         }
 
         return value.ToString();
+    }
+
+    private static readonly string[] StandardFields = ["name", "description", "dueDate", "startDate", "plannedDuration", "tags"];
+
+    private static List<FieldMapping> GetCustomFieldMappings(List<FieldMapping> mappings)
+    {
+        // Custom fields are either raw GUIDs or prefixed with "custom:"
+        return mappings.Where(m => 
+        {
+            var field = m.AworkField;
+            if (field.StartsWith("custom:"))
+                field = field.Substring(7);
+            return Guid.TryParse(field, out _);
+        }).ToList();
+    }
+
+    private static string GetCustomFieldId(string aworkField)
+    {
+        return aworkField.StartsWith("custom:") ? aworkField.Substring(7) : aworkField;
+    }
+
+    private static List<CustomFieldValue> BuildCustomFieldValues(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> customFieldMappings)
+    {
+        var result = new List<CustomFieldValue>();
+
+        foreach (var mapping in customFieldMappings)
+        {
+            var value = GetMappedValue(formData, formFields, mapping.FormFieldId);
+            if (string.IsNullOrEmpty(value)) continue;
+
+            result.Add(new CustomFieldValue
+            {
+                CustomFieldDefinitionId = GetCustomFieldId(mapping.AworkField),
+                TextValue = value
+            });
+        }
+
+        return result;
+    }
+
+    private static List<string> GetTagsFromMappings(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings)
+    {
+        var tags = new List<string>();
+
+        foreach (var mapping in mappings.Where(m => m.AworkField == "tags"))
+        {
+            var value = GetMappedValue(formData, formFields, mapping.FormFieldId);
+            if (!string.IsNullOrEmpty(value))
+            {
+                // Split by comma if multiple tags
+                tags.AddRange(value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+            }
+        }
+
+        return tags.Distinct().ToList();
     }
 }
 

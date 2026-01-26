@@ -104,7 +104,8 @@ public class AworkCreateTaskRequest
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string? BaseType { get; set; }
+    public string BaseType { get; set; } = "projecttask";
+    public string? ProjectId { get; set; }
     public string? EntityId { get; set; }
     public bool IsPriority { get; set; }
     public DateTime? DueOn { get; set; }
@@ -112,8 +113,14 @@ public class AworkCreateTaskRequest
     public int? PlannedDuration { get; set; }
     public string? TaskStatusId { get; set; }
     public string? TypeOfWorkId { get; set; }
-    public string? ListId { get; set; }
+    public List<AworkTaskListAssignment>? Lists { get; set; }
     public List<AworkTaskAssignment>? Assignments { get; set; }
+}
+
+public class AworkTaskListAssignment
+{
+    public string Id { get; set; } = string.Empty;
+    public int Order { get; set; } = int.MaxValue;
 }
 
 public class AworkTaskAssignment
@@ -150,4 +157,16 @@ public class AworkCustomFieldSelectionOption
     public string Id { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
     public int Order { get; set; }
+}
+
+public class CustomFieldValue
+{
+    public string CustomFieldDefinitionId { get; set; } = string.Empty;
+    public string? TextValue { get; set; }
+    public decimal? NumberValue { get; set; }
+    public DateTime? DateValue { get; set; }
+    public string? SelectionOptionId { get; set; }
+    public List<string>? MultiSelectionOptionIds { get; set; }
+    public string? UserId { get; set; }
+    public string? LinkValue { get; set; }
 }

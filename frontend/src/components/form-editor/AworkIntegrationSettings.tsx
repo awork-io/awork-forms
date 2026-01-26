@@ -63,6 +63,7 @@ const AWORK_TASK_FIELDS = [
   { value: 'dueOn', label: 'Due Date' },
   { value: 'startOn', label: 'Start Date' },
   { value: 'plannedDuration', label: 'Planned Duration (seconds)' },
+  { value: 'tags', label: 'Tags (comma-separated)' },
 ];
 
 interface AworkIntegrationSettingsProps {

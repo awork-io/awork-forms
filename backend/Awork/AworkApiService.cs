@@ -93,6 +93,57 @@ public class AworkApiService
         return await MakeAworkPostRequestAsync<AworkCreateTaskResponse>(userId, "tasks", request);
     }
 
+    public async Task<bool> LinkCustomFieldToProject(int userId, string projectId, string customFieldDefinitionId)
+    {
+        try
+        {
+            var body = new { customFieldDefinitionId, order = 1 };
+            await MakeAworkPostRequestAsync<object>(userId, $"projects/{projectId}/linkcustomfielddefinition", body);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            // 409 Conflict means it's already linked - that's fine
+            if (ex.Message.Contains("409") || ex.Message.Contains("Conflict"))
+                return true;
+            Console.WriteLine($"Failed to link custom field {customFieldDefinitionId} to project {projectId}: {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> SetTaskCustomFields(int userId, string taskId, List<CustomFieldValue> customFields)
+    {
+        if (customFields.Count == 0) return true;
+
+        try
+        {
+            await MakeAworkPostRequestAsync<object>(userId, $"tasks/{taskId}/setcustomfields", customFields);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to set custom fields on task {taskId}: {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> AddTagsToTask(int userId, string taskId, List<string> tags)
+    {
+        if (tags.Count == 0) return true;
+
+        try
+        {
+            var tagObjects = tags.Select(t => new { name = t.Trim(), color = (string?)null }).ToList();
+            await MakeAworkPostRequestAsync<object>(userId, $"tasks/{taskId}/addtags", tagObjects);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to add tags to task {taskId}: {ex.Message}");
+            return false;
+        }
+    }
+
     public async Task<bool> AttachFileToTaskAsync(int userId, string taskId, string localFilePath, string fileName)
     {
         var accessToken = await GetValidAccessTokenAsync(userId);
