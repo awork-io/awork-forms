@@ -269,7 +269,10 @@ public class AworkApiService
     /// </summary>
     public async Task<AworkCreateTaskResponse?> CreateTaskAsync(int userId, string projectId, AworkCreateTaskRequest request)
     {
-        return await MakeAworkPostRequestAsync<AworkCreateTaskResponse>(userId, $"projects/{projectId}/tasks", request);
+        // Set the project ID and base type in the request
+        request.EntityId = projectId;
+        request.BaseType = "projecttask";
+        return await MakeAworkPostRequestAsync<AworkCreateTaskResponse>(userId, "tasks", request);
     }
 
     /// <summary>
@@ -422,13 +425,15 @@ public class AworkCreateTaskRequest
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string? BaseType { get; set; }  // "projecttask" or "private"
+    public string? EntityId { get; set; }  // Project ID for project tasks
     public bool IsPriority { get; set; }
     public DateTime? DueOn { get; set; }
     public DateTime? StartOn { get; set; }
     public int? PlannedDuration { get; set; }
     public string? TaskStatusId { get; set; }
     public string? TypeOfWorkId { get; set; }
-    public string? TaskListId { get; set; }
+    public string? ListId { get; set; }  // Task list ID (renamed from TaskListId)
     public List<AworkTaskAssignment>? Assignments { get; set; }
 }
 

@@ -377,7 +377,7 @@ public class SubmissionProcessor
             PlannedDuration = plannedDuration,
             TaskStatusId = taskStatusId,
             TypeOfWorkId = typeOfWorkId,
-            TaskListId = taskListId
+            ListId = taskListId
         };
 
         // Add assignment if specified

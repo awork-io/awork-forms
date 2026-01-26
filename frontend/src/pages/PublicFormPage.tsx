@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '@/lib/api';
-import type { PublicForm } from '@/lib/api';
+import type { PublicForm, SubmissionResponse } from '@/lib/api';
 import type { FormField } from '@/lib/form-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ export function PublicFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<SubmissionResponse | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Load form data
@@ -108,7 +109,8 @@ export function PublicFormPage() {
     setIsSubmitting(true);
 
     try {
-      await api.submitPublicForm(publicId, formData);
+      const response = await api.submitPublicForm(publicId, formData);
+      setSubmissionResult(response);
       setIsSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Submission failed');
@@ -183,6 +185,8 @@ export function PublicFormPage() {
 
   // Success state
   if (isSubmitted) {
+    const hasIntegrationError = submissionResult?.integrationStatus === 'failed';
+
     return (
       <div
         className="min-h-screen flex items-center justify-center p-4"
@@ -192,44 +196,93 @@ export function PublicFormPage() {
           {/* Animated checkmark */}
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 animate-in zoom-in duration-300"
-            style={{ backgroundColor: `${primaryColor}20` }}
+            style={{ backgroundColor: hasIntegrationError ? '#fef3c7' : `${primaryColor}20` }}
           >
-            <svg
-              className="w-10 h-10 animate-in zoom-in duration-500 delay-200"
-              style={{ color: primaryColor }}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+            {hasIntegrationError ? (
+              <svg
+                className="w-10 h-10 animate-in zoom-in duration-500 delay-200 text-amber-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-10 h-10 animate-in zoom-in duration-500 delay-200"
+                style={{ color: primaryColor }}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Thank You!</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            {hasIntegrationError ? 'Submission Received' : 'Thank You!'}
+          </h2>
           <p className="text-gray-500 text-lg">
             Your submission has been received successfully.
           </p>
 
-          {/* Confetti-like dots animation */}
-          <div className="relative h-8 mt-6">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-2 h-2 rounded-full animate-bounce"
-                style={{
-                  backgroundColor: primaryColor,
-                  left: `${20 + i * 15}%`,
-                  animationDelay: `${i * 0.1}s`,
-                  opacity: 0.6 + i * 0.1,
-                }}
-              />
-            ))}
-          </div>
+          {/* Integration error warning */}
+          {hasIntegrationError && (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-left animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-start gap-3">
+                <svg
+                  className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-amber-800">
+                    Integration Notice
+                  </p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    Your submission was saved, but there was an issue connecting to the project management system. The form owner has been notified.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Confetti-like dots animation - only show on full success */}
+          {!hasIntegrationError && (
+            <div className="relative h-8 mt-6">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-2 h-2 rounded-full animate-bounce"
+                  style={{
+                    backgroundColor: primaryColor,
+                    left: `${20 + i * 15}%`,
+                    animationDelay: `${i * 0.1}s`,
+                    opacity: 0.6 + i * 0.1,
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );

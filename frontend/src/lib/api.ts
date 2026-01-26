@@ -160,6 +160,10 @@ export interface SubmissionResponse {
   success: boolean;
   message: string;
   submissionId: number;
+  aworkProjectId?: string;
+  aworkTaskId?: string;
+  integrationStatus?: 'completed' | 'failed';
+  integrationError?: string;
 }
 
 export interface Submission {
