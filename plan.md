@@ -223,7 +223,7 @@ Building awork Forms app: React frontend + C# Minimal API backend + SQLite.
       "Add active/inactive toggle",
       "Show form status in list"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "testing",

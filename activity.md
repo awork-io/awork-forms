@@ -550,3 +550,44 @@
 **Build Status:**
 - Frontend: `npm run lint && npm run build` passes
 - Backend: `dotnet build` passes with 0 warnings, 0 errors
+
+---
+
+### 2026-01-26 - Form Preview and Share Functionality Complete
+
+**Task:** Add form preview and share functionality
+
+**Changes:**
+- Created `frontend/src/components/form-editor/ShareFormDialog.tsx`:
+  - Modal dialog for sharing public form URL
+  - Displays public link with copy-to-clipboard functionality
+  - Shows form name and active/inactive status badge
+  - "Open Form" button to preview in new tab
+  - "Copy Link" button with visual feedback (checkmark icon)
+  - Toast notification on successful copy
+  - Warning message when form is inactive
+- Updated `frontend/src/pages/FormEditorPage.tsx`:
+  - Added Share button next to Preview button in header
+  - Integrated ShareFormDialog component
+  - Added state management for share dialog visibility
+- Updated `frontend/src/pages/FormsPage.tsx`:
+  - Added "Share" option in form card dropdown menu
+  - Integrated ShareFormDialog for sharing from forms list
+  - Added state for tracking which form is being shared
+- Removed test-login endpoint from backend (using real awork OAuth now)
+
+**Visual Verification:**
+- Screenshot: `screenshots/15-share-dialog-forms-page.png` - Share dialog from forms list
+- Screenshot: `screenshots/15-share-dialog-form-editor.png` - Share dialog from form editor
+- Screenshot: `screenshots/15-public-form-preview.png` - Public form view
+- Screenshot: `screenshots/15-public-form-submit-success.png` - Success after submission
+- Tested with real awork OAuth login (nils czernig account)
+- Copy link functionality works with toast notification
+- Open Form button opens public form in new tab
+- Public form submission works correctly
+- Active/Inactive badge displays correctly
+- No console errors
+
+**Build Status:**
+- Frontend: `npm run lint && npm run build` passes
+- Backend: `dotnet build` passes with 0 warnings, 0 errors

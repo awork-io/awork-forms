@@ -53,7 +53,9 @@ import {
   Save,
   Eye,
   Loader2,
+  Share2,
 } from 'lucide-react';
+import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
 
 export function FormEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -87,6 +89,7 @@ export function FormEditorPage() {
     backgroundColor: '#F8FAFC',
     logoUrl: null,
   });
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -319,14 +322,24 @@ export function FormEditorPage() {
         </div>
         <div className="flex items-center gap-2">
           {form?.publicId && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.open(`/f/${form.publicId}`, '_blank')}
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Preview
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(`/f/${form.publicId}`, '_blank')}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsShareDialogOpen(true)}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            </>
           )}
           <Button size="sm" onClick={handleSave} disabled={isSaving}>
             {isSaving ? (
@@ -500,6 +513,17 @@ export function FormEditorPage() {
           </DragOverlay>
         </DndContext>
       </div>
+
+      {/* Share Form Dialog */}
+      {form?.publicId && (
+        <ShareFormDialog
+          open={isShareDialogOpen}
+          onOpenChange={setIsShareDialogOpen}
+          publicId={form.publicId}
+          formName={formName || 'Untitled Form'}
+          isActive={isActive}
+        />
+      )}
     </div>
   );
 }

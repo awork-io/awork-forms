@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { api, type Form } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
 
 export function FormsPage() {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ export function FormsPage() {
   const [newFormName, setNewFormName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [shareForm, setShareForm] = useState<Form | null>(null);
 
   const fetchForms = async () => {
     try {
@@ -213,6 +215,12 @@ export function FormsPage() {
                         </svg>
                         View Public Form
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShareForm(form)}>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                        </svg>
+                        Share
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onClick={() => setDeleteFormId(form.id)}
@@ -318,6 +326,17 @@ export function FormsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Share Form Dialog */}
+      {shareForm && (
+        <ShareFormDialog
+          open={shareForm !== null}
+          onOpenChange={(open) => !open && setShareForm(null)}
+          publicId={shareForm.publicId}
+          formName={shareForm.name}
+          isActive={shareForm.isActive}
+        />
+      )}
     </div>
   );
 }

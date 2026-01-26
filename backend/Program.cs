@@ -178,47 +178,6 @@ app.MapPost("/api/auth/logout", () =>
     return Results.Ok(new { message = "Logged out successfully" });
 });
 
-// Test login endpoint (for development/testing only)
-app.MapGet("/api/auth/test-login", (DbContextFactory dbFactory, JwtService jwtService) =>
-{
-    // Create or get test user
-    using var ctx = dbFactory.CreateContext();
-    using var cmd = ctx.Connection.CreateCommand();
-
-    cmd.CommandText = "SELECT Id FROM Users WHERE Email = 'test@example.com'";
-    var existingId = cmd.ExecuteScalar();
-    int userId;
-
-    if (existingId == null)
-    {
-        using var insertCmd = ctx.Connection.CreateCommand();
-        insertCmd.CommandText = @"
-            INSERT INTO Users (Email, Name, AworkUserId, AworkWorkspaceId, CreatedAt, UpdatedAt)
-            VALUES ('test@example.com', 'Test User', 'test-awork-id', 'test-workspace', @now, @now);
-            SELECT last_insert_rowid();";
-        insertCmd.Parameters.AddWithValue("@now", DateTime.UtcNow.ToString("o"));
-        userId = Convert.ToInt32(insertCmd.ExecuteScalar());
-    }
-    else
-    {
-        userId = Convert.ToInt32(existingId);
-    }
-
-    var token = jwtService.GenerateToken(userId, "test-awork-id", "test-workspace");
-
-    return Results.Ok(new
-    {
-        token = token,
-        user = new UserDto
-        {
-            Id = userId,
-            Email = "test@example.com",
-            Name = "Test User",
-            WorkspaceId = "test-workspace"
-        }
-    });
-});
-
 // =====================
 // Forms Endpoints
 // =====================
