@@ -13,7 +13,7 @@ public class ProjectTypesEndpoint : IEndpoint
 
             try
             {
-                return Results.Ok(await aworkService.GetProjectTypesAsync(userId.Value));
+                return Results.Ok(await aworkService.GetProjectTypes(userId.Value));
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -25,14 +25,14 @@ public class ProjectTypesEndpoint : IEndpoint
             }
         }).RequireAuth();
 
-        app.MapGet("/api/awork/projecttypes/{id}/projectstatuses", async (HttpContext context, AworkApiService aworkService, string id) =>
+        app.MapGet("/api/awork/projecttypes/{id:guid}/projectstatuses", async (HttpContext context, AworkApiService aworkService, Guid id) =>
         {
             var userId = context.GetCurrentUserId();
             if (userId == null) return Results.Unauthorized();
 
             try
             {
-                return Results.Ok(await aworkService.GetProjectStatusesAsync(userId.Value, id));
+                return Results.Ok(await aworkService.GetProjectStatuses(userId.Value, id));
             }
             catch (UnauthorizedAccessException ex)
             {

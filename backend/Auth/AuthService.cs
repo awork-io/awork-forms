@@ -23,7 +23,6 @@ public class AuthService
     private const string DcrScope = "full_access";
     private const string DcrApplicationType = "native";
 
-    private static readonly Dictionary<string, PkceState> _pkceStates = new();
     private static string? _dcrClientId;
 
     public AuthService(HttpClient httpClient, IDbContextFactory<AppDbContext> dbFactory, JwtService jwtService, string redirectUri)
@@ -60,48 +59,63 @@ public class AuthService
         return Base64UrlEncode(bytes);
     }
 
-    public async Task<AuthInitResult> InitiateAuthAsync()
+    public async Task<AuthInitResult> InitiateAuth()
     {
-        var clientId = await GetOrCreateDcrClientIdAsync();
+        var clientId = await GetOrCreateDcrClientId();
         var codeVerifier = GenerateCodeVerifier();
         var codeChallenge = GenerateCodeChallenge(codeVerifier);
         var state = GenerateState();
 
-        _pkceStates[state] = new PkceState
+        await using (var db = await _dbFactory.CreateDbContextAsync())
         {
-            CodeVerifier = codeVerifier,
-            ClientId = clientId,
-            CreatedAt = DateTime.UtcNow
-        };
+            db.OAuthStates.Add(new OAuthState
+            {
+                State = state,
+                CodeVerifier = codeVerifier,
+                ClientId = clientId,
+                CreatedAt = DateTime.UtcNow
+            });
+            await db.SaveChangesAsync();
+        }
 
-        CleanupExpiredStates();
+        await CleanupExpiredStates();
 
         var authUrl = $"{AworkAuthUrl}?response_type=code&client_id={clientId}&redirect_uri={Uri.EscapeDataString(_redirectUri)}&scope={Uri.EscapeDataString(DcrScope)}&state={state}&code_challenge={codeChallenge}&code_challenge_method=S256";
 
         return new AuthInitResult { AuthorizationUrl = authUrl, State = state };
     }
 
-    public async Task<AuthCallbackResult> HandleCallbackAsync(string code, string state)
+    public async Task<AuthCallbackResult> HandleCallback(string code, string state)
     {
-        if (!_pkceStates.TryGetValue(state, out var pkceState))
-            return new AuthCallbackResult { Success = false, Error = "Invalid state parameter" };
+        OAuthState? pkceState;
+        await using (var db = await _dbFactory.CreateDbContextAsync())
+        {
+            pkceState = await db.OAuthStates.FirstOrDefaultAsync(s => s.State == state);
+            if (pkceState == null)
+                return new AuthCallbackResult { Success = false, Error = "Invalid state parameter" };
 
-        _pkceStates.Remove(state);
+            if (DateTime.UtcNow - pkceState.CreatedAt > TimeSpan.FromMinutes(10))
+            {
+                db.OAuthStates.Remove(pkceState);
+                await db.SaveChangesAsync();
+                return new AuthCallbackResult { Success = false, Error = "State expired" };
+            }
 
-        if (DateTime.UtcNow - pkceState.CreatedAt > TimeSpan.FromMinutes(10))
-            return new AuthCallbackResult { Success = false, Error = "State expired" };
+            db.OAuthStates.Remove(pkceState);
+            await db.SaveChangesAsync();
+        }
 
         try
         {
-            var tokenResult = await ExchangeCodeForTokensAsync(code, pkceState.CodeVerifier, pkceState.ClientId);
+            var tokenResult = await ExchangeCodeForTokens(code, pkceState.CodeVerifier, pkceState.ClientId);
             if (!tokenResult.Success)
                 return new AuthCallbackResult { Success = false, Error = tokenResult.Error };
 
-            var userInfo = await GetUserInfoAsync(tokenResult.AccessToken!);
+            var userInfo = await GetUserInfo(tokenResult.AccessToken!);
             if (userInfo == null)
                 return new AuthCallbackResult { Success = false, Error = "Failed to get user info" };
 
-            var user = await UpsertUserAsync(userInfo, tokenResult);
+            var user = await UpsertUser(userInfo, tokenResult);
             var sessionToken = _jwtService.GenerateToken(user.Id, user.AworkUserId, user.AworkWorkspaceId);
 
             return new AuthCallbackResult
@@ -125,7 +139,7 @@ public class AuthService
         }
     }
 
-    private async Task<string> GetOrCreateDcrClientIdAsync()
+    private async Task<string> GetOrCreateDcrClientId()
     {
         if (!string.IsNullOrEmpty(_dcrClientId))
             return _dcrClientId;
@@ -139,7 +153,7 @@ public class AuthService
             return _dcrClientId;
         }
 
-        var dcrResponse = await RegisterDcrClientAsync();
+        var dcrResponse = await RegisterDcrClient();
         _dcrClientId = dcrResponse.ClientId;
 
         db.Settings.Add(new Setting { Key = "dcr_client_id", Value = _dcrClientId });
@@ -148,7 +162,7 @@ public class AuthService
         return _dcrClientId;
     }
 
-    private async Task<DcrResponse> RegisterDcrClientAsync()
+    private async Task<DcrResponse> RegisterDcrClient()
     {
         var dcrRequest = new
         {
@@ -167,7 +181,7 @@ public class AuthService
         return JsonSerializer.Deserialize<DcrResponse>(json) ?? throw new Exception("Failed to parse DCR response");
     }
 
-    private async Task<TokenResult> ExchangeCodeForTokensAsync(string code, string codeVerifier, string clientId)
+    private async Task<TokenResult> ExchangeCodeForTokens(string code, string codeVerifier, string clientId)
     {
         var tokenRequest = new Dictionary<string, string>
         {
@@ -197,7 +211,7 @@ public class AuthService
         };
     }
 
-    private async Task<AworkUserInfo?> GetUserInfoAsync(string accessToken)
+    private async Task<AworkUserInfo?> GetUserInfo(string accessToken)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, AworkUserInfoUrl);
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
@@ -209,12 +223,16 @@ public class AuthService
         return JsonSerializer.Deserialize<AworkUserInfo>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 
-    private async Task<User> UpsertUserAsync(AworkUserInfo userInfo, TokenResult tokenResult)
+    private async Task<User> UpsertUser(AworkUserInfo userInfo, TokenResult tokenResult)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
 
+        var workspaceId = userInfo.Workspace?.Id ?? userInfo.WorkspaceId ?? userInfo.AccountId ?? Guid.Empty;
+        if (workspaceId == Guid.Empty)
+            throw new Exception("Missing workspace ID in awork user info");
+
         var user = await db.Users.FirstOrDefaultAsync(u =>
-            u.AworkUserId == userInfo.Id && u.AworkWorkspaceId == (userInfo.WorkspaceId ?? ""));
+            u.AworkUserId == userInfo.Id && u.AworkWorkspaceId == workspaceId);
 
         var now = DateTime.UtcNow;
 
@@ -223,7 +241,7 @@ public class AuthService
             user = new User
             {
                 AworkUserId = userInfo.Id,
-                AworkWorkspaceId = userInfo.WorkspaceId ?? "",
+                AworkWorkspaceId = workspaceId,
                 Email = userInfo.Email ?? "",
                 Name = $"{userInfo.FirstName} {userInfo.LastName}".Trim(),
                 AvatarUrl = userInfo.ProfileImage,
@@ -233,6 +251,8 @@ public class AuthService
                 CreatedAt = now,
                 UpdatedAt = now
             };
+            if (user.Id == Guid.Empty)
+                user.Id = Guid.NewGuid();
             db.Users.Add(user);
         }
         else
@@ -250,19 +270,13 @@ public class AuthService
         return user;
     }
 
-    public async Task<User?> GetUserByIdAsync(int userId)
+    public async Task<User?> GetUserById(Guid userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
         return await db.Users.FindAsync(userId);
     }
 
-    public User? GetUserById(int userId)
-    {
-        using var db = _dbFactory.CreateDbContext();
-        return db.Users.Find(userId);
-    }
-
-    public async Task<string?> GetValidAccessTokenAsync(int userId)
+    public async Task<string?> GetValidAccessToken(Guid userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
         var user = await db.Users.FindAsync(userId);
@@ -276,13 +290,13 @@ public class AuthService
         if (string.IsNullOrEmpty(user.RefreshToken))
             return null;
 
-        var refreshed = await RefreshTokenAsync(user);
+        var refreshed = await RefreshToken(user);
         return refreshed ? user.AccessToken : null;
     }
 
-    private async Task<bool> RefreshTokenAsync(User user)
+    private async Task<bool> RefreshToken(User user)
     {
-        var clientId = await GetOrCreateDcrClientIdAsync();
+        var clientId = await GetOrCreateDcrClientId();
 
         var tokenRequest = new Dictionary<string, string>
         {
@@ -318,14 +332,13 @@ public class AuthService
         return true;
     }
 
-    private void CleanupExpiredStates()
+    private async Task CleanupExpiredStates()
     {
-        var expiredStates = _pkceStates
-            .Where(kvp => DateTime.UtcNow - kvp.Value.CreatedAt > TimeSpan.FromMinutes(15))
-            .Select(kvp => kvp.Key)
-            .ToList();
-
-        foreach (var state in expiredStates)
-            _pkceStates.Remove(state);
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var cutoff = DateTime.UtcNow.AddMinutes(-15);
+        var expired = await db.OAuthStates.Where(s => s.CreatedAt < cutoff).ToListAsync();
+        if (expired.Count == 0) return;
+        db.OAuthStates.RemoveRange(expired);
+        await db.SaveChangesAsync();
     }
 }

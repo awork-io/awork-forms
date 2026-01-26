@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,6 +11,22 @@ namespace backend.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "OAuthStates",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    State = table.Column<string>(type: "TEXT", nullable: false),
+                    CodeVerifier = table.Column<string>(type: "TEXT", nullable: false),
+                    ClientId = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OAuthStates", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Settings",
                 columns: table => new
@@ -29,10 +45,9 @@ namespace backend.Data.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    AworkUserId = table.Column<string>(type: "TEXT", nullable: false),
-                    AworkWorkspaceId = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    AworkUserId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    AworkWorkspaceId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Email = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     AvatarUrl = table.Column<string>(type: "TEXT", nullable: true),
@@ -54,17 +69,17 @@ namespace backend.Data.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     PublicId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    UserId = table.Column<int>(type: "INTEGER", nullable: false),
+                    WorkspaceId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: true),
                     FieldsJson = table.Column<string>(type: "TEXT", nullable: false),
                     ActionType = table.Column<string>(type: "TEXT", nullable: true),
-                    AworkProjectId = table.Column<string>(type: "TEXT", nullable: true),
-                    AworkProjectTypeId = table.Column<string>(type: "TEXT", nullable: true),
-                    AworkTaskListId = table.Column<string>(type: "TEXT", nullable: true),
-                    AworkTaskStatusId = table.Column<string>(type: "TEXT", nullable: true),
-                    AworkTypeOfWorkId = table.Column<string>(type: "TEXT", nullable: true),
-                    AworkAssigneeId = table.Column<string>(type: "TEXT", nullable: true),
+                    AworkProjectId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    AworkProjectTypeId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    AworkTaskListId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    AworkTaskStatusId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    AworkTypeOfWorkId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    AworkAssigneeId = table.Column<Guid>(type: "TEXT", nullable: true),
                     AworkTaskIsPriority = table.Column<bool>(type: "INTEGER", nullable: true),
                     FieldMappingsJson = table.Column<string>(type: "TEXT", nullable: true),
                     PrimaryColor = table.Column<string>(type: "TEXT", nullable: true),
@@ -77,12 +92,6 @@ namespace backend.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Forms", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Forms_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -94,8 +103,8 @@ namespace backend.Data.Migrations
                     FormId = table.Column<int>(type: "INTEGER", nullable: false),
                     DataJson = table.Column<string>(type: "TEXT", nullable: false),
                     Status = table.Column<string>(type: "TEXT", nullable: false),
-                    AworkProjectId = table.Column<string>(type: "TEXT", nullable: true),
-                    AworkTaskId = table.Column<string>(type: "TEXT", nullable: true),
+                    AworkProjectId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    AworkTaskId = table.Column<Guid>(type: "TEXT", nullable: true),
                     ErrorMessage = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -118,9 +127,20 @@ namespace backend.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Forms_UserId",
+                name: "IX_Forms_WorkspaceId",
                 table: "Forms",
-                column: "UserId");
+                column: "WorkspaceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OAuthStates_CreatedAt",
+                table: "OAuthStates",
+                column: "CreatedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OAuthStates_State",
+                table: "OAuthStates",
+                column: "State",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Settings_Key",
@@ -153,6 +173,9 @@ namespace backend.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "OAuthStates");
+
             migrationBuilder.DropTable(
                 name: "Settings");
 

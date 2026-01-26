@@ -10,7 +10,10 @@ public class FormsServiceTests : IDisposable
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly FormsService _formsService;
-    private readonly int _testUserId = 1;
+    private readonly Guid _testUserId = Guid.NewGuid();
+    private readonly Guid _workspaceId = Guid.NewGuid();
+    private readonly Guid _otherWorkspaceUserId = Guid.NewGuid();
+    private readonly Guid _otherWorkspaceId = Guid.NewGuid();
 
     public FormsServiceTests()
     {
@@ -28,8 +31,18 @@ public class FormsServiceTests : IDisposable
             Id = _testUserId,
             Email = "test@example.com",
             Name = "Test User",
-            AworkUserId = "awork-123",
-            AworkWorkspaceId = "workspace-456",
+            AworkUserId = Guid.NewGuid(),
+            AworkWorkspaceId = _workspaceId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        db.Users.Add(new User
+        {
+            Id = _otherWorkspaceUserId,
+            Email = "other@example.com",
+            Name = "Other User",
+            AworkUserId = Guid.NewGuid(),
+            AworkWorkspaceId = _otherWorkspaceId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         });
@@ -83,7 +96,7 @@ public class FormsServiceTests : IDisposable
     public void GetFormById_WithWrongUser_ReturnsNull()
     {
         var created = _formsService.CreateForm(new CreateFormDto { Name = "Test Form" }, _testUserId);
-        var result = _formsService.GetFormById(created.Id, 999);
+        var result = _formsService.GetFormById(created.Id, _otherWorkspaceUserId);
         Assert.Null(result);
     }
 
@@ -100,7 +113,7 @@ public class FormsServiceTests : IDisposable
     [Fact]
     public void GetFormsByUser_WithNoForms_ReturnsEmptyList()
     {
-        var result = _formsService.GetFormsByUser(999);
+        var result = _formsService.GetFormsByUser(_otherWorkspaceUserId);
         Assert.Empty(result);
     }
 
@@ -153,7 +166,7 @@ public class FormsServiceTests : IDisposable
     public void DeleteForm_WithWrongUser_ReturnsFalse()
     {
         var created = _formsService.CreateForm(new CreateFormDto { Name = "Test Form" }, _testUserId);
-        var result = _formsService.DeleteForm(created.Id, 999);
+        var result = _formsService.DeleteForm(created.Id, _otherWorkspaceUserId);
 
         Assert.False(result);
         Assert.NotNull(_formsService.GetFormById(created.Id, _testUserId));

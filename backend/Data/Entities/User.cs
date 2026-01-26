@@ -2,9 +2,9 @@ namespace Backend.Data.Entities;
 
 public class User
 {
-    public int Id { get; set; }
-    public string AworkUserId { get; set; } = string.Empty;
-    public string AworkWorkspaceId { get; set; } = string.Empty;
+    public Guid Id { get; set; }
+    public Guid AworkUserId { get; set; }
+    public Guid AworkWorkspaceId { get; set; }
     public string Email { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }
@@ -13,6 +13,4 @@ public class User
     public DateTime? TokenExpiresAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-
-    public ICollection<Form> Forms { get; set; } = [];
 }

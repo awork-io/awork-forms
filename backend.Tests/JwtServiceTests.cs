@@ -17,9 +17,9 @@ public class JwtServiceTests
     public void GenerateToken_ReturnsValidJwtToken()
     {
         // Arrange
-        var userId = 123;
-        var aworkUserId = "awork-user-456";
-        var workspaceId = "workspace-789";
+        var userId = Guid.NewGuid();
+        var aworkUserId = Guid.NewGuid();
+        var workspaceId = Guid.NewGuid();
 
         // Act
         var token = _jwtService.GenerateToken(userId, aworkUserId, workspaceId);
@@ -34,9 +34,9 @@ public class JwtServiceTests
     public void ValidateToken_WithValidToken_ReturnsClaimsPrincipal()
     {
         // Arrange
-        var userId = 123;
-        var aworkUserId = "awork-user-456";
-        var workspaceId = "workspace-789";
+        var userId = Guid.NewGuid();
+        var aworkUserId = Guid.NewGuid();
+        var workspaceId = Guid.NewGuid();
         var token = _jwtService.GenerateToken(userId, aworkUserId, workspaceId);
 
         // Act
@@ -63,8 +63,8 @@ public class JwtServiceTests
     public void ValidateToken_WithTamperedToken_ReturnsNull()
     {
         // Arrange
-        var userId = 123;
-        var token = _jwtService.GenerateToken(userId, "awork-user", "workspace");
+        var userId = Guid.NewGuid();
+        var token = _jwtService.GenerateToken(userId, Guid.NewGuid(), Guid.NewGuid());
         var tamperedToken = token + "tampered";
 
         // Act
@@ -78,8 +78,8 @@ public class JwtServiceTests
     public void GetUserId_WithValidPrincipal_ReturnsUserId()
     {
         // Arrange
-        var userId = 123;
-        var token = _jwtService.GenerateToken(userId, "awork-user", "workspace");
+        var userId = Guid.NewGuid();
+        var token = _jwtService.GenerateToken(userId, Guid.NewGuid(), Guid.NewGuid());
         var principal = _jwtService.ValidateToken(token);
 
         // Act
@@ -94,8 +94,8 @@ public class JwtServiceTests
     public void GetAworkUserId_WithValidPrincipal_ReturnsAworkUserId()
     {
         // Arrange
-        var aworkUserId = "awork-user-456";
-        var token = _jwtService.GenerateToken(1, aworkUserId, "workspace");
+        var aworkUserId = Guid.NewGuid();
+        var token = _jwtService.GenerateToken(Guid.NewGuid(), aworkUserId, Guid.NewGuid());
         var principal = _jwtService.ValidateToken(token);
 
         // Act
@@ -109,8 +109,8 @@ public class JwtServiceTests
     public void GetWorkspaceId_WithValidPrincipal_ReturnsWorkspaceId()
     {
         // Arrange
-        var workspaceId = "workspace-789";
-        var token = _jwtService.GenerateToken(1, "awork-user", workspaceId);
+        var workspaceId = Guid.NewGuid();
+        var token = _jwtService.GenerateToken(Guid.NewGuid(), Guid.NewGuid(), workspaceId);
         var principal = _jwtService.ValidateToken(token);
 
         // Act
@@ -134,8 +134,8 @@ public class JwtServiceTests
     public void GenerateToken_WithDifferentUsers_GeneratesDifferentTokens()
     {
         // Arrange & Act
-        var token1 = _jwtService.GenerateToken(1, "user1", "workspace1");
-        var token2 = _jwtService.GenerateToken(2, "user2", "workspace2");
+        var token1 = _jwtService.GenerateToken(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var token2 = _jwtService.GenerateToken(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
 
         // Assert
         Assert.NotEqual(token1, token2);
@@ -149,8 +149,8 @@ public class JwtServiceTests
         var service2 = new JwtService();
 
         // Act
-        var token1 = service1.GenerateToken(1, "user", "workspace");
-        var token2 = service2.GenerateToken(1, "user", "workspace");
+        var token1 = service1.GenerateToken(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var token2 = service2.GenerateToken(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
 
         // Assert - tokens should be different because keys are different
         Assert.NotEqual(token1, token2);

@@ -20,7 +20,7 @@ public class SubmitFormEndpoint : IEndpoint
 
             var dataJson = JsonSerializer.Serialize(dto.Data);
             var submission = formsService.CreateSubmission(form.Id, dataJson);
-            var result = await processor.ProcessSubmissionAsync(submission.Id);
+            var result = await processor.ProcessSubmission(submission.Id);
 
             if (result.Status == "completed")
             {

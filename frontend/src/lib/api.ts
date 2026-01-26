@@ -1,7 +1,7 @@
 const API_BASE_URL = 'http://localhost:5100';
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   name: string;
   avatarUrl?: string;

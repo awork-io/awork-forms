@@ -18,7 +18,7 @@ public class AworkApiService
         _dbFactory = dbFactory;
     }
 
-    public async Task<string?> GetValidAccessTokenAsync(int userId)
+    public async Task<string?> GetValidAccessToken(Guid userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
         var user = await db.Users.FindAsync(userId);
@@ -33,72 +33,72 @@ public class AworkApiService
         return null;
     }
 
-    public async Task<List<AworkProject>> GetProjectsAsync(int userId)
+    public async Task<List<AworkProject>> GetProjects(Guid userId)
     {
-        var result = await MakeAworkRequestAsync<List<AworkProject>>(userId, "projects");
+        var result = await MakeAworkRequest<List<AworkProject>>(userId, "projects");
         return result ?? [];
     }
 
-    public async Task<List<AworkProjectType>> GetProjectTypesAsync(int userId)
+    public async Task<List<AworkProjectType>> GetProjectTypes(Guid userId)
     {
-        var result = await MakeAworkRequestAsync<List<AworkProjectType>>(userId, "projecttypes");
+        var result = await MakeAworkRequest<List<AworkProjectType>>(userId, "projecttypes");
         return result ?? [];
     }
 
-    public async Task<List<AworkUser>> GetUsersAsync(int userId)
+    public async Task<List<AworkUser>> GetUsers(Guid userId)
     {
-        var result = await MakeAworkRequestAsync<List<AworkUser>>(userId, "users");
+        var result = await MakeAworkRequest<List<AworkUser>>(userId, "users");
         return result ?? [];
     }
 
-    public async Task<List<AworkProjectStatus>> GetProjectStatusesAsync(int userId, string projectTypeId)
+    public async Task<List<AworkProjectStatus>> GetProjectStatuses(Guid userId, Guid projectTypeId)
     {
-        var result = await MakeAworkRequestAsync<List<AworkProjectStatus>>(userId, $"projecttypes/{projectTypeId}/projectstatuses");
+        var result = await MakeAworkRequest<List<AworkProjectStatus>>(userId, $"projecttypes/{projectTypeId}/projectstatuses");
         return result ?? [];
     }
 
-    public async Task<List<AworkTaskStatus>> GetTaskStatusesAsync(int userId, string projectId)
+    public async Task<List<AworkTaskStatus>> GetTaskStatuses(Guid userId, Guid projectId)
     {
-        var result = await MakeAworkRequestAsync<List<AworkTaskStatus>>(userId, $"projects/{projectId}/taskstatuses");
+        var result = await MakeAworkRequest<List<AworkTaskStatus>>(userId, $"projects/{projectId}/taskstatuses");
         return result ?? [];
     }
 
-    public async Task<List<AworkTaskList>> GetTaskListsAsync(int userId, string projectId)
+    public async Task<List<AworkTaskList>> GetTaskLists(Guid userId, Guid projectId)
     {
-        var result = await MakeAworkRequestAsync<List<AworkTaskList>>(userId, $"projects/{projectId}/tasklists");
+        var result = await MakeAworkRequest<List<AworkTaskList>>(userId, $"projects/{projectId}/tasklists");
         return result ?? [];
     }
 
-    public async Task<List<AworkTypeOfWork>> GetTypesOfWorkAsync(int userId)
+    public async Task<List<AworkTypeOfWork>> GetTypesOfWork(Guid userId)
     {
-        var result = await MakeAworkRequestAsync<List<AworkTypeOfWork>>(userId, "typeofwork");
+        var result = await MakeAworkRequest<List<AworkTypeOfWork>>(userId, "typeofwork");
         return result ?? [];
     }
 
-    public async Task<List<AworkCustomFieldDefinition>> GetTaskCustomFieldsAsync(int userId)
+    public async Task<List<AworkCustomFieldDefinition>> GetTaskCustomFields(Guid userId)
     {
-        var result = await MakeAworkRequestAsync<List<AworkCustomFieldDefinition>>(userId, "customfielddefinitions?filterby=entityType eq 'tasks'");
+        var result = await MakeAworkRequest<List<AworkCustomFieldDefinition>>(userId, "customfielddefinitions?filterby=entityType eq 'tasks'");
         return result ?? [];
     }
 
-    public async Task<AworkCreateProjectResponse?> CreateProjectAsync(int userId, AworkCreateProjectRequest request)
+    public async Task<AworkCreateProjectResponse?> CreateProject(Guid userId, AworkCreateProjectRequest request)
     {
-        return await MakeAworkPostRequestAsync<AworkCreateProjectResponse>(userId, "projects", request);
+        return await MakeAworkPostRequest<AworkCreateProjectResponse>(userId, "projects", request);
     }
 
-    public async Task<AworkCreateTaskResponse?> CreateTaskAsync(int userId, string projectId, AworkCreateTaskRequest request)
+    public async Task<AworkCreateTaskResponse?> CreateTask(Guid userId, Guid projectId, AworkCreateTaskRequest request)
     {
         request.EntityId = projectId;
         request.BaseType = "projecttask";
-        return await MakeAworkPostRequestAsync<AworkCreateTaskResponse>(userId, "tasks", request);
+        return await MakeAworkPostRequest<AworkCreateTaskResponse>(userId, "tasks", request);
     }
 
-    public async Task<bool> LinkCustomFieldToProject(int userId, string projectId, string customFieldDefinitionId)
+    public async Task<bool> LinkCustomFieldToProject(Guid userId, Guid projectId, Guid customFieldDefinitionId)
     {
         try
         {
             var body = new { customFieldDefinitionId, order = 1 };
-            await MakeAworkPostRequestAsync<object>(userId, $"projects/{projectId}/linkcustomfielddefinition", body);
+            await MakeAworkPostRequest<object>(userId, $"projects/{projectId}/linkcustomfielddefinition", body);
             return true;
         }
         catch (Exception ex)
@@ -111,13 +111,13 @@ public class AworkApiService
         }
     }
 
-    public async Task<bool> SetTaskCustomFields(int userId, string taskId, List<CustomFieldValue> customFields)
+    public async Task<bool> SetTaskCustomFields(Guid userId, Guid taskId, List<CustomFieldValue> customFields)
     {
         if (customFields.Count == 0) return true;
 
         try
         {
-            await MakeAworkPostRequestAsync<object>(userId, $"tasks/{taskId}/setcustomfields", customFields);
+            await MakeAworkPostRequest<object>(userId, $"tasks/{taskId}/setcustomfields", customFields);
             return true;
         }
         catch (Exception ex)
@@ -127,14 +127,14 @@ public class AworkApiService
         }
     }
 
-    public async Task<bool> AddTagsToTask(int userId, string taskId, List<string> tags)
+    public async Task<bool> AddTagsToTask(Guid userId, Guid taskId, List<string> tags)
     {
         if (tags.Count == 0) return true;
 
         try
         {
             var tagObjects = tags.Select(t => new { name = t.Trim(), color = (string?)null }).ToList();
-            await MakeAworkPostRequestAsync<object>(userId, $"tasks/{taskId}/addtags", tagObjects);
+            await MakeAworkPostRequest<object>(userId, $"tasks/{taskId}/addtags", tagObjects);
             return true;
         }
         catch (Exception ex)
@@ -144,9 +144,9 @@ public class AworkApiService
         }
     }
 
-    public async Task<bool> AttachFileToTaskAsync(int userId, string taskId, string localFilePath, string fileName)
+    public async Task<bool> AttachFileToTask(Guid userId, Guid taskId, string localFilePath, string fileName)
     {
-        var accessToken = await GetValidAccessTokenAsync(userId);
+        var accessToken = await GetValidAccessToken(userId);
         if (string.IsNullOrEmpty(accessToken))
             throw new UnauthorizedAccessException("No valid awork access token available.");
 
@@ -200,9 +200,9 @@ public class AworkApiService
         };
     }
 
-    private async Task<T?> MakeAworkRequestAsync<T>(int userId, string endpoint) where T : class
+    private async Task<T?> MakeAworkRequest<T>(Guid userId, string endpoint) where T : class
     {
-        var accessToken = await GetValidAccessTokenAsync(userId);
+        var accessToken = await GetValidAccessToken(userId);
         if (string.IsNullOrEmpty(accessToken))
             throw new UnauthorizedAccessException("No valid awork access token available. Please re-authenticate.");
 
@@ -224,9 +224,9 @@ public class AworkApiService
         return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 
-    private async Task<T?> MakeAworkPostRequestAsync<T>(int userId, string endpoint, object body) where T : class
+    private async Task<T?> MakeAworkPostRequest<T>(Guid userId, string endpoint, object body) where T : class
     {
-        var accessToken = await GetValidAccessTokenAsync(userId);
+        var accessToken = await GetValidAccessToken(userId);
         if (string.IsNullOrEmpty(accessToken))
             throw new UnauthorizedAccessException("No valid awork access token available. Please re-authenticate.");
 

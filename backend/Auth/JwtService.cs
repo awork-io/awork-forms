@@ -34,7 +34,7 @@ public class JwtService
     /// <summary>
     /// Generates a JWT token for the authenticated user
     /// </summary>
-    public string GenerateToken(int userId, string aworkUserId, string workspaceId)
+    public string GenerateToken(Guid userId, Guid aworkUserId, Guid workspaceId)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -42,8 +42,8 @@ public class JwtService
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim("awork_user_id", aworkUserId),
-            new Claim("workspace_id", workspaceId),
+            new Claim("awork_user_id", aworkUserId.ToString()),
+            new Claim("workspace_id", workspaceId.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
         };
@@ -92,14 +92,14 @@ public class JwtService
     /// <summary>
     /// Extracts user ID from claims principal
     /// </summary>
-    public static int? GetUserId(ClaimsPrincipal? principal)
+    public static Guid? GetUserId(ClaimsPrincipal? principal)
     {
         // JWT libraries may remap 'sub' to ClaimTypes.NameIdentifier
         var userIdClaim = principal?.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
             ?? principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? principal?.FindFirst("sub")?.Value;
 
-        if (int.TryParse(userIdClaim, out var userId))
+        if (Guid.TryParse(userIdClaim, out var userId))
         {
             return userId;
         }
@@ -109,16 +109,18 @@ public class JwtService
     /// <summary>
     /// Extracts awork user ID from claims principal
     /// </summary>
-    public static string? GetAworkUserId(ClaimsPrincipal? principal)
+    public static Guid? GetAworkUserId(ClaimsPrincipal? principal)
     {
-        return principal?.FindFirst("awork_user_id")?.Value;
+        var value = principal?.FindFirst("awork_user_id")?.Value;
+        return Guid.TryParse(value, out var id) ? id : null;
     }
 
     /// <summary>
     /// Extracts workspace ID from claims principal
     /// </summary>
-    public static string? GetWorkspaceId(ClaimsPrincipal? principal)
+    public static Guid? GetWorkspaceId(ClaimsPrincipal? principal)
     {
-        return principal?.FindFirst("workspace_id")?.Value;
+        var value = principal?.FindFirst("workspace_id")?.Value;
+        return Guid.TryParse(value, out var id) ? id : null;
     }
 }

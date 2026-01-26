@@ -16,7 +16,7 @@ public class SubmissionProcessor
         _aworkService = aworkService;
     }
 
-    public async Task<SubmissionProcessResult> ProcessSubmissionAsync(int submissionId)
+    public async Task<SubmissionProcessResult> ProcessSubmission(int submissionId)
     {
         var result = new SubmissionProcessResult { SubmissionId = submissionId };
 
@@ -26,7 +26,6 @@ public class SubmissionProcessor
 
             var submission = await db.Submissions
                 .Include(s => s.Form)
-                .ThenInclude(f => f.User)
                 .FirstOrDefaultAsync(s => s.Id == submissionId);
 
             if (submission == null)
@@ -37,7 +36,17 @@ public class SubmissionProcessor
             }
 
             var form = submission.Form;
-            var userId = form.UserId;
+            var userId = await GetWorkspaceUserId(db, form.WorkspaceId);
+            if (userId == null)
+            {
+                submission.Status = "failed";
+                submission.ErrorMessage = "No authenticated user available for this workspace";
+                submission.UpdatedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync();
+                result.Status = "failed";
+                result.ErrorMessage = submission.ErrorMessage;
+                return result;
+            }
 
             if (string.IsNullOrEmpty(form.ActionType))
             {
@@ -51,13 +60,13 @@ public class SubmissionProcessor
             var fieldMappings = ParseFieldMappings(form.FieldMappingsJson);
             var formFields = ParseFormFields(form.FieldsJson);
 
-            string? createdProjectId = null;
-            string? createdTaskId = null;
+            Guid? createdProjectId = null;
+            Guid? createdTaskId = null;
 
             if (form.ActionType == "project" || form.ActionType == "both")
             {
                 var projectRequest = BuildProjectRequest(formData, formFields, fieldMappings.ProjectFieldMappings, form.AworkProjectTypeId);
-                var project = await _aworkService.CreateProjectAsync(userId, projectRequest);
+                var project = await _aworkService.CreateProject(userId.Value, projectRequest);
                 if (project != null)
                 {
                     createdProjectId = project.Id;
@@ -71,23 +80,22 @@ public class SubmissionProcessor
                     ? createdProjectId
                     : form.AworkProjectId;
 
-                if (!string.IsNullOrEmpty(targetProjectId))
+                if (targetProjectId != null)
                 {
                     // Extract custom field mappings and link them to project first
                     var customFieldMappings = GetCustomFieldMappings(fieldMappings.TaskFieldMappings);
                     foreach (var cfMapping in customFieldMappings)
                     {
-                        var cfId = cfMapping.AworkField.StartsWith("custom:") 
-                            ? cfMapping.AworkField.Substring(7) 
-                            : cfMapping.AworkField;
-                        await _aworkService.LinkCustomFieldToProject(userId, targetProjectId, cfId);
+                        var cfId = GetCustomFieldId(cfMapping.AworkField);
+                        if (cfId == null) continue;
+                        await _aworkService.LinkCustomFieldToProject(userId.Value, targetProjectId.Value, cfId.Value);
                     }
 
                     var taskRequest = BuildTaskRequest(formData, formFields, fieldMappings.TaskFieldMappings,
-                        targetProjectId, form.AworkTaskStatusId, form.AworkTypeOfWorkId, form.AworkTaskListId,
+                        targetProjectId.Value, form.AworkTaskStatusId, form.AworkTypeOfWorkId, form.AworkTaskListId,
                         form.AworkAssigneeId, form.AworkTaskIsPriority ?? false);
 
-                    var task = await _aworkService.CreateTaskAsync(userId, targetProjectId, taskRequest);
+                    var task = await _aworkService.CreateTask(userId.Value, targetProjectId.Value, taskRequest);
                     if (task != null)
                     {
                         createdTaskId = task.Id;
@@ -97,17 +105,17 @@ public class SubmissionProcessor
                         var customFieldValues = BuildCustomFieldValues(formData, formFields, customFieldMappings);
                         if (customFieldValues.Count > 0)
                         {
-                            await _aworkService.SetTaskCustomFields(userId, task.Id, customFieldValues);
+                            await _aworkService.SetTaskCustomFields(userId.Value, task.Id, customFieldValues);
                         }
 
                         // Handle tags
                         var tags = GetTagsFromMappings(formData, formFields, fieldMappings.TaskFieldMappings);
                         if (tags.Count > 0)
                         {
-                            await _aworkService.AddTagsToTask(userId, task.Id, tags);
+                            await _aworkService.AddTagsToTask(userId.Value, task.Id, tags);
                         }
 
-                        await AttachFilesToTaskAsync(userId, task.Id, formData, formFields);
+                        await AttachFilesToTask(userId.Value, task.Id, formData, formFields);
                     }
                 }
             }
@@ -149,7 +157,7 @@ public class SubmissionProcessor
         }
     }
 
-    private async Task AttachFilesToTaskAsync(int userId, string taskId, Dictionary<string, object?> formData, List<FormFieldInfo> formFields)
+    private async Task AttachFilesToTask(Guid userId, Guid taskId, Dictionary<string, object?> formData, List<FormFieldInfo> formFields)
     {
         var fileFields = formFields.Where(f => f.Type == "file").ToList();
         if (fileFields.Count == 0) return;
@@ -171,7 +179,7 @@ public class SubmissionProcessor
                         {
                             var localPath = GetLocalFilePath(fileData.FileUrl, uploadsPath);
                             if (File.Exists(localPath))
-                                await _aworkService.AttachFileToTaskAsync(userId, taskId, localPath, fileData.FileName);
+                                await _aworkService.AttachFileToTask(userId, taskId, localPath, fileData.FileName);
                         }
                     }
                     else if (jsonElement.ValueKind == JsonValueKind.Array)
@@ -183,7 +191,7 @@ public class SubmissionProcessor
                             {
                                 var localPath = GetLocalFilePath(fileData.FileUrl, uploadsPath);
                                 if (File.Exists(localPath))
-                                    await _aworkService.AttachFileToTaskAsync(userId, taskId, localPath, fileData.FileName);
+                                    await _aworkService.AttachFileToTask(userId, taskId, localPath, fileData.FileName);
                             }
                         }
                     }
@@ -231,7 +239,7 @@ public class SubmissionProcessor
         catch { return new(); }
     }
 
-    private static AworkCreateProjectRequest BuildProjectRequest(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings, string? projectTypeId)
+    private static AworkCreateProjectRequest BuildProjectRequest(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings, Guid? projectTypeId)
     {
         var request = new AworkCreateProjectRequest { ProjectTypeId = projectTypeId };
 
@@ -254,7 +262,7 @@ public class SubmissionProcessor
     }
 
     private static AworkCreateTaskRequest BuildTaskRequest(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings,
-        string projectId, string? taskStatusId, string? typeOfWorkId, string? taskListId, string? assigneeId, bool isPriority)
+        Guid projectId, Guid? taskStatusId, Guid? typeOfWorkId, Guid? taskListId, Guid? assigneeId, bool isPriority)
     {
         var request = new AworkCreateTaskRequest
         {
@@ -265,11 +273,11 @@ public class SubmissionProcessor
             IsPriority = isPriority
         };
 
-        if (!string.IsNullOrEmpty(taskListId))
-            request.Lists = [new AworkTaskListAssignment { Id = taskListId }];
+        if (taskListId != null)
+            request.Lists = [new AworkTaskListAssignment { Id = taskListId.Value }];
 
-        if (!string.IsNullOrEmpty(assigneeId))
-            request.Assignments = [new AworkTaskAssignment { UserId = assigneeId }];
+        if (assigneeId != null)
+            request.Assignments = [new AworkTaskAssignment { UserId = assigneeId.Value }];
 
         foreach (var mapping in mappings)
         {
@@ -322,9 +330,10 @@ public class SubmissionProcessor
         }).ToList();
     }
 
-    private static string GetCustomFieldId(string aworkField)
+    private static Guid? GetCustomFieldId(string aworkField)
     {
-        return aworkField.StartsWith("custom:") ? aworkField.Substring(7) : aworkField;
+        var value = aworkField.StartsWith("custom:") ? aworkField.Substring(7) : aworkField;
+        return Guid.TryParse(value, out var id) ? id : null;
     }
 
     private static List<CustomFieldValue> BuildCustomFieldValues(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> customFieldMappings)
@@ -336,14 +345,25 @@ public class SubmissionProcessor
             var value = GetMappedValue(formData, formFields, mapping.FormFieldId);
             if (string.IsNullOrEmpty(value)) continue;
 
+            var customFieldId = GetCustomFieldId(mapping.AworkField);
+            if (customFieldId == null) continue;
             result.Add(new CustomFieldValue
             {
-                CustomFieldDefinitionId = GetCustomFieldId(mapping.AworkField),
+                CustomFieldDefinitionId = customFieldId.Value,
                 TextValue = value
             });
         }
 
         return result;
+    }
+
+    private static async Task<Guid?> GetWorkspaceUserId(AppDbContext db, Guid workspaceId)
+    {
+        return await db.Users
+            .Where(u => u.AworkWorkspaceId == workspaceId && !string.IsNullOrEmpty(u.AccessToken))
+            .OrderByDescending(u => u.UpdatedAt)
+            .Select(u => (Guid?)u.Id)
+            .FirstOrDefaultAsync();
     }
 
     private static List<string> GetTagsFromMappings(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings)

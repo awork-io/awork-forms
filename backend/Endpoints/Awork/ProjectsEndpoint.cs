@@ -13,7 +13,7 @@ public class ProjectsEndpoint : IEndpoint
 
             try
             {
-                var projects = await aworkService.GetProjectsAsync(userId.Value);
+                var projects = await aworkService.GetProjects(userId.Value);
                 return Results.Ok(projects);
             }
             catch (UnauthorizedAccessException ex)

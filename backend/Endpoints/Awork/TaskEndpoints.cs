@@ -6,14 +6,14 @@ public class TaskEndpoints : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/awork/projects/{id}/taskstatuses", async (HttpContext context, AworkApiService aworkService, string id) =>
+        app.MapGet("/api/awork/projects/{id:guid}/taskstatuses", async (HttpContext context, AworkApiService aworkService, Guid id) =>
         {
             var userId = context.GetCurrentUserId();
             if (userId == null) return Results.Unauthorized();
 
             try
             {
-                return Results.Ok(await aworkService.GetTaskStatusesAsync(userId.Value, id));
+                return Results.Ok(await aworkService.GetTaskStatuses(userId.Value, id));
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -25,14 +25,14 @@ public class TaskEndpoints : IEndpoint
             }
         }).RequireAuth();
 
-        app.MapGet("/api/awork/projects/{id}/tasklists", async (HttpContext context, AworkApiService aworkService, string id) =>
+        app.MapGet("/api/awork/projects/{id:guid}/tasklists", async (HttpContext context, AworkApiService aworkService, Guid id) =>
         {
             var userId = context.GetCurrentUserId();
             if (userId == null) return Results.Unauthorized();
 
             try
             {
-                return Results.Ok(await aworkService.GetTaskListsAsync(userId.Value, id));
+                return Results.Ok(await aworkService.GetTaskLists(userId.Value, id));
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -51,7 +51,7 @@ public class TaskEndpoints : IEndpoint
 
             try
             {
-                return Results.Ok(await aworkService.GetTypesOfWorkAsync(userId.Value));
+                return Results.Ok(await aworkService.GetTypesOfWork(userId.Value));
             }
             catch (UnauthorizedAccessException ex)
             {

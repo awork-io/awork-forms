@@ -2,13 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace Backend.Auth;
 
-public class PkceState
-{
-    public required string CodeVerifier { get; set; }
-    public required string ClientId { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
 public class DcrResponse
 {
     [JsonPropertyName("client_id")]
@@ -46,11 +39,11 @@ public class TokenResult
 
 public class UserDto
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Email { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }
-    public string WorkspaceId { get; set; } = string.Empty;
+    public Guid WorkspaceId { get; set; }
 }
 
 public class AuthTokenResponse
@@ -70,10 +63,19 @@ public class AuthTokenResponse
 
 public class AworkUserInfo
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string? Email { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? ProfileImage { get; set; }
-    public string? WorkspaceId { get; set; }
+    public Guid? WorkspaceId { get; set; }
+    public Guid? AccountId { get; set; }
+    public AworkWorkspaceInfo? Workspace { get; set; }
+}
+
+public class AworkWorkspaceInfo
+{
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
+    public string? Url { get; set; }
 }

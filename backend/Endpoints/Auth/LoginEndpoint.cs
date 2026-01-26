@@ -8,7 +8,7 @@ public class LoginEndpoint : IEndpoint
     {
         app.MapGet("/api/auth/login", async (AuthService authService) =>
         {
-            var result = await authService.InitiateAuthAsync();
+            var result = await authService.InitiateAuth();
             return Results.Ok(new { authorizationUrl = result.AuthorizationUrl, state = result.State });
         });
     }

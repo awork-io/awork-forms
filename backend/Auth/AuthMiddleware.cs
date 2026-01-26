@@ -37,8 +37,9 @@ public static class AuthMiddleware
         {
             var user = context.HttpContext.User;
             var userId = JwtService.GetUserId(user);
+            var workspaceId = JwtService.GetWorkspaceId(user);
 
-            if (userId == null)
+            if (userId == null || workspaceId == null || workspaceId == Guid.Empty)
             {
                 return Results.Unauthorized();
             }
@@ -50,7 +51,7 @@ public static class AuthMiddleware
     /// <summary>
     /// Gets the current user ID from HttpContext
     /// </summary>
-    public static int? GetCurrentUserId(this HttpContext context)
+    public static Guid? GetCurrentUserId(this HttpContext context)
     {
         return JwtService.GetUserId(context.User);
     }
@@ -58,7 +59,7 @@ public static class AuthMiddleware
     /// <summary>
     /// Gets the current workspace ID from HttpContext
     /// </summary>
-    public static string? GetCurrentWorkspaceId(this HttpContext context)
+    public static Guid? GetCurrentWorkspaceId(this HttpContext context)
     {
         return JwtService.GetWorkspaceId(context.User);
     }

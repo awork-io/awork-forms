@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<Form> Forms => Set<Form>();
     public DbSet<Submission> Submissions => Set<Submission>();
     public DbSet<Setting> Settings => Set<Setting>();
+    public DbSet<OAuthState> OAuthStates => Set<OAuthState>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,10 +24,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Form>(entity =>
         {
             entity.HasIndex(e => e.PublicId).IsUnique();
-            entity.HasIndex(e => e.UserId);
-            entity.HasOne(e => e.User)
-                  .WithMany(u => u.Forms)
-                  .HasForeignKey(e => e.UserId);
+            entity.HasIndex(e => e.WorkspaceId);
         });
 
         modelBuilder.Entity<Submission>(entity =>
@@ -41,6 +39,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Setting>(entity =>
         {
             entity.HasIndex(e => e.Key).IsUnique();
+        });
+
+        modelBuilder.Entity<OAuthState>(entity =>
+        {
+            entity.HasIndex(e => e.State).IsUnique();
+            entity.HasIndex(e => e.CreatedAt);
         });
     }
 }

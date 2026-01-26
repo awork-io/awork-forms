@@ -13,7 +13,7 @@ public class UsersEndpoint : IEndpoint
 
             try
             {
-                return Results.Ok(await aworkService.GetUsersAsync(userId.Value));
+                return Results.Ok(await aworkService.GetUsers(userId.Value));
             }
             catch (UnauthorizedAccessException ex)
             {

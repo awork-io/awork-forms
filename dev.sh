@@ -8,6 +8,35 @@ PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo "Starting awork Forms development servers..."
 echo ""
 
+# Load .env if present
+if [ -f "$PROJECT_DIR/.env" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$PROJECT_DIR/.env"
+    set +a
+fi
+
+# Require JWT secret for backend
+if [ -z "$JWT_SECRET_KEY" ] || [ ${#JWT_SECRET_KEY} -lt 32 ]; then
+    echo "JWT_SECRET_KEY missing or too short. Set it in .env (min 32 chars)."
+    exit 1
+fi
+
+# Build backend
+echo "Building backend..."
+dotnet build "$PROJECT_DIR/backend/backend.csproj" > /tmp/backend_build.log 2>&1 || {
+    echo "Backend build failed. See /tmp/backend_build.log"
+    exit 1
+}
+
+# Build frontend
+echo "Building frontend..."
+cd "$PROJECT_DIR/frontend"
+npm run build > /tmp/frontend_build.log 2>&1 || {
+    echo "Frontend build failed. See /tmp/frontend_build.log"
+    exit 1
+}
+
 # Function to cleanup on exit
 cleanup() {
     echo ""

@@ -8,7 +8,7 @@ public class CallbackEndpoint : IEndpoint
     {
         app.MapGet("/api/auth/callback", async (string code, string state, AuthService authService) =>
         {
-            var result = await authService.HandleCallbackAsync(code, state);
+            var result = await authService.HandleCallback(code, state);
             if (!result.Success)
             {
                 return Results.BadRequest(new { error = result.Error });

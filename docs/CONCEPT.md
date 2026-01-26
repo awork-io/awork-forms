@@ -47,7 +47,7 @@ Based on awork-form-craft implementation:
 
 1. **Dynamic Client Registration (DCR)**: App registers itself with awork API on first OAuth
 2. **PKCE Flow**: Authorization code exchange with code_verifier (no client_secret needed)
-3. **Token Storage**: Access/refresh tokens stored per **workspace** (not per user)
+3. **Token Storage**: Access/refresh tokens stored per **user**, scoped by workspace ID
 4. **Session**: JWT issued by our backend after successful awork OAuth
 
 ```
@@ -56,14 +56,14 @@ User → Login → Backend generates PKCE verifier
      → User grants access
      → Callback with code
      → Backend exchanges code for tokens (with verifier)
-     → Backend creates/updates workspace with tokens
-     → Backend creates/updates user record
+     → Backend stores OAuth state + DCR client id in DB
+     → Backend creates/updates user record (workspace-scoped)
      → Backend issues session JWT (contains workspace_id + user_id)
 ```
 
-**Multi-tenancy**: 
+**Multi-tenancy**:
 - All users from same awork workspace see the same forms
-- Tokens stored at workspace level (shared across users)
+- Tokens stored per user, scoped by workspace ID
 - Forms scoped to workspace, not individual user
 
 ## Data Model (SQLite)
@@ -71,47 +71,41 @@ User → Login → Backend generates PKCE verifier
 **Multi-tenancy**: All data is scoped to `workspace_id`. Users from the same awork workspace share forms.
 
 ```sql
--- Workspaces (tenants) - one per awork workspace
-CREATE TABLE workspaces (
-    id TEXT PRIMARY KEY, -- awork workspace_id
+-- Users authenticated via awork (workspace-scoped tokens)
+CREATE TABLE users (
+    id TEXT PRIMARY KEY, -- user id (GUID)
+    awork_user_id TEXT NOT NULL, -- awork user id (GUID)
+    awork_workspace_id TEXT NOT NULL, -- awork workspace id (GUID)
+    email TEXT,
     name TEXT,
-    access_token TEXT NOT NULL,
-    refresh_token TEXT NOT NULL,
-    token_expires_at TEXT NOT NULL,
-    client_id TEXT, -- DCR client_id
+    avatar_url TEXT,
+    access_token TEXT,
+    refresh_token TEXT,
+    token_expires_at TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- Users authenticated via awork (for audit/tracking)
-CREATE TABLE users (
-    id TEXT PRIMARY KEY,
-    awork_user_id TEXT UNIQUE NOT NULL,
-    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
-    email TEXT,
-    name TEXT,
-    last_login_at TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Form definitions (scoped to workspace)
 CREATE TABLE forms (
-    id TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     public_id TEXT UNIQUE NOT NULL, -- GUID for shareable link
-    workspace_id TEXT NOT NULL REFERENCES workspaces(id), -- tenant isolation
-    created_by_user_id TEXT REFERENCES users(id),
+    workspace_id TEXT NOT NULL, -- awork workspace id (GUID)
     name TEXT NOT NULL,
     description TEXT,
     fields TEXT NOT NULL, -- JSON array
     action_type TEXT DEFAULT 'task' CHECK(action_type IN ('project', 'task', 'both')),
-    project_mapping TEXT, -- JSON: field mappings for project creation
-    task_mapping TEXT,    -- JSON: field mappings for task creation
-    target_project_id TEXT, -- Fixed project for task-only forms
-    -- Styling options
-    primary_color TEXT DEFAULT '#6366f1', -- Indigo default
-    background_color TEXT DEFAULT '#ffffff',
-    logo_url TEXT, -- URL to uploaded logo
-    -- Status
+    awork_project_id TEXT,
+    awork_project_type_id TEXT,
+    awork_task_list_id TEXT,
+    awork_task_status_id TEXT,
+    awork_type_of_work_id TEXT,
+    awork_assignee_id TEXT,
+    awork_task_is_priority INTEGER,
+    field_mappings TEXT,
+    primary_color TEXT,
+    background_color TEXT,
+    logo_url TEXT,
     is_active INTEGER DEFAULT 1,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -119,19 +113,29 @@ CREATE TABLE forms (
 
 -- Form submissions
 CREATE TABLE submissions (
-    id TEXT PRIMARY KEY,
-    form_id TEXT NOT NULL REFERENCES forms(id),
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    form_id INTEGER NOT NULL REFERENCES forms(id),
     data TEXT NOT NULL, -- JSON: submitted field values
     awork_project_id TEXT,
     awork_task_id TEXT,
     status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'completed', 'failed')),
     error_message TEXT,
-    submitted_at TEXT DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- OAuth state (PKCE) - supports multi-instance
+CREATE TABLE oauth_states (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    state TEXT UNIQUE NOT NULL,
+    code_verifier TEXT NOT NULL,
+    client_id TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes for tenant isolation
 CREATE INDEX idx_forms_workspace ON forms(workspace_id);
-CREATE INDEX idx_users_workspace ON users(workspace_id);
+CREATE INDEX idx_users_workspace ON users(awork_workspace_id);
 ```
 
 ## API Endpoints

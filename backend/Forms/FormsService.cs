@@ -14,11 +14,13 @@ public class FormsService
         _dbFactory = dbFactory;
     }
 
-    public List<FormListDto> GetFormsByUser(int userId)
+    public List<FormListDto> GetFormsByUser(Guid userId)
     {
         using var db = _dbFactory.CreateDbContext();
+        var workspaceId = GetWorkspaceId(db, userId);
+        if (workspaceId == null) return [];
         return db.Forms
-            .Where(f => f.UserId == userId)
+            .Where(f => f.WorkspaceId == workspaceId)
             .OrderByDescending(f => f.UpdatedAt)
             .Select(f => new FormListDto
             {
@@ -35,23 +37,28 @@ public class FormsService
             .ToList();
     }
 
-    public FormDetailDto? GetFormById(int formId, int userId)
+    public FormDetailDto? GetFormById(int formId, Guid userId)
     {
         using var db = _dbFactory.CreateDbContext();
-        var form = db.Forms.FirstOrDefault(f => f.Id == formId && f.UserId == userId);
+        var workspaceId = GetWorkspaceId(db, userId);
+        if (workspaceId == null) return null;
+        var form = db.Forms.FirstOrDefault(f => f.Id == formId && f.WorkspaceId == workspaceId);
         if (form == null) return null;
         return MapToDetailDto(form);
     }
 
-    public FormDetailDto CreateForm(CreateFormDto dto, int userId)
+    public FormDetailDto CreateForm(CreateFormDto dto, Guid userId)
     {
         using var db = _dbFactory.CreateDbContext();
+        var user = db.Users.FirstOrDefault(u => u.Id == userId);
+        if (user == null)
+            throw new InvalidOperationException("User not found");
         var now = DateTime.UtcNow;
 
         var form = new Form
         {
             PublicId = Guid.NewGuid(),
-            UserId = userId,
+            WorkspaceId = user.AworkWorkspaceId,
             Name = dto.Name,
             Description = dto.Description,
             FieldsJson = dto.FieldsJson ?? "[]",
@@ -77,10 +84,12 @@ public class FormsService
         return MapToDetailDto(form);
     }
 
-    public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, int userId)
+    public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId)
     {
         using var db = _dbFactory.CreateDbContext();
-        var form = db.Forms.FirstOrDefault(f => f.Id == formId && f.UserId == userId);
+        var workspaceId = GetWorkspaceId(db, userId);
+        if (workspaceId == null) return null;
+        var form = db.Forms.FirstOrDefault(f => f.Id == formId && f.WorkspaceId == workspaceId);
         if (form == null) return null;
 
         if (dto.Name != null) form.Name = dto.Name;
@@ -106,10 +115,12 @@ public class FormsService
         return MapToDetailDto(form);
     }
 
-    public bool DeleteForm(int formId, int userId)
+    public bool DeleteForm(int formId, Guid userId)
     {
         using var db = _dbFactory.CreateDbContext();
-        var form = db.Forms.FirstOrDefault(f => f.Id == formId && f.UserId == userId);
+        var workspaceId = GetWorkspaceId(db, userId);
+        if (workspaceId == null) return false;
+        var form = db.Forms.FirstOrDefault(f => f.Id == formId && f.WorkspaceId == workspaceId);
         if (form == null) return false;
 
         db.Forms.Remove(form);
@@ -164,12 +175,14 @@ public class FormsService
         };
     }
 
-    public List<SubmissionListDto> GetSubmissionsByUser(int userId)
+    public List<SubmissionListDto> GetSubmissionsByUser(Guid userId)
     {
         using var db = _dbFactory.CreateDbContext();
+        var workspaceId = GetWorkspaceId(db, userId);
+        if (workspaceId == null) return [];
         return db.Submissions
             .Include(s => s.Form)
-            .Where(s => s.Form.UserId == userId)
+            .Where(s => s.Form.WorkspaceId == workspaceId)
             .OrderByDescending(s => s.CreatedAt)
             .Select(s => new SubmissionListDto
             {
@@ -187,12 +200,14 @@ public class FormsService
             .ToList();
     }
 
-    public List<SubmissionListDto> GetSubmissionsByForm(int formId, int userId)
+    public List<SubmissionListDto> GetSubmissionsByForm(int formId, Guid userId)
     {
         using var db = _dbFactory.CreateDbContext();
+        var workspaceId = GetWorkspaceId(db, userId);
+        if (workspaceId == null) return [];
         return db.Submissions
             .Include(s => s.Form)
-            .Where(s => s.FormId == formId && s.Form.UserId == userId)
+            .Where(s => s.FormId == formId && s.Form.WorkspaceId == workspaceId)
             .OrderByDescending(s => s.CreatedAt)
             .Select(s => new SubmissionListDto
             {
@@ -242,5 +257,16 @@ public class FormsService
             return doc.RootElement.GetArrayLength();
         }
         catch { return 0; }
+    }
+
+    private static Guid? GetWorkspaceId(AppDbContext db, Guid userId)
+    {
+        var workspaceId = db.Users
+            .Where(u => u.Id == userId)
+            .Select(u => (Guid?)u.AworkWorkspaceId)
+            .FirstOrDefault();
+
+        if (workspaceId == null || workspaceId == Guid.Empty) return null;
+        return workspaceId;
     }
 }

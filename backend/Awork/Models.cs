@@ -2,11 +2,11 @@ namespace Backend.Awork;
 
 public class AworkProject
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string? ProjectTypeId { get; set; }
-    public string? ProjectStatusId { get; set; }
+    public Guid? ProjectTypeId { get; set; }
+    public Guid? ProjectStatusId { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? DueDate { get; set; }
     public bool IsBillableByDefault { get; set; }
@@ -15,7 +15,7 @@ public class AworkProject
 
 public class AworkProjectType
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? Icon { get; set; }
@@ -24,7 +24,7 @@ public class AworkProjectType
 
 public class AworkUser
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Email { get; set; }
@@ -36,7 +36,7 @@ public class AworkUser
 
 public class AworkProjectStatus
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public int Order { get; set; }
@@ -44,7 +44,7 @@ public class AworkProjectStatus
 
 public class AworkTaskStatus
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public int Order { get; set; }
@@ -52,7 +52,7 @@ public class AworkTaskStatus
 
 public class AworkTaskList
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public int Order { get; set; }
     public int OrderOfNewTasks { get; set; }
@@ -60,7 +60,7 @@ public class AworkTaskList
 
 public class AworkTypeOfWork
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Icon { get; set; }
     public bool IsArchived { get; set; }
@@ -85,17 +85,17 @@ public class AworkCreateProjectRequest
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string? ProjectTypeId { get; set; }
+    public Guid? ProjectTypeId { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? DueDate { get; set; }
 }
 
 public class AworkCreateProjectResponse
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string? ProjectTypeId { get; set; }
+    public Guid? ProjectTypeId { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? DueDate { get; set; }
 }
@@ -105,45 +105,45 @@ public class AworkCreateTaskRequest
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string BaseType { get; set; } = "projecttask";
-    public string? ProjectId { get; set; }
-    public string? EntityId { get; set; }
+    public Guid? ProjectId { get; set; }
+    public Guid? EntityId { get; set; }
     public bool IsPriority { get; set; }
     public DateTime? DueOn { get; set; }
     public DateTime? StartOn { get; set; }
     public int? PlannedDuration { get; set; }
-    public string? TaskStatusId { get; set; }
-    public string? TypeOfWorkId { get; set; }
+    public Guid? TaskStatusId { get; set; }
+    public Guid? TypeOfWorkId { get; set; }
     public List<AworkTaskListAssignment>? Lists { get; set; }
     public List<AworkTaskAssignment>? Assignments { get; set; }
 }
 
 public class AworkTaskListAssignment
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public int Order { get; set; } = int.MaxValue;
 }
 
 public class AworkTaskAssignment
 {
-    public string UserId { get; set; } = string.Empty;
+    public Guid UserId { get; set; }
 }
 
 public class AworkCreateTaskResponse
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool IsPriority { get; set; }
     public DateTime? DueOn { get; set; }
     public DateTime? StartOn { get; set; }
     public int? PlannedDuration { get; set; }
-    public string? TaskStatusId { get; set; }
-    public string? ProjectId { get; set; }
+    public Guid? TaskStatusId { get; set; }
+    public Guid? ProjectId { get; set; }
 }
 
 public class AworkCustomFieldDefinition
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string EntityType { get; set; } = string.Empty;
@@ -154,19 +154,19 @@ public class AworkCustomFieldDefinition
 
 public class AworkCustomFieldSelectionOption
 {
-    public string Id { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Value { get; set; } = string.Empty;
     public int Order { get; set; }
 }
 
 public class CustomFieldValue
 {
-    public string CustomFieldDefinitionId { get; set; } = string.Empty;
+    public Guid CustomFieldDefinitionId { get; set; }
     public string? TextValue { get; set; }
     public decimal? NumberValue { get; set; }
     public DateTime? DateValue { get; set; }
-    public string? SelectionOptionId { get; set; }
-    public List<string>? MultiSelectionOptionIds { get; set; }
-    public string? UserId { get; set; }
+    public Guid? SelectionOptionId { get; set; }
+    public List<Guid>? MultiSelectionOptionIds { get; set; }
+    public Guid? UserId { get; set; }
     public string? LinkValue { get; set; }
 }

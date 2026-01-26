@@ -40,8 +40,11 @@ builder.Services.AddHttpClient();
 
 // JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
-    ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
-    ?? "awork-forms-dev-secret-key-change-in-production-min-32-chars";
+    ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+if (string.IsNullOrWhiteSpace(jwtSecretKey) || jwtSecretKey.Length < 32)
+{
+    throw new InvalidOperationException("JWT_SECRET_KEY is required and must be at least 32 characters.");
+}
 builder.Services.AddSingleton(new JwtService(jwtSecretKey));
 
 // Services

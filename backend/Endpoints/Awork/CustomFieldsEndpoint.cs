@@ -13,7 +13,7 @@ public class CustomFieldsEndpoint : IEndpoint
 
             try
             {
-                return Results.Ok(await aworkService.GetTaskCustomFieldsAsync(userId.Value));
+                return Results.Ok(await aworkService.GetTaskCustomFields(userId.Value));
             }
             catch (UnauthorizedAccessException ex)
             {
