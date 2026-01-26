@@ -47,6 +47,9 @@ coverage/
 tmp/
 .tmp/
 
+# Uploads (local runtime data)
+backend/uploads/
+
 # Screenshots (keep directory, ignore contents)
 screenshots/*
 !screenshots/.gitkeep
