@@ -129,7 +129,7 @@ public class SubmissionProcessor
         var fileFields = formFields.Where(f => f.Type == "file").ToList();
         if (fileFields.Count == 0) return;
 
-        var baseUrl = Environment.GetEnvironmentVariable("BASE_URL") ?? "http://localhost:5000";
+        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "submissions");
 
         foreach (var field in fileFields)
         {
@@ -141,22 +141,24 @@ public class SubmissionProcessor
                 {
                     if (jsonElement.ValueKind == JsonValueKind.Object)
                     {
-                        var fileData = JsonSerializer.Deserialize<FileUploadData>(jsonElement.GetRawText());
+                        var fileData = JsonSerializer.Deserialize<FileUploadData>(jsonElement.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                         if (fileData != null && !string.IsNullOrEmpty(fileData.FileUrl))
                         {
-                            var fullUrl = fileData.FileUrl.StartsWith("http") ? fileData.FileUrl : $"{baseUrl}{fileData.FileUrl}";
-                            await _aworkService.AttachFileToTaskByUrlAsync(userId, taskId, fullUrl, fileData.FileName);
+                            var localPath = GetLocalFilePath(fileData.FileUrl, uploadsPath);
+                            if (File.Exists(localPath))
+                                await _aworkService.AttachFileToTaskAsync(userId, taskId, localPath, fileData.FileName);
                         }
                     }
                     else if (jsonElement.ValueKind == JsonValueKind.Array)
                     {
-                        var files = JsonSerializer.Deserialize<List<FileUploadData>>(jsonElement.GetRawText());
+                        var files = JsonSerializer.Deserialize<List<FileUploadData>>(jsonElement.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                         if (files != null)
                         {
                             foreach (var fileData in files.Where(f => !string.IsNullOrEmpty(f.FileUrl)))
                             {
-                                var fullUrl = fileData.FileUrl.StartsWith("http") ? fileData.FileUrl : $"{baseUrl}{fileData.FileUrl}";
-                                await _aworkService.AttachFileToTaskByUrlAsync(userId, taskId, fullUrl, fileData.FileName);
+                                var localPath = GetLocalFilePath(fileData.FileUrl, uploadsPath);
+                                if (File.Exists(localPath))
+                                    await _aworkService.AttachFileToTaskAsync(userId, taskId, localPath, fileData.FileName);
                             }
                         }
                     }
@@ -167,6 +169,13 @@ public class SubmissionProcessor
                 Console.WriteLine($"Error attaching file from field {field.Id}: {ex.Message}");
             }
         }
+    }
+
+    private static string GetLocalFilePath(string fileUrl, string uploadsPath)
+    {
+        // fileUrl is like "/uploads/submissions/filename.ext"
+        var fileName = Path.GetFileName(fileUrl);
+        return Path.Combine(uploadsPath, fileName);
     }
 
     private static Dictionary<string, object?> ParseFormData(string dataJson)

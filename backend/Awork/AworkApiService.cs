@@ -93,18 +93,33 @@ public class AworkApiService
         return await MakeAworkPostRequestAsync<AworkCreateTaskResponse>(userId, "tasks", request);
     }
 
-    public async Task<bool> AttachFileToTaskByUrlAsync(int userId, string taskId, string fileUrl, string fileName, string? description = null)
+    public async Task<bool> AttachFileToTaskAsync(int userId, string taskId, string localFilePath, string fileName)
     {
-        var body = new
-        {
-            url = fileUrl,
-            name = fileName,
-            description = description ?? "Uploaded via awork Forms"
-        };
+        var accessToken = await GetValidAccessTokenAsync(userId);
+        if (string.IsNullOrEmpty(accessToken))
+            throw new UnauthorizedAccessException("No valid awork access token available.");
 
         try
         {
-            await MakeAworkPostRequestAsync<object>(userId, $"tasks/{taskId}/files/byurl", body);
+            using var form = new MultipartFormDataContent();
+            using var fileStream = File.OpenRead(localFilePath);
+            using var fileContent = new StreamContent(fileStream);
+
+            var mimeType = GetMimeType(fileName);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mimeType);
+            form.Add(fileContent, "file", fileName);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{AworkApiBaseUrl}/tasks/{taskId}/files");
+            request.Headers.Add("Authorization", $"Bearer {accessToken}");
+            request.Content = form;
+
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Failed to attach file {fileName} to task {taskId}: {response.StatusCode} - {error}");
+                return false;
+            }
             return true;
         }
         catch (Exception ex)
@@ -112,6 +127,26 @@ public class AworkApiService
             Console.WriteLine($"Failed to attach file {fileName} to task {taskId}: {ex.Message}");
             return false;
         }
+    }
+
+    private static string GetMimeType(string fileName)
+    {
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        return ext switch
+        {
+            ".pdf" => "application/pdf",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".doc" => "application/msword",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xls" => "application/vnd.ms-excel",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".txt" => "text/plain",
+            ".csv" => "text/csv",
+            ".zip" => "application/zip",
+            _ => "application/octet-stream"
+        };
     }
 
     private async Task<T?> MakeAworkRequestAsync<T>(int userId, string endpoint) where T : class

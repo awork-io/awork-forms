@@ -110,7 +110,24 @@ export function PublicFormPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await api.submitPublicForm(publicId, formData);
+      // Process form data - upload files first
+      const processedData: Record<string, unknown> = {};
+      
+      for (const [fieldId, value] of Object.entries(formData)) {
+        if (value instanceof File) {
+          // Upload file and store metadata
+          const uploadResult = await api.uploadPublicFile(publicId, value);
+          processedData[fieldId] = {
+            fileName: uploadResult.fileName,
+            fileUrl: uploadResult.fileUrl,
+            fileSize: uploadResult.fileSize,
+          };
+        } else {
+          processedData[fieldId] = value;
+        }
+      }
+
+      const response = await api.submitPublicForm(publicId, processedData);
       setSubmissionResult(response);
       setIsSubmitted(true);
     } catch (err) {

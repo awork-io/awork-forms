@@ -20,7 +20,7 @@ public class AuthService
     private const string AworkDcrUrl = "https://api.awork.com/api/v1/clientapplications/register";
 
     private const string DcrClientName = "awork Forms";
-    private const string DcrScope = "full_access offline_access";
+    private const string DcrScope = "full_access";
     private const string DcrApplicationType = "native";
 
     private static readonly Dictionary<string, PkceState> _pkceStates = new();

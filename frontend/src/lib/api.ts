@@ -414,6 +414,24 @@ class ApiClient {
 
     return response.json();
   }
+
+  async uploadPublicFile(publicId: string, file: File): Promise<{ fileName: string; fileUrl: string; fileSize: number }> {
+    const url = `${API_BASE_URL}/api/f/${publicId}/upload`;
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    return response.json();
+  }
 }
 
 export const api = new ApiClient();
