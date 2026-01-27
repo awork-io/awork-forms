@@ -15,7 +15,5 @@ public class HealthEndpoint : IEndpoint
             var provider = db.Database.ProviderName;
             return new { canConnect, provider, timestamp = DateTime.UtcNow };
         });
-
-        app.MapGet("/", () => "awork Forms API");
     }
 }
