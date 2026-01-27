@@ -11,4 +11,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:5100',
+      '/uploads': 'http://localhost:5100',
+    },
+  },
 })
