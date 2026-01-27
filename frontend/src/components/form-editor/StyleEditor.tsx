@@ -8,6 +8,8 @@ import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Trash2, Palette, Image, Eye, Loader2 } from 'lucide-react';
 import type { FormField } from '@/lib/form-types';
+import { getErrorMessage } from '@/lib/i18n-errors';
+import { useTranslation } from 'react-i18next';
 
 export interface FormStyling {
   primaryColor: string;
@@ -35,6 +37,7 @@ export function StyleEditor({
   onChange,
   fields,
 }: StyleEditorProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -55,8 +58,8 @@ export function StyleEditor({
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
     if (!allowedTypes.includes(file.type)) {
       toast({
-        title: 'Invalid file type',
-        description: 'Please upload a JPG, PNG, GIF, WebP, or SVG image.',
+        title: t('styleEditor.toast.invalidFileTypeTitle'),
+        description: t('styleEditor.toast.invalidFileTypeDesc'),
         variant: 'destructive',
       });
       return;
@@ -65,8 +68,8 @@ export function StyleEditor({
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: 'File too large',
-        description: 'Please upload an image smaller than 5MB.',
+        title: t('styleEditor.toast.fileTooLargeTitle'),
+        description: t('styleEditor.toast.fileTooLargeDesc'),
         variant: 'destructive',
       });
       return;
@@ -77,13 +80,13 @@ export function StyleEditor({
       const result = await api.uploadLogo(formId, file);
       onChange({ ...styling, logoUrl: result.logoUrl });
       toast({
-        title: 'Logo uploaded',
-        description: 'Your logo has been uploaded successfully.',
+        title: t('styleEditor.toast.uploadSuccessTitle'),
+        description: t('styleEditor.toast.uploadSuccessDesc'),
       });
     } catch (error) {
       toast({
-        title: 'Upload failed',
-        description: error instanceof Error ? error.message : 'Failed to upload logo',
+        title: t('styleEditor.toast.uploadFailedTitle'),
+        description: getErrorMessage(error, t, 'styleEditor.toast.uploadFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -101,13 +104,13 @@ export function StyleEditor({
       await api.deleteLogo(formId);
       onChange({ ...styling, logoUrl: null });
       toast({
-        title: 'Logo removed',
-        description: 'Your logo has been removed.',
+        title: t('styleEditor.toast.removeSuccessTitle'),
+        description: t('styleEditor.toast.removeSuccessDesc'),
       });
     } catch (error) {
       toast({
-        title: 'Failed to remove logo',
-        description: error instanceof Error ? error.message : 'Failed to remove logo',
+        title: t('styleEditor.toast.removeFailedTitle'),
+        description: getErrorMessage(error, t, 'styleEditor.toast.removeFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -123,7 +126,7 @@ export function StyleEditor({
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Palette className="w-4 h-4" />
-          Form Styling
+          {t('styleEditor.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -131,23 +134,23 @@ export function StyleEditor({
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="colors" className="text-xs">
               <Palette className="w-3 h-3 mr-1" />
-              Colors
+              {t('styleEditor.tabs.colors')}
             </TabsTrigger>
             <TabsTrigger value="logo" className="text-xs">
               <Image className="w-3 h-3 mr-1" />
-              Logo
+              {t('styleEditor.tabs.logo')}
             </TabsTrigger>
             <TabsTrigger value="preview" className="text-xs">
               <Eye className="w-3 h-3 mr-1" />
-              Preview
+              {t('styleEditor.tabs.preview')}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="colors" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="primary-color">Primary Color</Label>
+              <Label htmlFor="primary-color">{t('styleEditor.primaryColor')}</Label>
               <p className="text-xs text-muted-foreground">
-                Used for buttons and interactive elements
+                {t('styleEditor.primaryColorHelp')}
               </p>
               <div className="flex items-center gap-2">
                 <div
@@ -175,15 +178,15 @@ export function StyleEditor({
                   size="sm"
                   onClick={() => handleColorChange('primaryColor', DEFAULT_PRIMARY_COLOR)}
                 >
-                  Reset
+                  {t('styleEditor.reset')}
                 </Button>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="background-color">Background Color</Label>
+              <Label htmlFor="background-color">{t('styleEditor.backgroundColor')}</Label>
               <p className="text-xs text-muted-foreground">
-                Form background color
+                {t('styleEditor.backgroundColorHelp')}
               </p>
               <div className="flex items-center gap-2">
                 <div
@@ -211,7 +214,7 @@ export function StyleEditor({
                   size="sm"
                   onClick={() => handleColorChange('backgroundColor', DEFAULT_BACKGROUND_COLOR)}
                 >
-                  Reset
+                  {t('styleEditor.reset')}
                 </Button>
               </div>
             </div>
@@ -219,9 +222,9 @@ export function StyleEditor({
 
           <TabsContent value="logo" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label>Form Logo</Label>
+              <Label>{t('styleEditor.formLogo')}</Label>
               <p className="text-xs text-muted-foreground">
-                Upload a logo to display at the top of your form (max 5MB)
+                {t('styleEditor.formLogoHelp')}
               </p>
             </div>
 
@@ -230,7 +233,7 @@ export function StyleEditor({
                 <div className="relative w-full h-32 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                   <img
                     src={`http://localhost:5100${styling.logoUrl}`}
-                    alt="Form logo"
+                    alt={t('styleEditor.formLogoAlt')}
                     className="max-w-full max-h-full object-contain"
                   />
                 </div>
@@ -247,7 +250,7 @@ export function StyleEditor({
                     ) : (
                       <Upload className="w-4 h-4 mr-2" />
                     )}
-                    Replace
+                    {t('styleEditor.replace')}
                   </Button>
                   <Button
                     variant="outline"
@@ -272,16 +275,16 @@ export function StyleEditor({
                 {isUploading ? (
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Uploading...</p>
+                    <p className="text-sm text-muted-foreground">{t('styleEditor.uploading')}</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
                     <Upload className="w-8 h-8 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
-                      Click to upload a logo
+                      {t('styleEditor.clickUploadLogo')}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      JPG, PNG, GIF, WebP, or SVG
+                      {t('styleEditor.logoFormats')}
                     </p>
                   </div>
                 )}
@@ -299,9 +302,9 @@ export function StyleEditor({
 
           <TabsContent value="preview" className="mt-4">
             <div className="space-y-2">
-              <Label>Live Preview</Label>
+              <Label>{t('styleEditor.livePreview')}</Label>
               <p className="text-xs text-muted-foreground">
-                See how your form will look to users
+                {t('styleEditor.livePreviewHelp')}
               </p>
             </div>
             <div
@@ -314,7 +317,7 @@ export function StyleEditor({
                   <div className="flex justify-center mb-6">
                     <img
                       src={`http://localhost:5100${styling.logoUrl}`}
-                      alt="Form logo"
+                      alt={t('styleEditor.formLogoAlt')}
                       className="max-h-16 object-contain"
                     />
                   </div>
@@ -323,7 +326,7 @@ export function StyleEditor({
                 {/* Form header */}
                 <div className="text-center mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {formName || 'Untitled Form'}
+                    {formName || t('formEditor.untitled')}
                   </h2>
                   {formDescription && (
                     <p className="mt-1 text-sm text-gray-600">{formDescription}</p>
@@ -347,7 +350,7 @@ export function StyleEditor({
                           <div className="flex items-center gap-2">
                             <div className="w-4 h-4 rounded border border-gray-300 bg-white" />
                             <span className="text-sm text-gray-600">
-                              {field.placeholder || 'Checkbox option'}
+                              {field.placeholder || t('styleEditor.checkboxOption')}
                             </span>
                           </div>
                         ) : (
@@ -359,13 +362,13 @@ export function StyleEditor({
                     <div className="space-y-4">
                       <div className="space-y-1">
                         <label className="text-sm font-medium text-gray-700">
-                          Sample Field <span className="text-red-500">*</span>
+                          {t('styleEditor.sampleField')} <span className="text-red-500">*</span>
                         </label>
                         <div className="w-full h-10 rounded-md border border-gray-300 bg-white" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-sm font-medium text-gray-700">
-                          Another Field
+                          {t('styleEditor.anotherField')}
                         </label>
                         <div className="w-full h-10 rounded-md border border-gray-300 bg-white" />
                       </div>
@@ -373,7 +376,7 @@ export function StyleEditor({
                   )}
                   {fields.length > 3 && (
                     <p className="text-xs text-gray-500 text-center">
-                      +{fields.length - 3} more field{fields.length - 3 > 1 ? 's' : ''}
+                      {t('common.moreFieldsCount', { count: fields.length - 3 })}
                     </p>
                   )}
                 </div>
@@ -385,7 +388,7 @@ export function StyleEditor({
                     className="w-full py-2.5 px-4 rounded-md text-white font-medium transition-colors"
                     style={{ backgroundColor: primaryColor }}
                   >
-                    Submit
+                    {t('styleEditor.submit')}
                   </button>
                 </div>
               </div>

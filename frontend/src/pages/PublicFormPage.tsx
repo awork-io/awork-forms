@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import type { PublicForm, SubmissionResponse } from '@/lib/api';
-import type { FormField } from '@/lib/form-types';
+import type { FieldTranslation, FormField } from '@/lib/form-types';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -14,10 +14,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/i18n-errors';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
 const aworkGradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)';
 
 export function PublicFormPage() {
+  const { t, i18n } = useTranslation();
   const { publicId } = useParams<{ publicId: string }>();
   const [form, setForm] = useState<PublicForm | null>(null);
   const [fields, setFields] = useState<FormField[]>([]);
@@ -29,12 +33,13 @@ export function PublicFormPage() {
   const [submissionResult, setSubmissionResult] = useState<SubmissionResponse | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const languageKeys = getLanguageKeys(i18n.resolvedLanguage || i18n.language);
 
   // Load form data
   useEffect(() => {
     async function loadForm() {
       if (!publicId) {
-        setError('Invalid form URL');
+        setError(t('publicForm.invalidUrl'));
         setIsLoading(false);
         return;
       }
@@ -58,14 +63,14 @@ export function PublicFormPage() {
         });
         setFormData(initialData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load form');
+        setError(getErrorMessage(err, t, 'publicForm.loadError'));
       } finally {
         setIsLoading(false);
       }
     }
 
     loadForm();
-  }, [publicId]);
+  }, [publicId, t]);
 
   // Validate form
   const validateForm = (): boolean => {
@@ -77,10 +82,10 @@ export function PublicFormPage() {
       if (field.required) {
         if (field.type === 'checkbox') {
           if (!value) {
-            errors[field.id] = 'This field is required';
+            errors[field.id] = t('publicForm.requiredError');
           }
         } else if (!value || (typeof value === 'string' && value.trim() === '')) {
-          errors[field.id] = 'This field is required';
+          errors[field.id] = t('publicForm.requiredError');
         }
       }
 
@@ -88,7 +93,7 @@ export function PublicFormPage() {
       if (field.type === 'email' && value && typeof value === 'string') {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) {
-          errors[field.id] = 'Please enter a valid email address';
+          errors[field.id] = t('publicForm.emailError');
         }
       }
     });
@@ -131,7 +136,7 @@ export function PublicFormPage() {
       setSubmissionResult(response);
       setIsSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Submission failed');
+      setError(getErrorMessage(err, t, 'publicForm.submissionFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -166,7 +171,7 @@ export function PublicFormPage() {
         className="min-h-screen flex items-center justify-center"
         style={{ backgroundColor }}
       >
-        <div className="animate-pulse text-gray-500">Loading form...</div>
+        <div className="animate-pulse text-gray-500">{t('publicForm.loading')}</div>
       </div>
     );
   }
@@ -194,7 +199,7 @@ export function PublicFormPage() {
               />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Form Not Available</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('publicForm.notAvailableTitle')}</h2>
           <p className="text-gray-500">{error}</p>
         </div>
       </div>
@@ -249,10 +254,10 @@ export function PublicFormPage() {
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-3">
-            {hasIntegrationError ? 'Submission Received' : 'Thank You!'}
+            {hasIntegrationError ? t('publicForm.submissionReceived') : t('publicForm.thankYou')}
           </h2>
           <p className="text-gray-500 text-lg">
-            Your submission has been received successfully.
+            {t('publicForm.submissionSuccess')}
           </p>
 
           {/* Integration error warning */}
@@ -274,10 +279,10 @@ export function PublicFormPage() {
                 </svg>
                 <div>
                   <p className="text-sm font-medium text-amber-800">
-                    Integration Notice
+                    {t('publicForm.integrationNoticeTitle')}
                   </p>
                   <p className="text-sm text-amber-700 mt-1">
-                    Your submission was saved, but there was an issue connecting to the project management system. The form owner has been notified.
+                    {t('publicForm.integrationNoticeBody')}
                   </p>
                 </div>
               </div>
@@ -310,6 +315,9 @@ export function PublicFormPage() {
   const renderField = (field: FormField, index: number) => {
     const isFocused = focusedField === field.id;
     const hasError = !!validationErrors[field.id];
+    const fieldTranslation = getFieldTranslation(field, languageKeys);
+    const fieldLabel = fieldTranslation?.label || field.label;
+    const fieldPlaceholder = fieldTranslation?.placeholder || field.placeholder;
     
     const inputClasses = cn(
       'w-full px-3 py-3 text-base bg-white border-2 rounded-xl transition-all duration-300 outline-none',
@@ -347,7 +355,7 @@ export function PublicFormPage() {
                 isFocused ? 'text-blue-600' : 'text-gray-700'
               )}
             >
-              {field.label}
+              {fieldLabel}
               {field.required && (
                 <span className="text-red-400 ml-1">*</span>
               )}
@@ -358,7 +366,7 @@ export function PublicFormPage() {
             <input
               id={field.id}
               type="text"
-              placeholder={field.placeholder || 'Type your answer here...'}
+              placeholder={fieldPlaceholder || t('publicForm.placeholders.text')}
               value={(formData[field.id] as string) || ''}
               onChange={(e) => updateField(field.id, e.target.value)}
               className={inputClasses}
@@ -370,7 +378,7 @@ export function PublicFormPage() {
             <input
               id={field.id}
               type="email"
-              placeholder={field.placeholder || 'name@example.com'}
+              placeholder={fieldPlaceholder || t('publicForm.placeholders.email')}
               value={(formData[field.id] as string) || ''}
               onChange={(e) => updateField(field.id, e.target.value)}
               className={inputClasses}
@@ -382,7 +390,7 @@ export function PublicFormPage() {
             <input
               id={field.id}
               type="number"
-              placeholder={field.placeholder || '0'}
+              placeholder={fieldPlaceholder || t('publicForm.placeholders.number')}
               value={(formData[field.id] as string) || ''}
               onChange={(e) => updateField(field.id, e.target.value)}
               className={inputClasses}
@@ -393,7 +401,7 @@ export function PublicFormPage() {
           {field.type === 'textarea' && (
             <textarea
               id={field.id}
-              placeholder={field.placeholder || 'Type your answer here...'}
+              placeholder={fieldPlaceholder || t('publicForm.placeholders.textarea')}
               value={(formData[field.id] as string) || ''}
               onChange={(e) => updateField(field.id, e.target.value)}
               rows={4}
@@ -408,7 +416,7 @@ export function PublicFormPage() {
               onValueChange={(value) => updateField(field.id, value)}
             >
               <SelectTrigger className={inputClasses}>
-                <SelectValue placeholder={field.placeholder || 'Select an option'} />
+                <SelectValue placeholder={fieldPlaceholder || t('publicForm.placeholders.select')} />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 {field.options?.map((option) => (
@@ -417,7 +425,7 @@ export function PublicFormPage() {
                     value={option.value}
                     className="py-3 px-4 text-base cursor-pointer"
                   >
-                    {option.label}
+                    {fieldTranslation?.options?.[option.value] || option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -448,7 +456,7 @@ export function PublicFormPage() {
                 className="sr-only"
               />
               <span className="text-sm text-gray-700">
-                {field.label}
+                {fieldLabel}
                 {field.required && <span className="text-red-400 ml-1">*</span>}
               </span>
             </label>
@@ -524,9 +532,10 @@ export function PublicFormPage() {
                     </svg>
                   </div>
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium text-blue-600">Click to upload</span> or drag and drop
+                    <span className="font-medium text-blue-600">{t('publicForm.fileUpload.clickToUpload')}</span>{' '}
+                    {t('publicForm.fileUpload.dragAndDrop')}
                   </p>
-                  <p className="text-xs text-gray-400">PNG, JPG, PDF up to 10MB</p>
+                  <p className="text-xs text-gray-400">{t('publicForm.fileUpload.fileTypes')}</p>
                 </div>
               )}
             </div>
@@ -629,7 +638,7 @@ export function PublicFormPage() {
                   <div className="flex justify-center mb-6">
                     <img
                       src={logoUrl}
-                      alt="Logo"
+                      alt={t('publicForm.logoAlt')}
                       className="max-h-10 max-w-[140px] object-contain"
                     />
                   </div>
@@ -638,11 +647,11 @@ export function PublicFormPage() {
                 {/* Title and description */}
                 <div className="text-center mb-6">
                   <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 tracking-tight">
-                    {form?.name}
+                    {getTranslatedText(form?.nameTranslations, form?.name || '', languageKeys)}
                   </h1>
-                  {form?.description && (
+                  {getTranslatedText(form?.descriptionTranslations, form?.description || '', languageKeys) && (
                     <p className="text-base text-gray-500 max-w-md mx-auto leading-relaxed">
-                      {form.description}
+                      {getTranslatedText(form?.descriptionTranslations, form?.description || '', languageKeys)}
                     </p>
                   )}
                 </div>
@@ -654,7 +663,7 @@ export function PublicFormPage() {
                       <span className="font-semibold text-blue-600">{filledFields}</span>
                       <span>/</span>
                       <span>{fields.length}</span>
-                      <span>completed</span>
+                      <span>{t('publicForm.progressCompleted')}</span>
                     </span>
                   </div>
                 )}
@@ -695,11 +704,11 @@ export function PublicFormPage() {
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
-                          Submitting...
+                          {t('publicForm.submitting')}
                         </span>
                       ) : (
                         <span className="flex items-center justify-center gap-1.5">
-                          Submit
+                          {t('publicForm.submit')}
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                           </svg>
@@ -712,20 +721,50 @@ export function PublicFormPage() {
             </div>
 
             {/* Footer */}
-            <p className="text-center text-xs text-gray-400 mt-6">
-              Powered by{' '}
-              <a 
-                href="https://awork.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="font-semibold text-blue-500 hover:text-blue-600 transition-colors"
-              >
-                awork Forms
-              </a>
-            </p>
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <LanguageSwitcher variant="pill" />
+              <span className="text-gray-300">·</span>
+              <p className="text-xs text-gray-400">
+                {t('publicForm.poweredByPrefix')}{' '}
+                <a 
+                  href="https://awork.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue-500 hover:text-blue-600 transition-colors"
+                >
+                  {t('brand.full')}
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+function getLanguageKeys(language: string) {
+  const trimmed = (language || 'en').toLowerCase();
+  const base = trimmed.split('-')[0];
+  return base && base !== trimmed ? [trimmed, base] : [trimmed];
+}
+
+function getTranslatedText(
+  translations: Record<string, string> | undefined,
+  fallback: string,
+  languageKeys: string[]
+) {
+  for (const key of languageKeys) {
+    const value = translations?.[key];
+    if (value) return value;
+  }
+  return fallback;
+}
+
+function getFieldTranslation(field: FormField, languageKeys: string[]): FieldTranslation | undefined {
+  for (const key of languageKeys) {
+    const translation = field.translations?.[key];
+    if (translation) return translation;
+  }
+  return undefined;
 }

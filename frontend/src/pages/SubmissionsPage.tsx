@@ -20,8 +20,10 @@ import {
 } from '@/components/ui/dialog';
 import { api, type Submission, type FormDetail } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 export function SubmissionsPage() {
+  const { t, i18n } = useTranslation();
   const { formId } = useParams<{ formId?: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -48,8 +50,8 @@ export function SubmissionsPage() {
         }
       } catch {
         toast({
-          title: 'Error',
-          description: 'Failed to load submissions',
+          title: t('common.error'),
+          description: t('submissions.toast.loadError'),
           variant: 'destructive',
         });
       } finally {
@@ -59,10 +61,10 @@ export function SubmissionsPage() {
 
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formId]);
+  }, [formId, toast, t]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
+    return new Date(dateString).toLocaleString(i18n.language || 'en', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -76,20 +78,20 @@ export function SubmissionsPage() {
       case 'completed':
         return (
           <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-            Completed
+            {t('submissions.status.completed')}
           </Badge>
         );
       case 'failed':
         return (
           <Badge variant="destructive">
-            Failed
+            {t('submissions.status.failed')}
           </Badge>
         );
       case 'pending':
       default:
         return (
           <Badge variant="secondary">
-            Pending
+            {t('submissions.status.pending')}
           </Badge>
         );
     }
@@ -106,7 +108,7 @@ export function SubmissionsPage() {
   const getSubmissionPreview = (dataJson: string): string => {
     const data = parseSubmissionData(dataJson);
     const entries = Object.entries(data);
-    if (entries.length === 0) return 'No data';
+    if (entries.length === 0) return t('submissions.noData');
 
     // Get first few values as preview
     const preview = entries
@@ -117,14 +119,14 @@ export function SubmissionsPage() {
       })
       .join(', ');
 
-    return preview || 'No data';
+    return preview || t('submissions.noData');
   };
 
   if (isLoading) {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Loading submissions...</div>
+          <div className="text-muted-foreground">{t('common.loadingSubmissions')}</div>
         </div>
       </div>
     );
@@ -145,17 +147,17 @@ export function SubmissionsPage() {
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                Back to Forms
+                {t('submissions.backToForms')}
               </Button>
             )}
           </div>
           <h1 className="text-2xl font-semibold">
-            {form ? `${form.name} - Submissions` : 'All Submissions'}
+            {form ? t('submissions.titleForm', { name: form.name }) : t('submissions.titleAll')}
           </h1>
           <p className="text-muted-foreground">
             {form
-              ? `View all submissions for this form`
-              : 'View submissions across all your forms'}
+              ? t('submissions.subtitleForm')
+              : t('submissions.subtitleAll')}
           </p>
         </div>
         {formId && (
@@ -163,7 +165,7 @@ export function SubmissionsPage() {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            Edit Form
+            {t('submissions.editForm')}
           </Button>
         )}
       </div>
@@ -176,11 +178,11 @@ export function SubmissionsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <CardTitle>No submissions yet</CardTitle>
+            <CardTitle>{t('submissions.emptyTitle')}</CardTitle>
             <CardDescription>
               {form
-                ? 'Share your form to start receiving submissions.'
-                : 'Create forms and share them to start receiving submissions.'}
+                ? t('submissions.emptyDescForm')
+                : t('submissions.emptyDescAll')}
             </CardDescription>
           </CardHeader>
           {form && (
@@ -191,15 +193,15 @@ export function SubmissionsPage() {
                   const url = `${window.location.origin}/f/${form.publicId}`;
                   navigator.clipboard.writeText(url);
                   toast({
-                    title: 'Copied',
-                    description: 'Form link copied to clipboard',
+                    title: t('submissions.copyToastTitle'),
+                    description: t('submissions.copyToastDesc'),
                   });
                 }}
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                Copy Form Link
+                {t('submissions.copyFormLink')}
               </Button>
             </CardContent>
           )}
@@ -210,12 +212,12 @@ export function SubmissionsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {!formId && <TableHead>Form</TableHead>}
-                  <TableHead>Data Preview</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>awork</TableHead>
-                  <TableHead>Submitted</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  {!formId && <TableHead>{t('submissions.table.form')}</TableHead>}
+                  <TableHead>{t('submissions.table.dataPreview')}</TableHead>
+                  <TableHead>{t('submissions.table.status')}</TableHead>
+                  <TableHead>{t('submissions.table.awork')}</TableHead>
+                  <TableHead>{t('submissions.table.submitted')}</TableHead>
+                  <TableHead className="w-[100px]">{t('submissions.table.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -259,7 +261,7 @@ export function SubmissionsPage() {
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                             </svg>
-                            Project
+                            {t('submissions.project')}
                           </a>
                         )}
                         {submission.aworkTaskId && (
@@ -272,7 +274,7 @@ export function SubmissionsPage() {
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
-                            Task
+                            {t('submissions.task')}
                           </a>
                         )}
                         {!submission.aworkProjectId && !submission.aworkTaskId && (
@@ -289,7 +291,7 @@ export function SubmissionsPage() {
                         size="sm"
                         onClick={() => setSelectedSubmission(submission)}
                       >
-                        View
+                        {t('submissions.view')}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -304,21 +306,21 @@ export function SubmissionsPage() {
       <Dialog open={selectedSubmission !== null} onOpenChange={() => setSelectedSubmission(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Submission Details</DialogTitle>
+            <DialogTitle>{t('submissions.detailsTitle')}</DialogTitle>
             <DialogDescription>
-              Submitted on {selectedSubmission && formatDate(selectedSubmission.createdAt)}
+              {selectedSubmission && t('submissions.submittedOn', { date: formatDate(selectedSubmission.createdAt) })}
             </DialogDescription>
           </DialogHeader>
           {selectedSubmission && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div>
-                  <span className="text-sm text-muted-foreground">Status:</span>
+                  <span className="text-sm text-muted-foreground">{t('submissions.statusLabel')}</span>
                   <div className="mt-1">{getStatusBadge(selectedSubmission.status)}</div>
                 </div>
                 {selectedSubmission.errorMessage && (
                   <div className="flex-1">
-                    <span className="text-sm text-muted-foreground">Error:</span>
+                    <span className="text-sm text-muted-foreground">{t('submissions.errorLabel')}</span>
                     <p className="mt-1 text-sm text-destructive">{selectedSubmission.errorMessage}</p>
                   </div>
                 )}
@@ -326,7 +328,7 @@ export function SubmissionsPage() {
 
               {(selectedSubmission.aworkProjectId || selectedSubmission.aworkTaskId) && (
                 <div>
-                  <span className="text-sm text-muted-foreground">awork Links:</span>
+                  <span className="text-sm text-muted-foreground">{t('submissions.aworkLinks')}</span>
                   <div className="mt-1 flex gap-2">
                     {selectedSubmission.aworkProjectId && (
                       <a
@@ -334,11 +336,11 @@ export function SubmissionsPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-primary hover:underline"
-                      >
+                        >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
-                        View Project in awork
+                        {t('submissions.viewProject')}
                       </a>
                     )}
                     {selectedSubmission.aworkTaskId && (
@@ -347,11 +349,11 @@ export function SubmissionsPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-primary hover:underline"
-                      >
+                        >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
-                        View Task in awork
+                        {t('submissions.viewTask')}
                       </a>
                     )}
                   </div>
@@ -359,7 +361,7 @@ export function SubmissionsPage() {
               )}
 
               <div>
-                <span className="text-sm text-muted-foreground">Submitted Data:</span>
+                <span className="text-sm text-muted-foreground">{t('submissions.submittedData')}</span>
                 <div className="mt-2 bg-muted rounded-lg p-4">
                   <table className="w-full">
                     <tbody>
@@ -369,7 +371,7 @@ export function SubmissionsPage() {
                             {key}
                           </td>
                           <td className="py-2 text-sm break-words">
-                            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
+                            {typeof value === 'boolean' ? (value ? t('common.yes') : t('common.no')) : String(value)}
                           </td>
                         </tr>
                       ))}

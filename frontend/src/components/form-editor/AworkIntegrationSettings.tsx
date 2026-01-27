@@ -26,6 +26,7 @@ import {
 } from '@/lib/api';
 import type { FormField } from '@/lib/form-types';
 import { ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export type ActionType = 'task' | 'project' | 'both' | null;
 
@@ -50,20 +51,20 @@ export interface AworkIntegrationConfig {
 
 // Standard awork project fields that can be mapped
 const AWORK_PROJECT_FIELDS = [
-  { value: 'name', label: 'Project Name' },
-  { value: 'description', label: 'Description' },
-  { value: 'startDate', label: 'Start Date' },
-  { value: 'dueDate', label: 'Due Date' },
+  { value: 'name', labelKey: 'aworkIntegration.projectFields.name', fallbackLabel: 'Project Name' },
+  { value: 'description', labelKey: 'aworkIntegration.projectFields.description', fallbackLabel: 'Description' },
+  { value: 'startDate', labelKey: 'aworkIntegration.projectFields.startDate', fallbackLabel: 'Start Date' },
+  { value: 'dueDate', labelKey: 'aworkIntegration.projectFields.dueDate', fallbackLabel: 'Due Date' },
 ];
 
 // Standard awork task fields that can be mapped
 const AWORK_TASK_FIELDS = [
-  { value: 'name', label: 'Task Name' },
-  { value: 'description', label: 'Description' },
-  { value: 'dueOn', label: 'Due Date' },
-  { value: 'startOn', label: 'Start Date' },
-  { value: 'plannedDuration', label: 'Planned Duration (seconds)' },
-  { value: 'tags', label: 'Tags (comma-separated)' },
+  { value: 'name', labelKey: 'aworkIntegration.taskFields.name', fallbackLabel: 'Task Name' },
+  { value: 'description', labelKey: 'aworkIntegration.taskFields.description', fallbackLabel: 'Description' },
+  { value: 'dueOn', labelKey: 'aworkIntegration.taskFields.dueOn', fallbackLabel: 'Due Date' },
+  { value: 'startOn', labelKey: 'aworkIntegration.taskFields.startOn', fallbackLabel: 'Start Date' },
+  { value: 'plannedDuration', labelKey: 'aworkIntegration.taskFields.plannedDuration', fallbackLabel: 'Planned Duration (seconds)' },
+  { value: 'tags', labelKey: 'aworkIntegration.taskFields.tags', fallbackLabel: 'Tags (comma-separated)' },
 ];
 
 interface AworkIntegrationSettingsProps {
@@ -77,6 +78,7 @@ export function AworkIntegrationSettings({
   config,
   onChange,
 }: AworkIntegrationSettingsProps) {
+  const { t } = useTranslation();
   const [projects, setProjects] = useState<AworkProject[]>([]);
   const [projectTypes, setProjectTypes] = useState<AworkProjectType[]>([]);
   const [taskStatuses, setTaskStatuses] = useState<AworkTaskStatus[]>([]);
@@ -99,14 +101,14 @@ export function AworkIntegrationSettings({
     } catch (err) {
       const error = err as Error;
       if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
-        setAworkError('Your awork session has expired. Please re-authenticate with awork.');
+        setAworkError(t('aworkIntegration.errors.sessionExpired'));
       } else {
-        setAworkError('Failed to load awork projects.');
+        setAworkError(t('aworkIntegration.errors.loadProjects'));
       }
     } finally {
       setIsLoadingProjects(false);
     }
-  }, []);
+  }, [t]);
 
   // Fetch awork project types
   const fetchProjectTypes = useCallback(async () => {
@@ -118,14 +120,14 @@ export function AworkIntegrationSettings({
     } catch (err) {
       const error = err as Error;
       if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
-        setAworkError('Your awork session has expired. Please re-authenticate with awork.');
+        setAworkError(t('aworkIntegration.errors.sessionExpired'));
       } else {
-        setAworkError('Failed to load awork project types.');
+        setAworkError(t('aworkIntegration.errors.loadProjectTypes'));
       }
     } finally {
       setIsLoadingProjectTypes(false);
     }
-  }, []);
+  }, [t]);
 
   // Fetch task-related data (statuses, lists, types of work, users, custom fields)
   const fetchTaskData = useCallback(async (projectId: string) => {
@@ -141,20 +143,20 @@ export function AworkIntegrationSettings({
       ]);
       setTaskStatuses(statusesData);
       setTaskLists(listsData);
-      setTypesOfWork(typesData.filter(t => !t.isArchived));
+      setTypesOfWork(typesData.filter((type) => !type.isArchived));
       setUsers(usersData.filter(u => !u.isArchived && !u.isExternal));
       setCustomFields(customFieldsData.filter(f => !f.isArchived));
     } catch (err) {
       const error = err as Error;
       if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
-        setAworkError('Your awork session has expired. Please re-authenticate with awork.');
+        setAworkError(t('aworkIntegration.errors.sessionExpired'));
       } else {
-        setAworkError('Failed to load task configuration data.');
+        setAworkError(t('aworkIntegration.errors.loadTaskData'));
       }
     } finally {
       setIsLoadingTaskData(false);
     }
-  }, []);
+  }, [t]);
 
   // Load awork data when action type requires it
   useEffect(() => {
@@ -263,7 +265,7 @@ export function AworkIntegrationSettings({
           {
             formFieldId,
             aworkField,
-            aworkFieldLabel: aworkFieldInfo?.label || aworkField,
+            aworkFieldLabel: aworkFieldInfo?.fallbackLabel || aworkField,
           },
         ],
       });
@@ -284,7 +286,7 @@ export function AworkIntegrationSettings({
           {
             formFieldId,
             aworkField,
-            aworkFieldLabel: aworkFieldInfo?.label || aworkField,
+            aworkFieldLabel: aworkFieldInfo?.fallbackLabel || aworkField,
           },
         ],
       });
@@ -308,7 +310,7 @@ export function AworkIntegrationSettings({
     if (user.firstName || user.lastName) {
       return `${user.firstName || ''} ${user.lastName || ''}`.trim();
     }
-    return user.email || 'Unknown User';
+    return user.email || t('aworkIntegration.unknownUser');
   };
 
   return (
@@ -316,10 +318,10 @@ export function AworkIntegrationSettings({
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Link2 className="w-4 h-4" />
-          awork Integration
+          {t('aworkIntegration.title')}
         </CardTitle>
         <CardDescription>
-          Configure what happens in awork when this form is submitted
+          {t('aworkIntegration.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -333,19 +335,19 @@ export function AworkIntegrationSettings({
 
         {/* Action Type Selector */}
         <div className="space-y-2">
-          <Label>When form is submitted</Label>
+          <Label>{t('aworkIntegration.actionType.label')}</Label>
           <Select
             value={config.actionType || 'none'}
             onValueChange={handleActionTypeChange}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select an action" />
+              <SelectValue placeholder={t('aworkIntegration.actionType.placeholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Do nothing</SelectItem>
-              <SelectItem value="task">Create a Task</SelectItem>
-              <SelectItem value="project">Create a Project</SelectItem>
-              <SelectItem value="both">Create both Task and Project</SelectItem>
+              <SelectItem value="none">{t('aworkIntegration.actionType.none')}</SelectItem>
+              <SelectItem value="task">{t('aworkIntegration.actionType.task')}</SelectItem>
+              <SelectItem value="project">{t('aworkIntegration.actionType.project')}</SelectItem>
+              <SelectItem value="both">{t('aworkIntegration.actionType.both')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -356,17 +358,17 @@ export function AworkIntegrationSettings({
             <Separator />
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">Task</Badge>
-                <span className="text-sm font-medium">Task Settings</span>
+                <Badge variant="outline" className="text-xs">{t('aworkIntegration.task.badge')}</Badge>
+                <span className="text-sm font-medium">{t('aworkIntegration.task.settings')}</span>
               </div>
 
               {/* Project Selector */}
               <div className="space-y-2">
-                <Label>Add task to project</Label>
+                <Label>{t('aworkIntegration.task.addToProject')}</Label>
                 {isLoadingProjects ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Loading projects...
+                    {t('aworkIntegration.task.loadingProjects')}
                   </div>
                 ) : (
                   <Select
@@ -374,10 +376,10 @@ export function AworkIntegrationSettings({
                     onValueChange={handleProjectChange}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a project" />
+                      <SelectValue placeholder={t('aworkIntegration.task.selectProject')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Select a project...</SelectItem>
+                      <SelectItem value="none">{t('aworkIntegration.task.selectProjectPlaceholder')}</SelectItem>
                       {projects.map((project) => (
                         <SelectItem key={project.id} value={project.id}>
                           {project.name}
@@ -393,7 +395,7 @@ export function AworkIntegrationSettings({
                     onClick={fetchProjects}
                     className="mt-2"
                   >
-                    Load Projects
+                    {t('aworkIntegration.task.loadProjects')}
                   </Button>
                 )}
               </div>
@@ -401,11 +403,11 @@ export function AworkIntegrationSettings({
               {/* Task List Selector */}
               {config.projectId && (
                 <div className="space-y-2">
-                  <Label>Task list</Label>
+                  <Label>{t('aworkIntegration.task.taskList')}</Label>
                   {isLoadingTaskData ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading task lists...
+                      {t('aworkIntegration.task.loadingTaskLists')}
                     </div>
                   ) : (
                     <Select
@@ -413,10 +415,10 @@ export function AworkIntegrationSettings({
                       onValueChange={handleTaskListChange}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a task list" />
+                        <SelectValue placeholder={t('aworkIntegration.task.selectTaskList')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Default (no specific list)</SelectItem>
+                        <SelectItem value="none">{t('aworkIntegration.task.defaultTaskList')}</SelectItem>
                         {taskLists.map((list) => (
                           <SelectItem key={list.id} value={list.id}>
                             {list.name}
@@ -431,11 +433,11 @@ export function AworkIntegrationSettings({
               {/* Task Status Selector */}
               {config.projectId && (
                 <div className="space-y-2">
-                  <Label>Initial task status</Label>
+                  <Label>{t('aworkIntegration.task.taskStatus')}</Label>
                   {isLoadingTaskData ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading statuses...
+                      {t('aworkIntegration.task.loadingStatuses')}
                     </div>
                   ) : (
                     <Select
@@ -443,10 +445,10 @@ export function AworkIntegrationSettings({
                       onValueChange={handleTaskStatusChange}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
+                        <SelectValue placeholder={t('aworkIntegration.task.selectStatus')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Default status</SelectItem>
+                        <SelectItem value="none">{t('aworkIntegration.task.defaultStatus')}</SelectItem>
                         {taskStatuses.map((status) => (
                           <SelectItem key={status.id} value={status.id}>
                             {status.name}
@@ -461,11 +463,11 @@ export function AworkIntegrationSettings({
               {/* Type of Work Selector */}
               {config.projectId && (
                 <div className="space-y-2">
-                  <Label>Type of work</Label>
+                  <Label>{t('aworkIntegration.task.typeOfWork')}</Label>
                   {isLoadingTaskData ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading types of work...
+                      {t('aworkIntegration.task.loadingTypesOfWork')}
                     </div>
                   ) : (
                     <Select
@@ -473,10 +475,10 @@ export function AworkIntegrationSettings({
                       onValueChange={handleTypeOfWorkChange}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select type of work" />
+                        <SelectValue placeholder={t('aworkIntegration.task.selectTypeOfWork')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">No type of work</SelectItem>
+                        <SelectItem value="none">{t('aworkIntegration.task.noTypeOfWork')}</SelectItem>
                         {typesOfWork.map((type) => (
                           <SelectItem key={type.id} value={type.id}>
                             {type.name}
@@ -491,11 +493,11 @@ export function AworkIntegrationSettings({
               {/* Assignee Selector */}
               {config.projectId && (
                 <div className="space-y-2">
-                  <Label>Assign to</Label>
+                  <Label>{t('aworkIntegration.task.assignTo')}</Label>
                   {isLoadingTaskData ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading users...
+                      {t('aworkIntegration.task.loadingUsers')}
                     </div>
                   ) : (
                     <Select
@@ -503,10 +505,10 @@ export function AworkIntegrationSettings({
                       onValueChange={handleAssigneeChange}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select assignee" />
+                        <SelectValue placeholder={t('aworkIntegration.task.selectAssignee')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Unassigned</SelectItem>
+                        <SelectItem value="none">{t('aworkIntegration.task.unassigned')}</SelectItem>
                         {users.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {getUserDisplayName(user)}
@@ -522,9 +524,9 @@ export function AworkIntegrationSettings({
               {config.projectId && (
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Mark as priority</Label>
+                    <Label>{t('aworkIntegration.task.priority')}</Label>
                     <p className="text-sm text-muted-foreground">
-                      Created tasks will be marked as high priority
+                      {t('aworkIntegration.task.priorityHelp')}
                     </p>
                   </div>
                   <Switch
@@ -538,11 +540,11 @@ export function AworkIntegrationSettings({
               {formFields.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm">Map form fields to task</Label>
+                    <Label className="text-sm">{t('aworkIntegration.task.mapFields')}</Label>
                     {config.taskFieldMappings.length > 0 && (
                       <Badge variant="secondary" className="text-xs">
                         <CheckCircle2 className="w-3 h-3 mr-1" />
-                        {config.taskFieldMappings.length} mapped
+                        {t('aworkIntegration.task.mappedCount', { count: config.taskFieldMappings.length })}
                       </Badge>
                     )}
                   </div>
@@ -558,25 +560,25 @@ export function AworkIntegrationSettings({
                           onValueChange={(value) => updateTaskMapping(field.id, value)}
                         >
                           <SelectTrigger className="flex-1 h-9">
-                            <SelectValue placeholder="Not mapped" />
+                            <SelectValue placeholder={t('aworkIntegration.task.notMapped')} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">
-                              <span className="text-muted-foreground">Not mapped</span>
+                              <span className="text-muted-foreground">{t('aworkIntegration.task.notMapped')}</span>
                             </SelectItem>
                             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              Default Fields
+                              {t('common.defaultFields')}
                             </div>
                             {AWORK_TASK_FIELDS.map((aworkField) => (
                               <SelectItem key={aworkField.value} value={aworkField.value}>
-                                {aworkField.label}
+                                {t(aworkField.labelKey)}
                               </SelectItem>
                             ))}
                             {customFields.length > 0 && (
                               <>
                                 <Separator className="my-1" />
                                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                  Custom Fields
+                                  {t('common.customFields')}
                                 </div>
                                 {customFields.map((cf) => (
                                   <SelectItem key={`custom:${cf.id}`} value={`custom:${cf.id}`}>
@@ -607,16 +609,16 @@ export function AworkIntegrationSettings({
             <Separator />
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">Project</Badge>
-                <span className="text-sm font-medium">Project Settings</span>
+                <Badge variant="outline" className="text-xs">{t('aworkIntegration.project.badge')}</Badge>
+                <span className="text-sm font-medium">{t('aworkIntegration.project.settings')}</span>
               </div>
 
               <div className="space-y-2">
-                <Label>Project type</Label>
+                <Label>{t('aworkIntegration.project.projectType')}</Label>
                 {isLoadingProjectTypes ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Loading project types...
+                    {t('aworkIntegration.project.loadingProjectTypes')}
                   </div>
                 ) : (
                   <Select
@@ -624,10 +626,10 @@ export function AworkIntegrationSettings({
                     onValueChange={handleProjectTypeChange}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a project type" />
+                      <SelectValue placeholder={t('aworkIntegration.project.selectProjectType')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Select a project type...</SelectItem>
+                      <SelectItem value="none">{t('aworkIntegration.project.selectProjectTypePlaceholder')}</SelectItem>
                       {projectTypes.map((pt) => (
                         <SelectItem key={pt.id} value={pt.id}>
                           {pt.name}
@@ -643,7 +645,7 @@ export function AworkIntegrationSettings({
                     onClick={fetchProjectTypes}
                     className="mt-2"
                   >
-                    Load Project Types
+                    {t('aworkIntegration.project.loadProjectTypes')}
                   </Button>
                 )}
               </div>
@@ -652,11 +654,11 @@ export function AworkIntegrationSettings({
               {formFields.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm">Map form fields to project</Label>
+                    <Label className="text-sm">{t('aworkIntegration.project.mapFields')}</Label>
                     {config.projectFieldMappings.length > 0 && (
                       <Badge variant="secondary" className="text-xs">
                         <CheckCircle2 className="w-3 h-3 mr-1" />
-                        {config.projectFieldMappings.length} mapped
+                        {t('aworkIntegration.task.mappedCount', { count: config.projectFieldMappings.length })}
                       </Badge>
                     )}
                   </div>
@@ -672,13 +674,13 @@ export function AworkIntegrationSettings({
                           onValueChange={(value) => updateProjectMapping(field.id, value)}
                         >
                           <SelectTrigger className="w-40 h-8 text-xs">
-                            <SelectValue placeholder="Not mapped" />
+                            <SelectValue placeholder={t('aworkIntegration.task.notMapped')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">Not mapped</SelectItem>
+                            <SelectItem value="none">{t('aworkIntegration.task.notMapped')}</SelectItem>
                             {AWORK_PROJECT_FIELDS.map((aworkField) => (
                               <SelectItem key={aworkField.value} value={aworkField.value}>
-                                {aworkField.label}
+                                {t(aworkField.labelKey)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -697,7 +699,7 @@ export function AworkIntegrationSettings({
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Add form fields first to configure field mappings.
+              {t('aworkIntegration.noFields')}
             </AlertDescription>
           </Alert>
         )}

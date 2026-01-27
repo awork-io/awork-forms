@@ -7,6 +7,8 @@ public class Form
     public Guid WorkspaceId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string? NameTranslationsJson { get; set; }
+    public string? DescriptionTranslationsJson { get; set; }
     public string FieldsJson { get; set; } = "[]";
     public string? ActionType { get; set; }
     public Guid? AworkProjectId { get; set; }

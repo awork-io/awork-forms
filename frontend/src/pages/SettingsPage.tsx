@@ -2,16 +2,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AworkLogo } from '@/components/ui/awork-logo';
 import { User, Building2, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function SettingsPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <div className="p-6 lg:p-8">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account and preferences</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('settings.title')}</h1>
+        <p className="text-muted-foreground mt-1">{t('settings.subtitle')}</p>
       </div>
 
       <div className="grid gap-5 max-w-2xl">
@@ -20,9 +22,9 @@ export function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <User className="w-5 h-5 text-muted-foreground" />
-              <CardTitle>Account</CardTitle>
+              <CardTitle>{t('settings.accountTitle')}</CardTitle>
             </div>
-            <CardDescription>Your account information from awork</CardDescription>
+            <CardDescription>{t('settings.accountDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
@@ -49,7 +51,7 @@ export function SettingsPage() {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Building2 className="w-4 h-4" />
-                    Workspace
+                    {t('settings.workspace')}
                   </div>
                   <span className="text-sm font-medium">{user?.workspaceName || user?.workspaceId}</span>
                 </div>
@@ -63,20 +65,20 @@ export function SettingsPage() {
           <CardHeader>
             <div className="flex items-center gap-3">
               <AworkLogo className="h-4" />
-              <CardTitle>Forms</CardTitle>
+              <CardTitle>{t('settings.formsTitle')}</CardTitle>
             </div>
-            <CardDescription>Information about awork Forms</CardDescription>
+            <CardDescription>{t('settings.formsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Version</span>
+              <span className="text-sm text-muted-foreground">{t('settings.version')}</span>
               <span className="text-sm font-medium px-2 py-0.5 bg-muted rounded">1.0.0</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Status</span>
+              <span className="text-sm text-muted-foreground">{t('settings.status')}</span>
               <span className="text-sm font-medium text-green-900 bg-green-50 border border-green-100 px-2.5 py-1 rounded-full flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Connected to awork
+                {t('settings.connected')}
               </span>
             </div>
           </CardContent>

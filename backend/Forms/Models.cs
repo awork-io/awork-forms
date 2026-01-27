@@ -19,6 +19,8 @@ public class FormDetailDto
     public Guid PublicId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public Dictionary<string, string>? NameTranslations { get; set; }
+    public Dictionary<string, string>? DescriptionTranslations { get; set; }
     public string FieldsJson { get; set; } = "[]";
     public string? ActionType { get; set; }
     public Guid? AworkProjectId { get; set; }
@@ -41,6 +43,8 @@ public class CreateFormDto
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public Dictionary<string, string>? NameTranslations { get; set; }
+    public Dictionary<string, string>? DescriptionTranslations { get; set; }
     public string? FieldsJson { get; set; }
     public string? ActionType { get; set; }
     public Guid? AworkProjectId { get; set; }
@@ -60,6 +64,8 @@ public class UpdateFormDto
 {
     public string? Name { get; set; }
     public string? Description { get; set; }
+    public Dictionary<string, string>? NameTranslations { get; set; }
+    public Dictionary<string, string>? DescriptionTranslations { get; set; }
     public string? FieldsJson { get; set; }
     public string? ActionType { get; set; }
     public Guid? AworkProjectId { get; set; }
@@ -82,6 +88,8 @@ public class PublicFormDto
     public Guid PublicId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public Dictionary<string, string>? NameTranslations { get; set; }
+    public Dictionary<string, string>? DescriptionTranslations { get; set; }
     public string FieldsJson { get; set; } = "[]";
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }

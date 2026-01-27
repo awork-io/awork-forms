@@ -4,31 +4,33 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { AworkLogo } from '@/components/ui/awork-logo';
 import { LayoutDashboard, FileText, Inbox, Settings, LogOut } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
 interface NavItem {
-  label: string;
+  labelKey: string;
   href: string;
   icon: React.ReactNode;
 }
 
 const navItems: NavItem[] = [
   {
-    label: 'Dashboard',
+    labelKey: 'nav.dashboard',
     href: '/',
     icon: <LayoutDashboard className="w-5 h-5" />,
   },
   {
-    label: 'Forms',
+    labelKey: 'nav.forms',
     href: '/forms',
     icon: <FileText className="w-5 h-5" />,
   },
   {
-    label: 'Submissions',
+    labelKey: 'nav.submissions',
     href: '/submissions',
     icon: <Inbox className="w-5 h-5" />,
   },
   {
-    label: 'Settings',
+    labelKey: 'nav.settings',
     href: '/settings',
     icon: <Settings className="w-5 h-5" />,
   },
@@ -37,6 +39,7 @@ const navItems: NavItem[] = [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen flex">
@@ -46,7 +49,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="h-16 flex items-center px-5 border-b border-border/50">
           <Link to="/" className="flex items-center gap-3">
             <AworkLogo className="h-5" />
-            <span className="text-sm font-medium text-muted-foreground">Forms</span>
+            <span className="text-sm font-medium text-muted-foreground">{t('brand.product')}</span>
           </Link>
         </div>
 
@@ -68,7 +71,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     )}
                   >
                     {item.icon}
-                    {item.label}
+                    {t(item.labelKey)}
                   </Link>
                 </li>
               );
@@ -98,6 +101,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 {user?.email}
               </p>
             </div>
+            <LanguageSwitcher variant="minimal" />
           </div>
           <Button
             variant="ghost"
@@ -106,7 +110,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={logout}
           >
             <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
+            {t('nav.signOut')}
           </Button>
         </div>
       </aside>

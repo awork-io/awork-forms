@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { type FormField, type SelectOption } from '@/lib/form-types';
+import {
+  type FieldTranslation,
+  type FormField,
+  type SelectOption,
+  getFieldTypeLabel,
+} from '@/lib/form-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +20,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Plus, Trash2, GripVertical, Settings2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface FieldConfigDialogProps {
   field: FormField | null;
@@ -30,6 +37,7 @@ export function FieldConfigDialog({
   onUpdate,
   onDelete,
 }: FieldConfigDialogProps) {
+  const { t } = useTranslation();
   if (!field) return null;
 
   const handleUpdate = (updates: Partial<FormField>) => {
@@ -47,9 +55,9 @@ export function FieldConfigDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings2 className="w-5 h-5" />
-            Field Settings
+            {t('fieldConfigDialog.title')}
             <Badge variant="secondary" className="ml-2 text-xs font-normal">
-              {getFieldTypeName(field.type)}
+              {getFieldTypeLabel(field.type, t)}
             </Badge>
           </DialogTitle>
         </DialogHeader>
@@ -57,12 +65,12 @@ export function FieldConfigDialog({
         <div className="space-y-6 py-4">
           {/* Label */}
           <div className="space-y-2">
-            <Label htmlFor="field-label">Label</Label>
+            <Label htmlFor="field-label">{t('fieldConfigDialog.label')}</Label>
             <Input
               id="field-label"
               value={field.label}
               onChange={(e) => handleUpdate({ label: e.target.value })}
-              placeholder="Field label"
+              placeholder={t('fieldConfigDialog.labelPlaceholder')}
               autoFocus
             />
           </div>
@@ -70,22 +78,26 @@ export function FieldConfigDialog({
           {/* Placeholder (not for checkbox) */}
           {field.type !== 'checkbox' && (
             <div className="space-y-2">
-              <Label htmlFor="field-placeholder">Placeholder</Label>
+              <Label htmlFor="field-placeholder">{t('fieldConfigDialog.placeholder')}</Label>
               <Input
                 id="field-placeholder"
                 value={field.placeholder || ''}
                 onChange={(e) => handleUpdate({ placeholder: e.target.value })}
-                placeholder="Placeholder text (optional)"
+                placeholder={t('fieldConfigDialog.placeholderOptional')}
               />
             </div>
           )}
 
+          <Separator />
+
+          <FieldTranslationsEditor field={field} onUpdate={handleUpdate} />
+
           {/* Required Toggle */}
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label className="text-base">Required</Label>
+              <Label className="text-base">{t('fieldConfigDialog.required')}</Label>
               <p className="text-sm text-muted-foreground">
-                User must fill this field to submit
+                {t('fieldConfigDialog.requiredDescription')}
               </p>
             </div>
             <Switch
@@ -100,19 +112,19 @@ export function FieldConfigDialog({
               <Separator />
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="accepted-types">Accepted File Types</Label>
+                  <Label htmlFor="accepted-types">{t('fieldConfigDialog.acceptedTypes')}</Label>
                   <Input
                     id="accepted-types"
                     value={field.acceptedFileTypes || ''}
                     onChange={(e) => handleUpdate({ acceptedFileTypes: e.target.value })}
-                    placeholder=".pdf,.doc,.docx,.png,.jpg"
+                    placeholder={t('fieldConfigDialog.acceptedTypesPlaceholder')}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Comma-separated list of extensions
+                    {t('fieldConfigDialog.acceptedTypesHelp')}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="max-size">Max File Size (MB)</Label>
+                  <Label htmlFor="max-size">{t('fieldConfigDialog.maxFileSize')}</Label>
                   <Input
                     id="max-size"
                     type="number"
@@ -144,10 +156,10 @@ export function FieldConfigDialog({
             onClick={handleDelete}
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            Delete Field
+            {t('fieldConfigDialog.deleteField')}
           </Button>
           <Button onClick={() => onOpenChange(false)}>
-            Done
+            {t('fieldConfigDialog.done')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -161,6 +173,7 @@ interface SelectOptionsEditorProps {
 }
 
 function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
+  const { t } = useTranslation();
   const [newOptionLabel, setNewOptionLabel] = useState('');
 
   const addOption = () => {
@@ -185,7 +198,7 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
 
   return (
     <div className="space-y-3">
-      <Label>Dropdown Options</Label>
+      <Label>{t('fieldConfigDialog.dropdownOptions')}</Label>
       <div className="space-y-2 max-h-48 overflow-y-auto">
         {options.map((option, index) => (
           <div
@@ -197,7 +210,7 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
               value={option.label}
               onChange={(e) => updateOption(index, { label: e.target.value })}
               className="h-8 flex-1"
-              placeholder="Option label"
+              placeholder={t('fieldConfigDialog.optionLabelPlaceholder')}
             />
             <Button
               variant="ghost"
@@ -215,7 +228,7 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
         <Input
           value={newOptionLabel}
           onChange={(e) => setNewOptionLabel(e.target.value)}
-          placeholder="Add option..."
+          placeholder={t('fieldConfigDialog.addOptionPlaceholder')}
           className="h-9"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
@@ -230,23 +243,157 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
           disabled={!newOptionLabel.trim()}
         >
           <Plus className="w-4 h-4 mr-1" />
-          Add
+          {t('fieldConfigDialog.add')}
         </Button>
       </div>
     </div>
   );
 }
 
-function getFieldTypeName(type: string): string {
-  const names: Record<string, string> = {
-    text: 'Text',
-    email: 'Email',
-    number: 'Number',
-    textarea: 'Long Text',
-    select: 'Dropdown',
-    checkbox: 'Checkbox',
-    date: 'Date',
-    file: 'File Upload',
+interface FieldTranslationsEditorProps {
+  field: FormField;
+  onUpdate: (updates: Partial<FormField>) => void;
+}
+
+function FieldTranslationsEditor({ field, onUpdate }: FieldTranslationsEditorProps) {
+  const { t, i18n } = useTranslation();
+  const defaultLanguage = getSupportedLanguage(i18n.resolvedLanguage || i18n.language);
+  const languages = [
+    { code: 'de', label: t('language.german') },
+    { code: 'en', label: t('language.english') },
+  ];
+
+  const updateTranslation = (language: string, updates: Partial<FieldTranslation>) => {
+    const nextTranslations: Record<string, FieldTranslation> = {
+      ...(field.translations || {}),
+      [language]: {
+        ...(field.translations?.[language] || {}),
+        ...updates,
+      },
+    };
+
+    onUpdate({ translations: normalizeTranslations(nextTranslations) });
   };
-  return names[type] || type;
+
+  const updateOptionTranslation = (language: string, optionValue: string, value: string) => {
+    const currentOptions = field.translations?.[language]?.options || {};
+    updateTranslation(language, {
+      options: {
+        ...currentOptions,
+        [optionValue]: value,
+      },
+    });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-base">{t('fieldConfigDialog.translationsTitle')}</Label>
+        <p className="text-sm text-muted-foreground">
+          {t('fieldConfigDialog.translationsDescription')}
+        </p>
+      </div>
+      <Tabs defaultValue={defaultLanguage}>
+        <TabsList className="grid w-full grid-cols-2">
+          {languages.map((language) => (
+            <TabsTrigger key={language.code} value={language.code} className="text-xs">
+              {language.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {languages.map((language) => {
+          const translation = field.translations?.[language.code];
+          return (
+            <TabsContent key={language.code} value={language.code} className="space-y-3 mt-4">
+              <div className="space-y-2">
+                <Label>{t('fieldConfigDialog.translationLabel')}</Label>
+                <Input
+                  value={translation?.label || ''}
+                  onChange={(e) => updateTranslation(language.code, { label: e.target.value })}
+                  placeholder={field.label}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('fieldConfigDialog.translationOptional')}
+                </p>
+              </div>
+              {field.type !== 'checkbox' && (
+                <div className="space-y-2">
+                  <Label>{t('fieldConfigDialog.translationPlaceholder')}</Label>
+                  <Input
+                    value={translation?.placeholder || ''}
+                    onChange={(e) => updateTranslation(language.code, { placeholder: e.target.value })}
+                    placeholder={field.placeholder || t('fieldConfigDialog.placeholderOptional')}
+                  />
+                </div>
+              )}
+              {field.type === 'select' && (field.options?.length || 0) > 0 && (
+                <div className="space-y-2">
+                  <Label>{t('fieldConfigDialog.optionTranslations')}</Label>
+                  <div className="space-y-2">
+                    {(field.options || []).map((option) => (
+                      <div key={option.value} className="grid grid-cols-2 gap-2 items-center">
+                        <span className="text-sm text-muted-foreground truncate">
+                          {option.label}
+                        </span>
+                        <Input
+                          value={translation?.options?.[option.value] || ''}
+                          onChange={(e) =>
+                            updateOptionTranslation(language.code, option.value, e.target.value)
+                          }
+                          placeholder={t('fieldConfigDialog.optionTranslationPlaceholder')}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          );
+        })}
+      </Tabs>
+    </div>
+  );
+}
+
+function getSupportedLanguage(language?: string) {
+  if (!language) return 'en';
+  if (language.toLowerCase().startsWith('de')) {
+    return 'de';
+  }
+  return 'en';
+}
+
+function normalizeTranslations(
+  translations: Record<string, FieldTranslation>
+): Record<string, FieldTranslation> | undefined {
+  const cleaned = Object.entries(translations).reduce<Record<string, FieldTranslation>>(
+    (acc, [language, value]) => {
+      const next: FieldTranslation = {};
+      if (value.label?.trim()) {
+        next.label = value.label.trim();
+      }
+      if (value.placeholder?.trim()) {
+        next.placeholder = value.placeholder.trim();
+      }
+      if (value.options) {
+        const cleanedOptions = Object.entries(value.options)
+          .filter(([, optionValue]) => optionValue.trim())
+          .reduce<Record<string, string>>((optionAcc, [optionKey, optionValue]) => {
+            optionAcc[optionKey] = optionValue.trim();
+            return optionAcc;
+          }, {});
+        if (Object.keys(cleanedOptions).length > 0) {
+          next.options = cleanedOptions;
+        }
+      }
+
+      if (Object.keys(next).length > 0) {
+        acc[language] = next;
+      }
+      return acc;
+    },
+    {}
+  );
+
+  return Object.keys(cleaned).length > 0 ? cleaned : undefined;
 }

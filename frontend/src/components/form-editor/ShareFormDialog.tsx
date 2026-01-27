@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Check, Copy, ExternalLink, Link2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ShareFormDialogProps {
   open: boolean;
@@ -28,6 +29,7 @@ export function ShareFormDialog({
   formName,
   isActive,
 }: ShareFormDialogProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
@@ -38,14 +40,14 @@ export function ShareFormDialog({
       await navigator.clipboard.writeText(publicUrl);
       setCopied(true);
       toast({
-        title: 'Link copied',
-        description: 'The form link has been copied to your clipboard',
+        title: t('shareForm.toast.copiedTitle'),
+        description: t('shareForm.toast.copiedDesc'),
       });
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast({
-        title: 'Failed to copy',
-        description: 'Could not copy the link to clipboard',
+        title: t('shareForm.toast.copyFailedTitle'),
+        description: t('shareForm.toast.copyFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -61,18 +63,18 @@ export function ShareFormDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Link2 className="w-5 h-5" />
-            Share Form
+            {t('shareForm.title')}
           </DialogTitle>
           <DialogDescription>
-            Share this link with anyone who should fill out your form.
+            {t('shareForm.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="public-url">Public Link</Label>
+              <Label htmlFor="public-url">{t('shareForm.publicLink')}</Label>
               <Badge variant={isActive ? 'default' : 'secondary'}>
-                {isActive ? 'Active' : 'Inactive'}
+                {isActive ? t('common.active') : t('common.inactive')}
               </Badge>
             </div>
             <div className="flex gap-2">
@@ -94,12 +96,12 @@ export function ShareFormDialog({
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
-                <span className="sr-only">Copy link</span>
+                <span className="sr-only">{t('shareForm.copyLinkSr')}</span>
               </Button>
             </div>
             {!isActive && (
               <p className="text-sm text-muted-foreground">
-                This form is currently inactive. Users who visit this link will see a message that the form is not accepting submissions.
+                {t('shareForm.inactiveNotice')}
               </p>
             )}
           </div>
@@ -113,18 +115,18 @@ export function ShareFormDialog({
         <div className="flex justify-between">
           <Button variant="outline" onClick={handleOpenForm}>
             <ExternalLink className="w-4 h-4 mr-2" />
-            Open Form
+            {t('shareForm.openForm')}
           </Button>
           <Button onClick={handleCopy}>
             {copied ? (
               <>
                 <Check className="w-4 h-4 mr-2" />
-                Copied!
+                {t('shareForm.copied')}
               </>
             ) : (
               <>
                 <Copy className="w-4 h-4 mr-2" />
-                Copy Link
+                {t('shareForm.copyLink')}
               </>
             )}
           </Button>

@@ -28,6 +28,8 @@ export interface Form {
 
 export interface FormDetail extends Form {
   fieldsJson: string;
+  nameTranslations?: Record<string, string>;
+  descriptionTranslations?: Record<string, string>;
   actionType?: string;
   aworkProjectId?: string;
   aworkProjectTypeId?: string;
@@ -45,6 +47,8 @@ export interface FormDetail extends Form {
 export interface CreateFormDto {
   name: string;
   description?: string;
+  nameTranslations?: Record<string, string>;
+  descriptionTranslations?: Record<string, string>;
   fieldsJson?: string;
   actionType?: string;
   aworkProjectId?: string;
@@ -63,6 +67,8 @@ export interface CreateFormDto {
 export interface UpdateFormDto {
   name?: string;
   description?: string;
+  nameTranslations?: Record<string, string>;
+  descriptionTranslations?: Record<string, string>;
   fieldsJson?: string;
   actionType?: string;
   aworkProjectId?: string;
@@ -167,6 +173,8 @@ export interface PublicForm {
   publicId: string;
   name: string;
   description?: string;
+  nameTranslations?: Record<string, string>;
+  descriptionTranslations?: Record<string, string>;
   fieldsJson: string;
   primaryColor?: string;
   backgroundColor?: string;

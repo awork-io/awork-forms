@@ -14,12 +14,19 @@ export interface SelectOption {
   value: string;
 }
 
+export interface FieldTranslation {
+  label?: string;
+  placeholder?: string;
+  options?: Record<string, string>;
+}
+
 export interface FormField {
   id: string;
   type: FieldType;
   label: string;
   placeholder?: string;
   required: boolean;
+  translations?: Record<string, FieldTranslation>;
   options?: SelectOption[]; // For select fields
   acceptedFileTypes?: string; // For file fields (e.g., ".pdf,.doc,.docx")
   maxFileSizeMB?: number; // For file fields
@@ -88,12 +95,131 @@ export const FIELD_TYPES: FieldTypeInfo[] = [
   },
 ];
 
+const FIELD_TYPE_TRANSLATION_KEYS: Record<
+  FieldType,
+  { labelKey: string; descriptionKey: string; defaultLabelKey: string }
+> = {
+  text: {
+    labelKey: 'fieldTypes.text.label',
+    descriptionKey: 'fieldTypes.text.description',
+    defaultLabelKey: 'fieldDefaults.text',
+  },
+  email: {
+    labelKey: 'fieldTypes.email.label',
+    descriptionKey: 'fieldTypes.email.description',
+    defaultLabelKey: 'fieldDefaults.email',
+  },
+  number: {
+    labelKey: 'fieldTypes.number.label',
+    descriptionKey: 'fieldTypes.number.description',
+    defaultLabelKey: 'fieldDefaults.number',
+  },
+  textarea: {
+    labelKey: 'fieldTypes.textarea.label',
+    descriptionKey: 'fieldTypes.textarea.description',
+    defaultLabelKey: 'fieldDefaults.textarea',
+  },
+  select: {
+    labelKey: 'fieldTypes.select.label',
+    descriptionKey: 'fieldTypes.select.description',
+    defaultLabelKey: 'fieldDefaults.select',
+  },
+  checkbox: {
+    labelKey: 'fieldTypes.checkbox.label',
+    descriptionKey: 'fieldTypes.checkbox.description',
+    defaultLabelKey: 'fieldDefaults.checkbox',
+  },
+  date: {
+    labelKey: 'fieldTypes.date.label',
+    descriptionKey: 'fieldTypes.date.description',
+    defaultLabelKey: 'fieldDefaults.date',
+  },
+  file: {
+    labelKey: 'fieldTypes.file.label',
+    descriptionKey: 'fieldTypes.file.description',
+    defaultLabelKey: 'fieldDefaults.file',
+  },
+};
+
+const FIELD_TYPE_FALLBACKS: Record<
+  FieldType,
+  { label: string; description: string; defaultLabel: string }
+> = {
+  text: {
+    label: 'Text',
+    description: 'Single line text input',
+    defaultLabel: 'Text Field',
+  },
+  email: {
+    label: 'Email',
+    description: 'Email address input',
+    defaultLabel: 'Email Address',
+  },
+  number: {
+    label: 'Number',
+    description: 'Numeric input',
+    defaultLabel: 'Number',
+  },
+  textarea: {
+    label: 'Long Text',
+    description: 'Multi-line text area',
+    defaultLabel: 'Description',
+  },
+  select: {
+    label: 'Dropdown',
+    description: 'Select from options',
+    defaultLabel: 'Select Option',
+  },
+  checkbox: {
+    label: 'Checkbox',
+    description: 'Yes/No checkbox',
+    defaultLabel: 'I agree',
+  },
+  date: {
+    label: 'Date',
+    description: 'Date picker',
+    defaultLabel: 'Date',
+  },
+  file: {
+    label: 'File Upload',
+    description: 'Upload files',
+    defaultLabel: 'Attachment',
+  },
+};
+
+const OPTION_LABEL_KEYS = {
+  option1: 'fieldDefaults.option1',
+  option2: 'fieldDefaults.option2',
+} as const;
+
+export function getFieldTypeLabel(type: FieldType, t?: TFunction): string {
+  const meta = FIELD_TYPE_TRANSLATION_KEYS[type];
+  if (!meta) return type;
+  if (t) return t(meta.labelKey);
+  return FIELD_TYPE_FALLBACKS[type].label;
+}
+
+export function getFieldTypeDescription(type: FieldType, t?: TFunction): string {
+  const meta = FIELD_TYPE_TRANSLATION_KEYS[type];
+  if (!meta) return type;
+  if (t) return t(meta.descriptionKey);
+  return FIELD_TYPE_FALLBACKS[type].description;
+}
+
+export function getTranslatedFieldTypes(t?: TFunction): FieldTypeInfo[] {
+  return FIELD_TYPES.map((fieldType) => ({
+    ...fieldType,
+    label: getFieldTypeLabel(fieldType.type, t),
+    description: getFieldTypeDescription(fieldType.type, t),
+  }));
+}
+
 // Create a new field with default values
-export function createField(type: FieldType): FormField {
+export function createField(type: FieldType, t?: TFunction): FormField {
   const baseField = {
     id: crypto.randomUUID(),
     type,
-    label: getDefaultLabel(type),
+    label: getDefaultLabel(type, t),
     required: false,
     placeholder: '',
   };
@@ -102,8 +228,8 @@ export function createField(type: FieldType): FormField {
     return {
       ...baseField,
       options: [
-        { label: 'Option 1', value: 'option1' },
-        { label: 'Option 2', value: 'option2' },
+        { label: getDefaultOptionLabel('option1', t), value: 'option1' },
+        { label: getDefaultOptionLabel('option2', t), value: 'option2' },
       ],
     };
   }
@@ -119,7 +245,11 @@ export function createField(type: FieldType): FormField {
   return baseField;
 }
 
-function getDefaultLabel(type: FieldType): string {
+function getDefaultLabel(type: FieldType, t?: TFunction): string {
+  const meta = FIELD_TYPE_TRANSLATION_KEYS[type];
+  if (meta && t) {
+    return t(meta.defaultLabelKey);
+  }
   switch (type) {
     case 'text':
       return 'Text Field';
@@ -141,3 +271,14 @@ function getDefaultLabel(type: FieldType): string {
       return 'Field';
   }
 }
+
+function getDefaultOptionLabel(
+  option: keyof typeof OPTION_LABEL_KEYS,
+  t?: TFunction
+): string {
+  if (t) {
+    return t(OPTION_LABEL_KEYS[option]);
+  }
+  return option === 'option1' ? 'Option 1' : 'Option 2';
+}
+import type { TFunction } from 'i18next';

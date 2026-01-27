@@ -61,6 +61,8 @@ public class FormsService
             WorkspaceId = user.AworkWorkspaceId,
             Name = dto.Name,
             Description = dto.Description,
+            NameTranslationsJson = SerializeTranslations(dto.NameTranslations),
+            DescriptionTranslationsJson = SerializeTranslations(dto.DescriptionTranslations),
             FieldsJson = dto.FieldsJson ?? "[]",
             ActionType = dto.ActionType,
             AworkProjectId = dto.AworkProjectId,
@@ -94,6 +96,8 @@ public class FormsService
 
         if (dto.Name != null) form.Name = dto.Name;
         if (dto.Description != null) form.Description = dto.Description;
+        if (dto.NameTranslations != null) form.NameTranslationsJson = SerializeTranslations(dto.NameTranslations);
+        if (dto.DescriptionTranslations != null) form.DescriptionTranslationsJson = SerializeTranslations(dto.DescriptionTranslations);
         if (dto.FieldsJson != null) form.FieldsJson = dto.FieldsJson;
         if (dto.ActionType != null) form.ActionType = dto.ActionType;
         if (dto.AworkProjectId != null) form.AworkProjectId = dto.AworkProjectId;
@@ -140,6 +144,8 @@ public class FormsService
             PublicId = form.PublicId,
             Name = form.Name,
             Description = form.Description,
+            NameTranslations = DeserializeTranslations(form.NameTranslationsJson),
+            DescriptionTranslations = DeserializeTranslations(form.DescriptionTranslationsJson),
             FieldsJson = form.FieldsJson,
             PrimaryColor = form.PrimaryColor,
             BackgroundColor = form.BackgroundColor,
@@ -231,6 +237,8 @@ public class FormsService
         PublicId = form.PublicId,
         Name = form.Name,
         Description = form.Description,
+        NameTranslations = DeserializeTranslations(form.NameTranslationsJson),
+        DescriptionTranslations = DeserializeTranslations(form.DescriptionTranslationsJson),
         FieldsJson = form.FieldsJson,
         ActionType = form.ActionType,
         AworkProjectId = form.AworkProjectId,
@@ -248,6 +256,31 @@ public class FormsService
         CreatedAt = form.CreatedAt,
         UpdatedAt = form.UpdatedAt
     };
+
+    private static Dictionary<string, string>? DeserializeTranslations(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? SerializeTranslations(Dictionary<string, string>? translations)
+    {
+        if (translations == null) return null;
+
+        var trimmed = translations
+            .Where(kv => !string.IsNullOrWhiteSpace(kv.Key) && !string.IsNullOrWhiteSpace(kv.Value))
+            .ToDictionary(kv => kv.Key.Trim(), kv => kv.Value.Trim());
+
+        if (trimmed.Count == 0) return null;
+        return JsonSerializer.Serialize(trimmed);
+    }
 
     private static int CountFields(string fieldsJson)
     {

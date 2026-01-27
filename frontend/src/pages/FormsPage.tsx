@@ -32,8 +32,10 @@ import { api, type Form } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
 import { Plus, MoreVertical, Pencil, ClipboardList, Eye, Share2, Trash2, FileText, Layers, Inbox } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function FormsPage() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [forms, setForms] = useState<Form[]>([]);
@@ -51,8 +53,8 @@ export function FormsPage() {
       setForms(data);
     } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to load forms',
+        title: t('common.error'),
+        description: t('formsPage.toast.loadError'),
         variant: 'destructive',
       });
     } finally {
@@ -68,8 +70,8 @@ export function FormsPage() {
   const handleCreateForm = async () => {
     if (!newFormName.trim()) {
       toast({
-        title: 'Error',
-        description: 'Form name is required',
+        title: t('common.error'),
+        description: t('formsPage.toast.nameRequired'),
         variant: 'destructive',
       });
       return;
@@ -79,8 +81,8 @@ export function FormsPage() {
     try {
       const form = await api.createForm({ name: newFormName.trim() });
       toast({
-        title: 'Success',
-        description: 'Form created successfully',
+        title: t('common.success'),
+        description: t('formsPage.toast.createSuccess'),
       });
       setIsCreateDialogOpen(false);
       setNewFormName('');
@@ -88,8 +90,8 @@ export function FormsPage() {
       navigate(`/forms/${form.id}/edit`);
     } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to create form',
+        title: t('common.error'),
+        description: t('formsPage.toast.createError'),
         variant: 'destructive',
       });
     } finally {
@@ -104,15 +106,15 @@ export function FormsPage() {
     try {
       await api.deleteForm(deleteFormId);
       toast({
-        title: 'Success',
-        description: 'Form deleted successfully',
+        title: t('common.success'),
+        description: t('formsPage.toast.deleteSuccess'),
       });
       setForms(forms.filter((f) => f.id !== deleteFormId));
       setDeleteFormId(null);
     } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to delete form',
+        title: t('common.error'),
+        description: t('formsPage.toast.deleteError'),
         variant: 'destructive',
       });
     } finally {
@@ -121,7 +123,7 @@ export function FormsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(i18n.language || 'en', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -132,7 +134,7 @@ export function FormsPage() {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Loading forms...</div>
+          <div className="text-muted-foreground">{t('common.loadingForms')}</div>
         </div>
       </div>
     );
@@ -143,12 +145,12 @@ export function FormsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Forms</h1>
-          <p className="text-muted-foreground mt-1">Create and manage your forms</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t('formsPage.title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('formsPage.subtitle')}</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)} className="shadow-sm">
           <Plus className="w-4 h-4 mr-2" />
-          Create Form
+          {t('formsPage.createForm')}
         </Button>
       </div>
 
@@ -158,15 +160,15 @@ export function FormsPage() {
             <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4">
               <FileText className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle className="text-xl">No forms yet</CardTitle>
+            <CardTitle className="text-xl">{t('formsPage.emptyTitle')}</CardTitle>
             <CardDescription className="max-w-sm mx-auto">
-              Create your first form to start collecting submissions and creating tasks in awork.
+              {t('formsPage.emptyDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center pb-12">
             <Button onClick={() => setIsCreateDialogOpen(true)} size="lg">
               <Plus className="w-4 h-4 mr-2" />
-              Create Your First Form
+              {t('formsPage.emptyCta')}
             </Button>
           </CardContent>
         </Card>
@@ -190,32 +192,32 @@ export function FormsPage() {
                     <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         <MoreVertical className="w-4 h-4" />
-                        <span className="sr-only">Actions</span>
+                        <span className="sr-only">{t('formsPage.actionsLabel')}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenuItem onClick={() => navigate(`/forms/${form.id}/edit`)}>
                         <Pencil className="w-4 h-4 mr-2" />
-                        Edit
+                        {t('common.edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate(`/forms/${form.id}/submissions`)}>
                         <ClipboardList className="w-4 h-4 mr-2" />
-                        View Submissions
+                        {t('formsPage.viewSubmissions')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => window.open(`/f/${form.publicId}`, '_blank')}>
                         <Eye className="w-4 h-4 mr-2" />
-                        View Public Form
+                        {t('formsPage.viewPublicForm')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setShareForm(form)}>
                         <Share2 className="w-4 h-4 mr-2" />
-                        Share
+                        {t('common.share')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         onClick={() => setDeleteFormId(form.id)}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
+                        {t('common.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -225,11 +227,11 @@ export function FormsPage() {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1.5">
                     <Layers className="w-4 h-4" />
-                    <span>{form.fieldCount} fields</span>
+                    <span>{t('common.fieldsCount', { count: form.fieldCount })}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Inbox className="w-4 h-4" />
-                    <span>{form.submissionCount} submissions</span>
+                    <span>{t('common.submissionsCount', { count: form.submissionCount })}</span>
                   </div>
                 </div>
                 <div className="mt-4 flex items-center justify-between">
@@ -238,10 +240,10 @@ export function FormsPage() {
                       ? 'bg-green-50 text-green-900 border border-green-100'
                       : 'bg-muted text-muted-foreground'
                   }`}>
-                    {form.isActive ? 'Active' : 'Inactive'}
+                    {form.isActive ? t('common.active') : t('common.inactive')}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    Updated {formatDate(form.updatedAt)}
+                    {t('formsPage.updated', { date: formatDate(form.updatedAt) })}
                   </span>
                 </div>
               </CardContent>
@@ -254,17 +256,17 @@ export function FormsPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New Form</DialogTitle>
+            <DialogTitle>{t('formsPage.dialog.title')}</DialogTitle>
             <DialogDescription>
-              Enter a name for your new form. You can add fields and configure settings after creating it.
+              {t('formsPage.dialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Form Name</Label>
+              <Label htmlFor="name">{t('formsPage.dialog.nameLabel')}</Label>
               <Input
                 id="name"
-                placeholder="e.g., Contact Form, Support Request"
+                placeholder={t('formsPage.dialog.namePlaceholder')}
                 value={newFormName}
                 onChange={(e) => setNewFormName(e.target.value)}
                 onKeyDown={(e) => {
@@ -277,10 +279,10 @@ export function FormsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Cancel
+              {t('formsPage.dialog.cancel')}
             </Button>
             <Button onClick={handleCreateForm} disabled={isCreating}>
-              {isCreating ? 'Creating...' : 'Create Form'}
+              {isCreating ? t('formsPage.dialog.creating') : t('formsPage.dialog.create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -290,19 +292,19 @@ export function FormsPage() {
       <AlertDialog open={deleteFormId !== null} onOpenChange={() => setDeleteFormId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Form</AlertDialogTitle>
+            <AlertDialogTitle>{t('formsPage.deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this form? This action cannot be undone. All submissions associated with this form will also be deleted.
+              {t('formsPage.deleteDialog.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('formsPage.deleteDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteForm}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? t('formsPage.deleteDialog.deleting') : t('formsPage.deleteDialog.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

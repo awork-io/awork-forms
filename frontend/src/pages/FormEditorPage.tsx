@@ -23,13 +23,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { api, type FormDetail } from '@/lib/api';
 import {
   type FormField,
   type FieldType,
-  FIELD_TYPES,
   createField,
+  getFieldTypeLabel,
 } from '@/lib/form-types';
 import { FieldCard } from '@/components/form-editor/FieldCard';
 import { FieldConfigDialog } from '@/components/form-editor/FieldConfigDialog';
@@ -54,8 +55,10 @@ import {
   Share2,
 } from 'lucide-react';
 import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
+import { useTranslation } from 'react-i18next';
 
 export function FormEditorPage() {
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -65,6 +68,8 @@ export function FormEditorPage() {
   const [form, setForm] = useState<FormDetail | null>(null);
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
+  const [nameTranslations, setNameTranslations] = useState<Record<string, string>>({});
+  const [descriptionTranslations, setDescriptionTranslations] = useState<Record<string, string>>({});
   const [isActive, setIsActive] = useState(true);
   const [fields, setFields] = useState<FormField[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
@@ -107,6 +112,8 @@ export function FormEditorPage() {
       setForm(data);
       setFormName(data.name);
       setFormDescription(data.description || '');
+      setNameTranslations(data.nameTranslations || {});
+      setDescriptionTranslations(data.descriptionTranslations || {});
       setIsActive(data.isActive);
 
       // Parse fields from JSON
@@ -140,15 +147,15 @@ export function FormEditorPage() {
       ));
     } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to load form',
+        title: t('common.error'),
+        description: t('formEditor.toast.loadError'),
         variant: 'destructive',
       });
       navigate('/forms');
     } finally {
       setIsLoading(false);
     }
-  }, [navigate, toast]);
+  }, [navigate, toast, t]);
 
   useEffect(() => {
     if (id) {
@@ -159,8 +166,8 @@ export function FormEditorPage() {
   const handleSave = async () => {
     if (!id || !formName.trim()) {
       toast({
-        title: 'Error',
-        description: 'Form name is required',
+        title: t('common.error'),
+        description: t('formEditor.toast.nameRequired'),
         variant: 'destructive',
       });
       return;
@@ -170,22 +177,26 @@ export function FormEditorPage() {
     try {
       const aworkData = serializeAworkConfig(aworkConfig);
       const stylingData = serializeStyling(styling);
+      const normalizedNameTranslations = normalizeTranslations(nameTranslations, formName) ?? {};
+      const normalizedDescriptionTranslations = normalizeTranslations(descriptionTranslations, formDescription) ?? {};
       await api.updateForm(parseInt(id), {
         name: formName.trim(),
         description: formDescription.trim() || undefined,
+        nameTranslations: normalizedNameTranslations,
+        descriptionTranslations: normalizedDescriptionTranslations,
         fieldsJson: JSON.stringify(fields),
         isActive,
         ...aworkData,
         ...stylingData,
       });
       toast({
-        title: 'Saved',
-        description: 'Form saved successfully',
+        title: t('formEditor.toast.saveSuccessTitle'),
+        description: t('formEditor.toast.saveSuccessDesc'),
       });
     } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to save form',
+        title: t('common.error'),
+        description: t('formEditor.toast.saveError'),
         variant: 'destructive',
       });
     } finally {
@@ -222,7 +233,7 @@ export function FormEditorPage() {
     // Check if dropping a new field type onto the canvas
     if (activeIdStr.startsWith('field-type-')) {
       const fieldType = activeIdStr.replace('field-type-', '') as FieldType;
-      const newField = createField(fieldType);
+      const newField = createField(fieldType, t);
 
       if (overIdStr === 'form-canvas' || fields.length === 0) {
         // Drop on empty canvas or canvas drop zone
@@ -277,7 +288,7 @@ export function FormEditorPage() {
       const newField = {
         ...field,
         id: crypto.randomUUID(),
-        label: `${field.label} (Copy)`,
+        label: `${field.label} (${t('formEditor.copySuffix')})`,
       };
       const index = fields.findIndex((f) => f.id === fieldId);
       const newFields = [...fields];
@@ -288,7 +299,7 @@ export function FormEditorPage() {
   };
 
   const handleAddField = (fieldType: FieldType, atIndex: number) => {
-    const newField = createField(fieldType);
+    const newField = createField(fieldType, t);
     const newFields = [...fields];
     newFields.splice(atIndex, 0, newField);
     setFields(newFields);
@@ -296,6 +307,11 @@ export function FormEditorPage() {
   };
 
   const selectedField = fields.find((f) => f.id === selectedFieldId);
+  const defaultTranslationLanguage = getSupportedLanguage(i18n.resolvedLanguage || i18n.language);
+  const translationLanguages = [
+    { code: 'de', label: t('language.german') },
+    { code: 'en', label: t('language.english') },
+  ];
 
   if (isLoading) {
     return (
@@ -318,13 +334,13 @@ export function FormEditorPage() {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h1 className="text-lg font-semibold">{formName || 'Untitled Form'}</h1>
+            <h1 className="text-lg font-semibold">{formName || t('formEditor.untitled')}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Badge variant={isActive ? 'default' : 'secondary'}>
-                {isActive ? 'Active' : 'Inactive'}
+                {isActive ? t('common.active') : t('common.inactive')}
               </Badge>
               <span>·</span>
-              <span>{fields.length} fields</span>
+              <span>{t('common.fieldsCount', { count: fields.length })}</span>
             </div>
           </div>
         </div>
@@ -337,7 +353,7 @@ export function FormEditorPage() {
                 onClick={() => window.open(`/f/${form.publicId}`, '_blank')}
               >
                 <Eye className="w-4 h-4 mr-2" />
-                Preview
+                {t('formEditor.preview')}
               </Button>
               <Button
                 variant="outline"
@@ -345,7 +361,7 @@ export function FormEditorPage() {
                 onClick={() => setIsShareDialogOpen(true)}
               >
                 <Share2 className="w-4 h-4 mr-2" />
-                Share
+                {t('formEditor.share')}
               </Button>
             </>
           )}
@@ -355,7 +371,7 @@ export function FormEditorPage() {
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            Save
+            {t('formEditor.save')}
           </Button>
         </div>
       </div>
@@ -374,33 +390,33 @@ export function FormEditorPage() {
               {/* Form Settings */}
               <Card className="mb-6">
                 <CardHeader>
-                  <CardTitle className="text-base">Form Settings</CardTitle>
+                  <CardTitle className="text-base">{t('formEditor.formSettings')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="form-name">Form Name</Label>
+                    <Label htmlFor="form-name">{t('formEditor.formName')}</Label>
                     <Input
                       id="form-name"
                       value={formName}
                       onChange={(e) => setFormName(e.target.value)}
-                      placeholder="Enter form name"
+                      placeholder={t('formEditor.formNamePlaceholder')}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="form-description">Description (optional)</Label>
+                    <Label htmlFor="form-description">{t('formEditor.descriptionLabel')}</Label>
                     <Textarea
                       id="form-description"
                       value={formDescription}
                       onChange={(e) => setFormDescription(e.target.value)}
-                      placeholder="Describe what this form is for"
+                      placeholder={t('formEditor.descriptionPlaceholder')}
                       rows={2}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Form Status</Label>
+                      <Label>{t('formEditor.formStatus')}</Label>
                       <p className="text-sm text-muted-foreground">
-                        {isActive ? 'Form is accepting submissions' : 'Form is not accepting submissions'}
+                        {isActive ? t('formEditor.formStatusActive') : t('formEditor.formStatusInactive')}
                       </p>
                     </div>
                     <Switch
@@ -408,6 +424,60 @@ export function FormEditorPage() {
                       onCheckedChange={setIsActive}
                     />
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-base">{t('formEditor.translations.title')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('formEditor.translations.description')}
+                  </p>
+                  <Tabs defaultValue={defaultTranslationLanguage} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      {translationLanguages.map((language) => (
+                        <TabsTrigger key={language.code} value={language.code} className="text-xs">
+                          {language.label}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    {translationLanguages.map((language) => (
+                      <TabsContent key={language.code} value={language.code} className="space-y-4 mt-4">
+                        <div className="space-y-2">
+                          <Label>{t('formEditor.translations.formName')}</Label>
+                          <Input
+                            value={nameTranslations[language.code] || ''}
+                            onChange={(e) =>
+                              setNameTranslations((prev) => ({
+                                ...prev,
+                                [language.code]: e.target.value,
+                              }))
+                            }
+                            placeholder={formName || t('formEditor.formNamePlaceholder')}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            {t('formEditor.translations.fallbackHint')}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{t('formEditor.translations.formDescription')}</Label>
+                          <Textarea
+                            value={descriptionTranslations[language.code] || ''}
+                            onChange={(e) =>
+                              setDescriptionTranslations((prev) => ({
+                                ...prev,
+                                [language.code]: e.target.value,
+                              }))
+                            }
+                            placeholder={formDescription || t('formEditor.descriptionPlaceholder')}
+                            rows={2}
+                          />
+                        </div>
+                      </TabsContent>
+                    ))}
+                  </Tabs>
                 </CardContent>
               </Card>
 
@@ -438,7 +508,7 @@ export function FormEditorPage() {
 
               {/* Form Fields */}
               <div className="space-y-4">
-                <h2 className="text-base font-semibold">Form Fields</h2>
+                <h2 className="text-base font-semibold">{t('formEditor.formFields')}</h2>
 
                 <FormCanvas
                   fields={fields}
@@ -464,7 +534,7 @@ export function FormEditorPage() {
             {draggedFieldType && (
               <div className="bg-background border rounded-lg shadow-lg p-4 w-64 opacity-90">
                 <p className="font-medium">
-                  {FIELD_TYPES.find((ft) => ft.type === draggedFieldType)?.label}
+                  {getFieldTypeLabel(draggedFieldType, t)}
                 </p>
               </div>
             )}
@@ -478,7 +548,7 @@ export function FormEditorPage() {
           open={isShareDialogOpen}
           onOpenChange={setIsShareDialogOpen}
           publicId={form.publicId}
-          formName={formName || 'Untitled Form'}
+          formName={formName || t('formEditor.untitled')}
           isActive={isActive}
         />
       )}
@@ -493,4 +563,31 @@ export function FormEditorPage() {
       />
     </div>
   );
+}
+
+function getSupportedLanguage(language?: string) {
+  if (!language) return 'en';
+  if (language.toLowerCase().startsWith('de')) {
+    return 'de';
+  }
+  return 'en';
+}
+
+function normalizeTranslations(
+  translations: Record<string, string>,
+  fallback: string
+): Record<string, string> | undefined {
+  const fallbackValue = fallback.trim();
+  const cleaned = Object.entries(translations).reduce<Record<string, string>>(
+    (acc, [language, value]) => {
+      const trimmed = value.trim();
+      if (!trimmed) return acc;
+      if (fallbackValue && trimmed === fallbackValue) return acc;
+      acc[language] = trimmed;
+      return acc;
+    },
+    {}
+  );
+
+  return Object.keys(cleaned).length > 0 ? cleaned : undefined;
 }

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { X, Plus, Trash2, GripVertical } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface FieldConfigPanelProps {
   field: FormField;
@@ -18,11 +19,12 @@ export function FieldConfigPanel({
   onUpdate,
   onClose,
 }: FieldConfigPanelProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Field Settings</h3>
+        <h3 className="font-semibold">{t('fieldConfigPanel.title')}</h3>
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
           <X className="w-4 h-4" />
         </Button>
@@ -33,32 +35,32 @@ export function FieldConfigPanel({
       {/* Basic Settings */}
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="field-label">Label</Label>
+          <Label htmlFor="field-label">{t('fieldConfigDialog.label')}</Label>
           <Input
             id="field-label"
             value={field.label}
             onChange={(e) => onUpdate({ label: e.target.value })}
-            placeholder="Field label"
+            placeholder={t('fieldConfigDialog.labelPlaceholder')}
           />
         </div>
 
         {field.type !== 'checkbox' && (
           <div className="space-y-2">
-            <Label htmlFor="field-placeholder">Placeholder</Label>
+            <Label htmlFor="field-placeholder">{t('fieldConfigDialog.placeholder')}</Label>
             <Input
               id="field-placeholder"
               value={field.placeholder || ''}
               onChange={(e) => onUpdate({ placeholder: e.target.value })}
-              placeholder="Placeholder text"
+              placeholder={t('fieldConfigDialog.placeholderOptional')}
             />
           </div>
         )}
 
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label>Required</Label>
+            <Label>{t('fieldConfigDialog.required')}</Label>
             <p className="text-xs text-muted-foreground">
-              User must fill this field
+              {t('fieldConfigDialog.requiredDescription')}
             </p>
           </div>
           <Switch
@@ -83,8 +85,8 @@ export function FieldConfigPanel({
       <Separator />
       <div className="rounded-lg bg-muted p-3">
         <p className="text-xs text-muted-foreground">
-          <span className="font-medium">Field Type:</span>{' '}
-          {getFieldTypeDescription(field.type)}
+          <span className="font-medium">{t('fieldConfigPanel.fieldTypeLabel')}</span>{' '}
+          {t(`fieldTypeInfo.${field.type}`, { defaultValue: t('fieldTypeInfo.default') })}
         </p>
       </div>
     </div>
@@ -97,6 +99,7 @@ interface SelectOptionsEditorProps {
 }
 
 function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
+  const { t } = useTranslation();
   const [newOptionLabel, setNewOptionLabel] = useState('');
 
   const addOption = () => {
@@ -130,7 +133,7 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
 
   return (
     <div className="space-y-3">
-      <Label>Options</Label>
+      <Label>{t('fieldConfigDialog.dropdownOptions')}</Label>
 
       <div className="space-y-2">
         {options.map((option, index) => (
@@ -145,7 +148,7 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
               value={option.label}
               onChange={(e) => updateOption(index, { label: e.target.value })}
               className="h-8 flex-1"
-              placeholder="Option label"
+              placeholder={t('fieldConfigDialog.optionLabelPlaceholder')}
             />
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
@@ -209,7 +212,7 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
         <Input
           value={newOptionLabel}
           onChange={(e) => setNewOptionLabel(e.target.value)}
-          placeholder="New option"
+          placeholder={t('fieldConfigDialog.addOptionPlaceholder')}
           className="h-8"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
@@ -225,30 +228,9 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
           disabled={!newOptionLabel.trim()}
         >
           <Plus className="w-4 h-4 mr-1" />
-          Add
+          {t('fieldConfigDialog.add')}
         </Button>
       </div>
     </div>
   );
-}
-
-function getFieldTypeDescription(type: string): string {
-  switch (type) {
-    case 'text':
-      return 'Single line text input for short answers';
-    case 'email':
-      return 'Email address input with validation';
-    case 'number':
-      return 'Numeric input for numbers only';
-    case 'textarea':
-      return 'Multi-line text area for longer responses';
-    case 'select':
-      return 'Dropdown menu for selecting one option';
-    case 'checkbox':
-      return 'Checkbox for yes/no or agreement';
-    case 'date':
-      return 'Date picker for selecting a date';
-    default:
-      return 'Custom field type';
-  }
 }

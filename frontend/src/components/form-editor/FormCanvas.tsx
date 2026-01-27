@@ -6,6 +6,7 @@ import {
 import { type FormField, type FieldType } from '@/lib/form-types';
 import { SortableFieldCard } from './SortableFieldCard';
 import { AddFieldZone } from './AddFieldZone';
+import { useTranslation } from 'react-i18next';
 
 interface FormCanvasProps {
   fields: FormField[];
@@ -24,6 +25,7 @@ export function FormCanvas({
   onFieldDuplicate,
   onAddField,
 }: FormCanvasProps) {
+  const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({
     id: 'form-canvas',
   });
@@ -56,9 +58,9 @@ export function FormCanvas({
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              <p className="text-sm font-medium">No fields yet</p>
+              <p className="text-sm font-medium">{t('formCanvas.emptyTitle')}</p>
               <p className="text-xs mt-1">
-                Click above or drag fields to add them
+                {t('formCanvas.emptySubtitle')}
               </p>
             </div>
           </div>

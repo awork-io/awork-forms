@@ -5,7 +5,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { type FieldType, type FieldTypeInfo, FIELD_TYPES } from '@/lib/form-types';
+import { type FieldType, type FieldTypeInfo, getTranslatedFieldTypes } from '@/lib/form-types';
 import {
   Type,
   Mail,
@@ -16,6 +16,7 @@ import {
   Calendar,
   Paperclip,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AddFieldZoneProps {
   onAddField: (fieldType: FieldType) => void;
@@ -23,7 +24,9 @@ interface AddFieldZoneProps {
 }
 
 export function AddFieldZone({ onAddField, isFirst }: AddFieldZoneProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const fieldTypes = getTranslatedFieldTypes(t);
 
   const handleSelect = (fieldType: FieldType) => {
     onAddField(fieldType);
@@ -41,12 +44,12 @@ export function AddFieldZone({ onAddField, isFirst }: AddFieldZoneProps) {
               transition-all duration-200"
           >
             <Plus className="w-4 h-4" />
-            <span className="text-xs font-medium">Add field</span>
+            <span className="text-xs font-medium">{t('addField.button')}</span>
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-72 p-2" align="center">
           <div className="grid grid-cols-2 gap-1">
-            {FIELD_TYPES.map((fieldType) => (
+            {fieldTypes.map((fieldType) => (
               <FieldTypeButton
                 key={fieldType.type}
                 fieldType={fieldType}

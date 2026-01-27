@@ -1,6 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { type FieldTypeInfo } from '@/lib/form-types';
+import { type FieldTypeInfo, getFieldTypeLabel, getFieldTypeDescription } from '@/lib/form-types';
 import {
   Type,
   Mail,
@@ -11,23 +11,30 @@ import {
   Calendar,
   GripVertical,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface FieldTypeSidebarProps {
   fieldTypes: FieldTypeInfo[];
 }
 
 export function FieldTypeSidebar({ fieldTypes }: FieldTypeSidebarProps) {
+  const { t } = useTranslation();
+  const translatedFieldTypes = fieldTypes.map((fieldType) => ({
+    ...fieldType,
+    label: getFieldTypeLabel(fieldType.type, t),
+    description: getFieldTypeDescription(fieldType.type, t),
+  }));
   return (
     <div className="w-64 border-r bg-background shrink-0">
       <div className="p-4 border-b">
-        <h2 className="font-semibold text-sm">Field Types</h2>
+        <h2 className="font-semibold text-sm">{t('fieldTypeSidebar.title')}</h2>
         <p className="text-xs text-muted-foreground mt-1">
-          Drag to add fields to your form
+          {t('fieldTypeSidebar.subtitle')}
         </p>
       </div>
       <ScrollArea className="h-[calc(100vh-12rem)]">
         <div className="p-3 space-y-2">
-          {fieldTypes.map((fieldType) => (
+          {translatedFieldTypes.map((fieldType) => (
             <DraggableFieldType key={fieldType.type} fieldType={fieldType} />
           ))}
         </div>

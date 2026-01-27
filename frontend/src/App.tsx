@@ -11,17 +11,19 @@ import { SettingsPage } from '@/pages/SettingsPage';
 import { PublicFormPage } from '@/pages/PublicFormPage';
 import { SubmissionsPage } from '@/pages/SubmissionsPage';
 import { Toaster } from '@/components/ui/toaster';
+import { useTranslation } from 'react-i18next';
 
 const queryClient = new QueryClient();
 
 // Protected route wrapper with AppLayout
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('common.loading')}</div>
       </div>
     );
   }
@@ -36,11 +38,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // Protected route wrapper without AppLayout (for pages with custom layouts)
 function ProtectedRouteNoLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('common.loading')}</div>
       </div>
     );
   }
@@ -55,11 +58,12 @@ function ProtectedRouteNoLayout({ children }: { children: React.ReactNode }) {
 // Public route wrapper (redirects to dashboard if already authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('common.loading')}</div>
       </div>
     );
   }

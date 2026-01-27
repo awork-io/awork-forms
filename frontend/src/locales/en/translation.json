@@ -1,0 +1,497 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "processing": "Processing...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "save": "Save",
+    "create": "Create",
+    "done": "Done",
+    "active": "Active",
+    "inactive": "Inactive",
+    "required": "Required",
+    "preview": "Preview",
+    "share": "Share",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyLink": "Copy Link",
+    "openForm": "Open Form",
+    "edit": "Edit",
+    "view": "View",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "yes": "Yes",
+    "no": "No",
+    "status": "Status",
+    "actions": "Actions",
+    "close": "Close",
+    "project": "Project",
+    "task": "Task",
+    "notMapped": "Not mapped",
+    "defaultFields": "Default Fields",
+    "customFields": "Custom Fields",
+    "loadingForms": "Loading forms...",
+    "loadingSubmissions": "Loading submissions...",
+    "loadingForm": "Loading form...",
+    "fieldsCount": "{{count}} field",
+    "fieldsCount_other": "{{count}} fields",
+    "submissionsCount": "{{count}} submission",
+    "submissionsCount_other": "{{count}} submissions",
+    "optionsCount": "{{count}} option",
+    "optionsCount_other": "{{count}} options",
+    "moreFieldsCount": "+{{count}} more field",
+    "moreFieldsCount_other": "+{{count}} more fields"
+  },
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "german": "German"
+  },
+  "errors": {
+    "generic": "Something went wrong.",
+    "unauthorized": "Unauthorized",
+    "requestFailed": "Request failed",
+    "uploadFailed": "Upload failed",
+    "formNotFound": "Form not found",
+    "submissionFailed": "Submission failed",
+    "authFailed": "Authentication failed"
+  },
+  "brand": {
+    "full": "awork Forms",
+    "product": "Forms",
+    "poweredBy": "Powered by awork Forms"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "forms": "Forms",
+    "submissions": "Submissions",
+    "settings": "Settings",
+    "signOut": "Sign Out"
+  },
+  "login": {
+    "tagline": "Create forms that connect to awork projects and tasks",
+    "intro": "Sign in with your awork account to get started.",
+    "signIn": "Sign in with awork",
+    "redirecting": "Redirecting...",
+    "error": "Failed to initiate login. Please try again."
+  },
+  "authCallback": {
+    "signingIn": "Signing you in...",
+    "wait": "Please wait while we complete the authentication process.",
+    "processing": "Processing...",
+    "failedTitle": "Authentication Failed",
+    "unknownError": "An unknown error occurred",
+    "tryAgain": "Try Again",
+    "denied": "Authentication was denied: {{error}}",
+    "missingParams": "Invalid callback - missing code or state parameter"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to awork Forms",
+    "totalForms": "Total Forms",
+    "totalFormsDesc": "Create forms to collect submissions",
+    "submissions": "Submissions",
+    "submissionsDesc": "Submissions this month",
+    "tasksCreated": "Tasks Created",
+    "tasksCreatedDesc": "Tasks created in awork",
+    "quickActions": "Quick Actions",
+    "createForm": "Create a Form",
+    "createFormDesc": "Build a new form with custom fields",
+    "viewForms": "View Forms",
+    "viewFormsDesc": "Manage your existing forms"
+  },
+  "formsPage": {
+    "title": "Forms",
+    "subtitle": "Create and manage your forms",
+    "createForm": "Create Form",
+    "emptyTitle": "No forms yet",
+    "emptyDesc": "Create your first form to start collecting submissions and creating tasks in awork.",
+    "emptyCta": "Create Your First Form",
+    "actionsLabel": "Actions",
+    "viewSubmissions": "View Submissions",
+    "viewPublicForm": "View Public Form",
+    "updated": "Updated {{date}}",
+    "dialog": {
+      "title": "Create New Form",
+      "description": "Enter a name for your new form. You can add fields and configure settings after creating it.",
+      "nameLabel": "Form Name",
+      "namePlaceholder": "e.g., Contact Form, Support Request",
+      "cancel": "Cancel",
+      "create": "Create Form",
+      "creating": "Creating..."
+    },
+    "deleteDialog": {
+      "title": "Delete Form",
+      "description": "Are you sure you want to delete this form? This action cannot be undone. All submissions associated with this form will also be deleted.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleting": "Deleting..."
+    },
+    "toast": {
+      "loadError": "Failed to load forms",
+      "nameRequired": "Form name is required",
+      "createSuccess": "Form created successfully",
+      "createError": "Failed to create form",
+      "deleteSuccess": "Form deleted successfully",
+      "deleteError": "Failed to delete form"
+    }
+  },
+  "formEditor": {
+    "untitled": "Untitled Form",
+    "copySuffix": "Copy",
+    "preview": "Preview",
+    "share": "Share",
+    "save": "Save",
+    "formSettings": "Form Settings",
+    "formName": "Form Name",
+    "formNamePlaceholder": "Enter form name",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "Describe what this form is for",
+    "formStatus": "Form Status",
+    "formStatusActive": "Form is accepting submissions",
+    "formStatusInactive": "Form is not accepting submissions",
+    "formFields": "Form Fields",
+    "translations": {
+      "title": "Translations",
+      "description": "Add optional translations for your form name and description.",
+      "formName": "Form Name",
+      "formDescription": "Form Description",
+      "fallbackHint": "Leave empty to use the default text."
+    },
+    "toast": {
+      "loadError": "Failed to load form",
+      "nameRequired": "Form name is required",
+      "saveSuccessTitle": "Saved",
+      "saveSuccessDesc": "Form saved successfully",
+      "saveError": "Failed to save form"
+    }
+  },
+  "fieldTypeSidebar": {
+    "title": "Field Types",
+    "subtitle": "Drag to add fields to your form"
+  },
+  "addField": {
+    "button": "Add field"
+  },
+  "formCanvas": {
+    "emptyTitle": "No fields yet",
+    "emptySubtitle": "Click above or drag fields to add them"
+  },
+  "fieldTypes": {
+    "text": {
+      "label": "Text",
+      "description": "Single line text input"
+    },
+    "email": {
+      "label": "Email",
+      "description": "Email address input"
+    },
+    "number": {
+      "label": "Number",
+      "description": "Numeric input"
+    },
+    "textarea": {
+      "label": "Long Text",
+      "description": "Multi-line text area"
+    },
+    "select": {
+      "label": "Dropdown",
+      "description": "Select from options"
+    },
+    "checkbox": {
+      "label": "Checkbox",
+      "description": "Yes/No checkbox"
+    },
+    "date": {
+      "label": "Date",
+      "description": "Date picker"
+    },
+    "file": {
+      "label": "File Upload",
+      "description": "Upload files"
+    }
+  },
+  "fieldDefaults": {
+    "text": "Text Field",
+    "email": "Email Address",
+    "number": "Number",
+    "textarea": "Description",
+    "select": "Select Option",
+    "checkbox": "I agree",
+    "date": "Date",
+    "file": "Attachment",
+    "option1": "Option 1",
+    "option2": "Option 2"
+  },
+  "fieldPreview": {
+    "enterText": "Enter text...",
+    "enterEmail": "Enter email",
+    "enterNumber": "Enter number",
+    "selectOption": "Select an option",
+    "selectDate": "Select a date"
+  },
+  "fieldCard": {
+    "duplicate": "Duplicate",
+    "delete": "Delete"
+  },
+  "fieldConfigDialog": {
+    "title": "Field Settings",
+    "label": "Label",
+    "labelPlaceholder": "Field label",
+    "placeholder": "Placeholder",
+    "placeholderOptional": "Placeholder text (optional)",
+    "required": "Required",
+    "requiredDescription": "User must fill this field to submit",
+    "acceptedTypes": "Accepted File Types",
+    "acceptedTypesPlaceholder": ".pdf,.doc,.docx,.png,.jpg",
+    "acceptedTypesHelp": "Comma-separated list of extensions",
+    "maxFileSize": "Max File Size (MB)",
+    "dropdownOptions": "Dropdown Options",
+    "optionLabelPlaceholder": "Option label",
+    "translationsTitle": "Translations",
+    "translationsDescription": "Add optional translations for this field.",
+    "translationLabel": "Label",
+    "translationPlaceholder": "Placeholder",
+    "translationOptional": "Leave empty to use the default text.",
+    "optionTranslations": "Option translations",
+    "optionTranslationPlaceholder": "Translation (optional)",
+    "addOptionPlaceholder": "Add option...",
+    "add": "Add",
+    "deleteField": "Delete Field",
+    "done": "Done"
+  },
+  "fieldConfigPanel": {
+    "title": "Field Settings",
+    "fieldTypeLabel": "Field Type:"
+  },
+  "fieldTypeInfo": {
+    "text": "Single line text input for short answers",
+    "email": "Email address input with validation",
+    "number": "Numeric input for numbers only",
+    "textarea": "Multi-line text area for longer responses",
+    "select": "Dropdown menu for selecting one option",
+    "checkbox": "Checkbox for yes/no or agreement",
+    "date": "Date picker for selecting a date",
+    "default": "Custom field type"
+  },
+  "styleEditor": {
+    "title": "Form Styling",
+    "tabs": {
+      "colors": "Colors",
+      "logo": "Logo",
+      "preview": "Preview"
+    },
+    "primaryColor": "Primary Color",
+    "primaryColorHelp": "Used for buttons and interactive elements",
+    "backgroundColor": "Background Color",
+    "backgroundColorHelp": "Form background color",
+    "reset": "Reset",
+    "formLogo": "Form Logo",
+    "formLogoHelp": "Upload a logo to display at the top of your form (max 5MB)",
+    "formLogoAlt": "Form logo",
+    "uploading": "Uploading...",
+    "clickUploadLogo": "Click to upload a logo",
+    "logoFormats": "JPG, PNG, GIF, WebP, or SVG",
+    "replace": "Replace",
+    "livePreview": "Live Preview",
+    "livePreviewHelp": "See how your form will look to users",
+    "checkboxOption": "Checkbox option",
+    "sampleField": "Sample Field",
+    "anotherField": "Another Field",
+    "submit": "Submit",
+    "toast": {
+      "invalidFileTypeTitle": "Invalid file type",
+      "invalidFileTypeDesc": "Please upload a JPG, PNG, GIF, WebP, or SVG image.",
+      "fileTooLargeTitle": "File too large",
+      "fileTooLargeDesc": "Please upload an image smaller than 5MB.",
+      "uploadSuccessTitle": "Logo uploaded",
+      "uploadSuccessDesc": "Your logo has been uploaded successfully.",
+      "uploadFailedTitle": "Upload failed",
+      "uploadFailedDesc": "Failed to upload logo",
+      "removeSuccessTitle": "Logo removed",
+      "removeSuccessDesc": "Your logo has been removed.",
+      "removeFailedTitle": "Failed to remove logo",
+      "removeFailedDesc": "Failed to remove logo"
+    }
+  },
+  "shareForm": {
+    "title": "Share Form",
+    "description": "Share this link with anyone who should fill out your form.",
+    "publicLink": "Public Link",
+    "copyLinkSr": "Copy link",
+    "inactiveNotice": "This form is currently inactive. Users who visit this link will see a message that the form is not accepting submissions.",
+    "openForm": "Open Form",
+    "copied": "Copied!",
+    "copyLink": "Copy Link",
+    "toast": {
+      "copiedTitle": "Link copied",
+      "copiedDesc": "The form link has been copied to your clipboard",
+      "copyFailedTitle": "Failed to copy",
+      "copyFailedDesc": "Could not copy the link to clipboard"
+    }
+  },
+  "aworkIntegration": {
+    "title": "awork Integration",
+    "description": "Configure what happens in awork when this form is submitted",
+    "errors": {
+      "sessionExpired": "Your awork session has expired. Please re-authenticate with awork.",
+      "loadProjects": "Failed to load awork projects.",
+      "loadProjectTypes": "Failed to load awork project types.",
+      "loadTaskData": "Failed to load task configuration data."
+    },
+    "actionType": {
+      "label": "When form is submitted",
+      "placeholder": "Select an action",
+      "none": "Do nothing",
+      "task": "Create a Task",
+      "project": "Create a Project",
+      "both": "Create both Task and Project"
+    },
+    "task": {
+      "badge": "Task",
+      "settings": "Task Settings",
+      "addToProject": "Add task to project",
+      "loadingProjects": "Loading projects...",
+      "selectProject": "Select a project",
+      "selectProjectPlaceholder": "Select a project...",
+      "loadProjects": "Load Projects",
+      "taskList": "Task list",
+      "loadingTaskLists": "Loading task lists...",
+      "selectTaskList": "Select a task list",
+      "defaultTaskList": "Default (no specific list)",
+      "taskStatus": "Initial task status",
+      "loadingStatuses": "Loading statuses...",
+      "selectStatus": "Select a status",
+      "defaultStatus": "Default status",
+      "typeOfWork": "Type of work",
+      "loadingTypesOfWork": "Loading types of work...",
+      "selectTypeOfWork": "Select type of work",
+      "noTypeOfWork": "No type of work",
+      "assignTo": "Assign to",
+      "loadingUsers": "Loading users...",
+      "selectAssignee": "Select assignee",
+      "unassigned": "Unassigned",
+      "priority": "Mark as priority",
+      "priorityHelp": "Created tasks will be marked as high priority",
+      "mapFields": "Map form fields to task",
+      "mappedCount": "{{count}} mapped",
+      "mappedCount_other": "{{count}} mapped",
+      "notMapped": "Not mapped"
+    },
+    "project": {
+      "badge": "Project",
+      "settings": "Project Settings",
+      "projectType": "Project type",
+      "loadingProjectTypes": "Loading project types...",
+      "selectProjectType": "Select a project type",
+      "selectProjectTypePlaceholder": "Select a project type...",
+      "loadProjectTypes": "Load Project Types",
+      "mapFields": "Map form fields to project"
+    },
+    "taskFields": {
+      "name": "Task Name",
+      "description": "Description",
+      "dueOn": "Due Date",
+      "startOn": "Start Date",
+      "plannedDuration": "Planned Duration (seconds)",
+      "tags": "Tags (comma-separated)"
+    },
+    "projectFields": {
+      "name": "Project Name",
+      "description": "Description",
+      "startDate": "Start Date",
+      "dueDate": "Due Date"
+    },
+    "noFields": "Add form fields first to configure field mappings.",
+    "unknownUser": "Unknown User",
+    "defaultFieldsLabel": "Default Fields",
+    "customFieldsLabel": "Custom Fields"
+  },
+  "submissions": {
+    "titleAll": "All Submissions",
+    "titleForm": "{{name}} - Submissions",
+    "subtitleAll": "View submissions across all your forms",
+    "subtitleForm": "View all submissions for this form",
+    "backToForms": "Back to Forms",
+    "editForm": "Edit Form",
+    "emptyTitle": "No submissions yet",
+    "emptyDescForm": "Share your form to start receiving submissions.",
+    "emptyDescAll": "Create forms and share them to start receiving submissions.",
+    "copyFormLink": "Copy Form Link",
+    "copyToastTitle": "Copied",
+    "copyToastDesc": "Form link copied to clipboard",
+    "toast": {
+      "loadError": "Failed to load submissions"
+    },
+    "table": {
+      "form": "Form",
+      "dataPreview": "Data Preview",
+      "status": "Status",
+      "awork": "awork",
+      "submitted": "Submitted",
+      "actions": "Actions"
+    },
+    "status": {
+      "completed": "Completed",
+      "failed": "Failed",
+      "pending": "Pending"
+    },
+    "project": "Project",
+    "task": "Task",
+    "noData": "No data",
+    "view": "View",
+    "detailsTitle": "Submission Details",
+    "submittedOn": "Submitted on {{date}}",
+    "statusLabel": "Status:",
+    "errorLabel": "Error:",
+    "aworkLinks": "awork Links:",
+    "viewProject": "View Project in awork",
+    "viewTask": "View Task in awork",
+    "submittedData": "Submitted Data:"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account and preferences",
+    "accountTitle": "Account",
+    "accountDesc": "Your account information from awork",
+    "workspace": "Workspace",
+    "formsTitle": "Forms",
+    "formsDesc": "Information about awork Forms",
+    "version": "Version",
+    "status": "Status",
+    "connected": "Connected to awork"
+  },
+  "publicForm": {
+    "invalidUrl": "Invalid form URL",
+    "loadError": "Failed to load form",
+    "requiredError": "This field is required",
+    "emailError": "Please enter a valid email address",
+    "submissionFailed": "Submission failed",
+    "loading": "Loading form...",
+    "notAvailableTitle": "Form Not Available",
+    "submissionReceived": "Submission Received",
+    "thankYou": "Thank You!",
+    "submissionSuccess": "Your submission has been received successfully.",
+    "integrationNoticeTitle": "Integration Notice",
+    "integrationNoticeBody": "Your submission was saved, but there was an issue connecting to the project management system. The form owner has been notified.",
+    "progressCompleted": "completed",
+    "placeholders": {
+      "text": "Type your answer here...",
+      "email": "name@example.com",
+      "number": "0",
+      "textarea": "Type your answer here...",
+      "select": "Select an option"
+    },
+    "fileUpload": {
+      "clickToUpload": "Click to upload",
+      "dragAndDrop": "or drag and drop",
+      "fileTypes": "PNG, JPG, PDF up to 10MB"
+    },
+    "logoAlt": "Logo",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "poweredByPrefix": "Powered by"
+  }
+}

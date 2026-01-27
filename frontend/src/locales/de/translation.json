@@ -1,0 +1,497 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "processing": "Wird verarbeitet...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "create": "Erstellen",
+    "done": "Fertig",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "required": "Erforderlich",
+    "preview": "Vorschau",
+    "share": "Teilen",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "copyLink": "Link kopieren",
+    "openForm": "Formular öffnen",
+    "edit": "Bearbeiten",
+    "view": "Ansehen",
+    "submit": "Senden",
+    "submitting": "Wird gesendet...",
+    "yes": "Ja",
+    "no": "Nein",
+    "status": "Status",
+    "actions": "Aktionen",
+    "close": "Schließen",
+    "project": "Projekt",
+    "task": "Aufgabe",
+    "notMapped": "Nicht zugeordnet",
+    "defaultFields": "Standardfelder",
+    "customFields": "Benutzerdefinierte Felder",
+    "loadingForms": "Formulare werden geladen...",
+    "loadingSubmissions": "Einreichungen werden geladen...",
+    "loadingForm": "Formular wird geladen...",
+    "fieldsCount": "{{count}} Feld",
+    "fieldsCount_other": "{{count}} Felder",
+    "submissionsCount": "{{count}} Einreichung",
+    "submissionsCount_other": "{{count}} Einreichungen",
+    "optionsCount": "{{count}} Option",
+    "optionsCount_other": "{{count}} Optionen",
+    "moreFieldsCount": "+{{count}} weiteres Feld",
+    "moreFieldsCount_other": "+{{count}} weitere Felder"
+  },
+  "language": {
+    "label": "Sprache",
+    "english": "Englisch",
+    "german": "Deutsch"
+  },
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen.",
+    "unauthorized": "Nicht autorisiert",
+    "requestFailed": "Anfrage fehlgeschlagen",
+    "uploadFailed": "Upload fehlgeschlagen",
+    "formNotFound": "Formular nicht gefunden",
+    "submissionFailed": "Senden fehlgeschlagen",
+    "authFailed": "Authentifizierung fehlgeschlagen"
+  },
+  "brand": {
+    "full": "awork Forms",
+    "product": "Formulare",
+    "poweredBy": "Bereitgestellt von awork Forms"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "forms": "Formulare",
+    "submissions": "Einreichungen",
+    "settings": "Einstellungen",
+    "signOut": "Abmelden"
+  },
+  "login": {
+    "tagline": "Erstelle Formulare, die mit awork-Projekten und -Aufgaben verbunden sind",
+    "intro": "Melde dich mit deinem awork-Konto an, um loszulegen.",
+    "signIn": "Mit awork anmelden",
+    "redirecting": "Weiterleitung...",
+    "error": "Login konnte nicht gestartet werden. Bitte versuch es erneut."
+  },
+  "authCallback": {
+    "signingIn": "Du wirst angemeldet...",
+    "wait": "Bitte warte, während wir die Anmeldung abschließen.",
+    "processing": "Wird verarbeitet...",
+    "failedTitle": "Authentifizierung fehlgeschlagen",
+    "unknownError": "Unbekannter Fehler",
+    "tryAgain": "Erneut versuchen",
+    "denied": "Authentifizierung wurde abgelehnt: {{error}}",
+    "missingParams": "Ungültiger Rückruf – Code oder Statusparameter fehlt"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Willkommen bei awork Forms",
+    "totalForms": "Formulare insgesamt",
+    "totalFormsDesc": "Erstelle Formulare, um Einreichungen zu sammeln",
+    "submissions": "Einreichungen",
+    "submissionsDesc": "Einreichungen in diesem Monat",
+    "tasksCreated": "Erstellte Aufgaben",
+    "tasksCreatedDesc": "Aufgaben, die in awork erstellt wurden",
+    "quickActions": "Schnellaktionen",
+    "createForm": "Formular erstellen",
+    "createFormDesc": "Neues Formular mit benutzerdefinierten Feldern erstellen",
+    "viewForms": "Formulare anzeigen",
+    "viewFormsDesc": "Deine bestehenden Formulare verwalten"
+  },
+  "formsPage": {
+    "title": "Formulare",
+    "subtitle": "Formulare erstellen und verwalten",
+    "createForm": "Formular erstellen",
+    "emptyTitle": "Noch keine Formulare",
+    "emptyDesc": "Erstelle dein erstes Formular, um Einreichungen zu sammeln und Aufgaben in awork zu erstellen.",
+    "emptyCta": "Erstes Formular erstellen",
+    "actionsLabel": "Aktionen",
+    "viewSubmissions": "Einreichungen ansehen",
+    "viewPublicForm": "Öffentliches Formular ansehen",
+    "updated": "Aktualisiert {{date}}",
+    "dialog": {
+      "title": "Neues Formular erstellen",
+      "description": "Gib einen Namen für dein neues Formular ein. Du kannst Felder hinzufügen und Einstellungen nach dem Erstellen konfigurieren.",
+      "nameLabel": "Formularname",
+      "namePlaceholder": "z. B. Kontaktformular, Support-Anfrage",
+      "cancel": "Abbrechen",
+      "create": "Formular erstellen",
+      "creating": "Wird erstellt..."
+    },
+    "deleteDialog": {
+      "title": "Formular löschen",
+      "description": "Bist du sicher, dass du dieses Formular löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden. Alle zugehörigen Einreichungen werden ebenfalls gelöscht.",
+      "cancel": "Abbrechen",
+      "delete": "Löschen",
+      "deleting": "Wird gelöscht..."
+    },
+    "toast": {
+      "loadError": "Formulare konnten nicht geladen werden",
+      "nameRequired": "Ein Formularname ist erforderlich",
+      "createSuccess": "Formular erfolgreich erstellt",
+      "createError": "Formular konnte nicht erstellt werden",
+      "deleteSuccess": "Formular erfolgreich gelöscht",
+      "deleteError": "Formular konnte nicht gelöscht werden"
+    }
+  },
+  "formEditor": {
+    "untitled": "Unbenanntes Formular",
+    "copySuffix": "Kopie",
+    "preview": "Vorschau",
+    "share": "Teilen",
+    "save": "Speichern",
+    "formSettings": "Formulareinstellungen",
+    "formName": "Formularname",
+    "formNamePlaceholder": "Formularnamen eingeben",
+    "descriptionLabel": "Beschreibung (optional)",
+    "descriptionPlaceholder": "Beschreibe, wofür dieses Formular ist",
+    "formStatus": "Formularstatus",
+    "formStatusActive": "Formular nimmt Einreichungen an",
+    "formStatusInactive": "Formular nimmt keine Einreichungen an",
+    "formFields": "Formularfelder",
+    "translations": {
+      "title": "Übersetzungen",
+      "description": "Füge optionale Übersetzungen für deinen Formularnamen und die Beschreibung hinzu.",
+      "formName": "Formularname",
+      "formDescription": "Formularbeschreibung",
+      "fallbackHint": "Lass es leer, um den Standardtext zu verwenden."
+    },
+    "toast": {
+      "loadError": "Formular konnte nicht geladen werden",
+      "nameRequired": "Ein Formularname ist erforderlich",
+      "saveSuccessTitle": "Gespeichert",
+      "saveSuccessDesc": "Formular erfolgreich gespeichert",
+      "saveError": "Formular konnte nicht gespeichert werden"
+    }
+  },
+  "fieldTypeSidebar": {
+    "title": "Feldtypen",
+    "subtitle": "Zieh Felder in das Formular"
+  },
+  "addField": {
+    "button": "Feld hinzufügen"
+  },
+  "formCanvas": {
+    "emptyTitle": "Noch keine Felder",
+    "emptySubtitle": "Klicke oben oder zieh Felder hinein"
+  },
+  "fieldTypes": {
+    "text": {
+      "label": "Text",
+      "description": "Einzeiliges Textfeld"
+    },
+    "email": {
+      "label": "E-Mail",
+      "description": "E-Mail-Adresse"
+    },
+    "number": {
+      "label": "Zahl",
+      "description": "Numerische Eingabe"
+    },
+    "textarea": {
+      "label": "Langer Text",
+      "description": "Mehrzeiliges Textfeld"
+    },
+    "select": {
+      "label": "Auswahl",
+      "description": "Aus Optionen wählen"
+    },
+    "checkbox": {
+      "label": "Checkbox",
+      "description": "Ja/Nein-Checkbox"
+    },
+    "date": {
+      "label": "Datum",
+      "description": "Datumsauswahl"
+    },
+    "file": {
+      "label": "Datei-Upload",
+      "description": "Dateien hochladen"
+    }
+  },
+  "fieldDefaults": {
+    "text": "Textfeld",
+    "email": "E-Mail-Adresse",
+    "number": "Zahl",
+    "textarea": "Beschreibung",
+    "select": "Auswahl",
+    "checkbox": "Ich stimme zu",
+    "date": "Datum",
+    "file": "Anhang",
+    "option1": "Option 1",
+    "option2": "Option 2"
+  },
+  "fieldPreview": {
+    "enterText": "Text eingeben...",
+    "enterEmail": "E-Mail eingeben",
+    "enterNumber": "Zahl eingeben",
+    "selectOption": "Option auswählen",
+    "selectDate": "Datum auswählen"
+  },
+  "fieldCard": {
+    "duplicate": "Duplizieren",
+    "delete": "Löschen"
+  },
+  "fieldConfigDialog": {
+    "title": "Feldeinstellungen",
+    "label": "Bezeichnung",
+    "labelPlaceholder": "Feldbezeichnung",
+    "placeholder": "Platzhalter",
+    "placeholderOptional": "Platzhaltertext (optional)",
+    "required": "Erforderlich",
+    "requiredDescription": "Benutzer müssen dieses Feld ausfüllen",
+    "acceptedTypes": "Zulässige Dateitypen",
+    "acceptedTypesPlaceholder": ".pdf,.doc,.docx,.png,.jpg",
+    "acceptedTypesHelp": "Durch Kommas getrennte Liste von Endungen",
+    "maxFileSize": "Max. Dateigröße (MB)",
+    "dropdownOptions": "Auswahloptionen",
+    "optionLabelPlaceholder": "Optionsbezeichnung",
+    "translationsTitle": "Übersetzungen",
+    "translationsDescription": "Füge optionale Übersetzungen für dieses Feld hinzu.",
+    "translationLabel": "Beschriftung",
+    "translationPlaceholder": "Platzhalter",
+    "translationOptional": "Lass es leer, um den Standardtext zu verwenden.",
+    "optionTranslations": "Optionen übersetzen",
+    "optionTranslationPlaceholder": "Übersetzung (optional)",
+    "addOptionPlaceholder": "Option hinzufügen...",
+    "add": "Hinzufügen",
+    "deleteField": "Feld löschen",
+    "done": "Fertig"
+  },
+  "fieldConfigPanel": {
+    "title": "Feldeinstellungen",
+    "fieldTypeLabel": "Feldtyp:"
+  },
+  "fieldTypeInfo": {
+    "text": "Einzeiliges Textfeld für kurze Antworten",
+    "email": "E-Mail-Eingabe mit Validierung",
+    "number": "Numerische Eingabe nur für Zahlen",
+    "textarea": "Mehrzeiliges Textfeld für längere Antworten",
+    "select": "Dropdown-Menü zur Auswahl einer Option",
+    "checkbox": "Checkbox für Ja/Nein oder Zustimmung",
+    "date": "Datumsauswahl",
+    "default": "Benutzerdefinierter Feldtyp"
+  },
+  "styleEditor": {
+    "title": "Formular-Design",
+    "tabs": {
+      "colors": "Farben",
+      "logo": "Logo",
+      "preview": "Vorschau"
+    },
+    "primaryColor": "Primärfarbe",
+    "primaryColorHelp": "Für Buttons und interaktive Elemente",
+    "backgroundColor": "Hintergrundfarbe",
+    "backgroundColorHelp": "Hintergrundfarbe des Formulars",
+    "reset": "Zurücksetzen",
+    "formLogo": "Formularlogo",
+    "formLogoHelp": "Lade ein Logo hoch, das oben im Formular angezeigt wird (max. 5 MB)",
+    "formLogoAlt": "Formularlogo",
+    "uploading": "Wird hochgeladen...",
+    "clickUploadLogo": "Klicken, um ein Logo hochzuladen",
+    "logoFormats": "JPG, PNG, GIF, WebP oder SVG",
+    "replace": "Ersetzen",
+    "livePreview": "Live-Vorschau",
+    "livePreviewHelp": "Sieh, wie dein Formular für Benutzer aussieht",
+    "checkboxOption": "Checkbox-Option",
+    "sampleField": "Beispielfeld",
+    "anotherField": "Weiteres Feld",
+    "submit": "Senden",
+    "toast": {
+      "invalidFileTypeTitle": "Ungültiger Dateityp",
+      "invalidFileTypeDesc": "Bitte lade ein JPG-, PNG-, GIF-, WebP- oder SVG-Bild hoch.",
+      "fileTooLargeTitle": "Datei zu groß",
+      "fileTooLargeDesc": "Bitte lade ein Bild kleiner als 5 MB hoch.",
+      "uploadSuccessTitle": "Logo hochgeladen",
+      "uploadSuccessDesc": "Dein Logo wurde erfolgreich hochgeladen.",
+      "uploadFailedTitle": "Upload fehlgeschlagen",
+      "uploadFailedDesc": "Logo konnte nicht hochgeladen werden",
+      "removeSuccessTitle": "Logo entfernt",
+      "removeSuccessDesc": "Dein Logo wurde entfernt.",
+      "removeFailedTitle": "Logo konnte nicht entfernt werden",
+      "removeFailedDesc": "Logo konnte nicht entfernt werden"
+    }
+  },
+  "shareForm": {
+    "title": "Formular teilen",
+    "description": "Teile diesen Link mit allen, die dein Formular ausfüllen sollen.",
+    "publicLink": "Öffentlicher Link",
+    "copyLinkSr": "Link kopieren",
+    "inactiveNotice": "Dieses Formular ist derzeit inaktiv. Nutzer, die diesen Link aufrufen, sehen eine Nachricht, dass das Formular keine Einreichungen annimmt.",
+    "openForm": "Formular öffnen",
+    "copied": "Kopiert!",
+    "copyLink": "Link kopieren",
+    "toast": {
+      "copiedTitle": "Link kopiert",
+      "copiedDesc": "Der Formular-Link wurde in die Zwischenablage kopiert",
+      "copyFailedTitle": "Kopieren fehlgeschlagen",
+      "copyFailedDesc": "Der Link konnte nicht kopiert werden"
+    }
+  },
+  "aworkIntegration": {
+    "title": "awork-Integration",
+    "description": "Konfiguriere, was in awork passiert, wenn dieses Formular gesendet wird",
+    "errors": {
+      "sessionExpired": "Deine awork-Sitzung ist abgelaufen. Bitte melde dich erneut bei awork an.",
+      "loadProjects": "awork-Projekte konnten nicht geladen werden.",
+      "loadProjectTypes": "awork-Projekttypen konnten nicht geladen werden.",
+      "loadTaskData": "Aufgabenkonfiguration konnte nicht geladen werden."
+    },
+    "actionType": {
+      "label": "Wenn das Formular gesendet wird",
+      "placeholder": "Aktion auswählen",
+      "none": "Nichts tun",
+      "task": "Aufgabe erstellen",
+      "project": "Projekt erstellen",
+      "both": "Aufgabe und Projekt erstellen"
+    },
+    "task": {
+      "badge": "Aufgabe",
+      "settings": "Aufgaben-Einstellungen",
+      "addToProject": "Aufgabe zu Projekt hinzufügen",
+      "loadingProjects": "Projekte werden geladen...",
+      "selectProject": "Projekt auswählen",
+      "selectProjectPlaceholder": "Projekt auswählen...",
+      "loadProjects": "Projekte laden",
+      "taskList": "Aufgabenliste",
+      "loadingTaskLists": "Aufgabenlisten werden geladen...",
+      "selectTaskList": "Aufgabenliste auswählen",
+      "defaultTaskList": "Standard (keine spezielle Liste)",
+      "taskStatus": "Initialer Aufgabenstatus",
+      "loadingStatuses": "Status werden geladen...",
+      "selectStatus": "Status auswählen",
+      "defaultStatus": "Standardstatus",
+      "typeOfWork": "Art der Arbeit",
+      "loadingTypesOfWork": "Arten der Arbeit werden geladen...",
+      "selectTypeOfWork": "Art der Arbeit auswählen",
+      "noTypeOfWork": "Keine Art der Arbeit",
+      "assignTo": "Zuweisen an",
+      "loadingUsers": "Benutzer werden geladen...",
+      "selectAssignee": "Zuständigen auswählen",
+      "unassigned": "Nicht zugewiesen",
+      "priority": "Als Priorität markieren",
+      "priorityHelp": "Erstellte Aufgaben werden als hohe Priorität markiert",
+      "mapFields": "Formularfelder der Aufgabe zuordnen",
+      "mappedCount": "{{count}} zugeordnet",
+      "mappedCount_other": "{{count}} zugeordnet",
+      "notMapped": "Nicht zugeordnet"
+    },
+    "project": {
+      "badge": "Projekt",
+      "settings": "Projekt-Einstellungen",
+      "projectType": "Projekttyp",
+      "loadingProjectTypes": "Projekttypen werden geladen...",
+      "selectProjectType": "Projekttyp auswählen",
+      "selectProjectTypePlaceholder": "Projekttyp auswählen...",
+      "loadProjectTypes": "Projekttypen laden",
+      "mapFields": "Formularfelder dem Projekt zuordnen"
+    },
+    "taskFields": {
+      "name": "Aufgabenname",
+      "description": "Beschreibung",
+      "dueOn": "Fälligkeitsdatum",
+      "startOn": "Startdatum",
+      "plannedDuration": "Geplante Dauer (Sekunden)",
+      "tags": "Tags (durch Kommas getrennt)"
+    },
+    "projectFields": {
+      "name": "Projektname",
+      "description": "Beschreibung",
+      "startDate": "Startdatum",
+      "dueDate": "Fälligkeitsdatum"
+    },
+    "noFields": "Füge zuerst Formularfelder hinzu, um Feldzuordnungen zu konfigurieren.",
+    "unknownUser": "Unbekannter Benutzer",
+    "defaultFieldsLabel": "Standardfelder",
+    "customFieldsLabel": "Benutzerdefinierte Felder"
+  },
+  "submissions": {
+    "titleAll": "Alle Einreichungen",
+    "titleForm": "{{name}} – Einreichungen",
+    "subtitleAll": "Einreichungen aus allen Formularen anzeigen",
+    "subtitleForm": "Alle Einreichungen für dieses Formular anzeigen",
+    "backToForms": "Zurück zu Formularen",
+    "editForm": "Formular bearbeiten",
+    "emptyTitle": "Noch keine Einreichungen",
+    "emptyDescForm": "Teile dein Formular, um Einreichungen zu erhalten.",
+    "emptyDescAll": "Erstelle und teile Formulare, um Einreichungen zu erhalten.",
+    "copyFormLink": "Formular-Link kopieren",
+    "copyToastTitle": "Kopiert",
+    "copyToastDesc": "Formular-Link wurde kopiert",
+    "toast": {
+      "loadError": "Einreichungen konnten nicht geladen werden"
+    },
+    "table": {
+      "form": "Formular",
+      "dataPreview": "Datenvorschau",
+      "status": "Status",
+      "awork": "awork",
+      "submitted": "Gesendet",
+      "actions": "Aktionen"
+    },
+    "status": {
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "pending": "Ausstehend"
+    },
+    "project": "Projekt",
+    "task": "Aufgabe",
+    "noData": "Keine Daten",
+    "view": "Ansehen",
+    "detailsTitle": "Einreichungsdetails",
+    "submittedOn": "Gesendet am {{date}}",
+    "statusLabel": "Status:",
+    "errorLabel": "Fehler:",
+    "aworkLinks": "awork-Links:",
+    "viewProject": "Projekt in awork anzeigen",
+    "viewTask": "Aufgabe in awork anzeigen",
+    "submittedData": "Gesendete Daten:"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "subtitle": "Konto und Einstellungen verwalten",
+    "accountTitle": "Konto",
+    "accountDesc": "Deine Kontoinformationen aus awork",
+    "workspace": "Workspace",
+    "formsTitle": "Formulare",
+    "formsDesc": "Informationen über awork Forms",
+    "version": "Version",
+    "status": "Status",
+    "connected": "Mit awork verbunden"
+  },
+  "publicForm": {
+    "invalidUrl": "Ungültige Formular-URL",
+    "loadError": "Formular konnte nicht geladen werden",
+    "requiredError": "Dieses Feld ist erforderlich",
+    "emailError": "Bitte gib eine gültige E-Mail-Adresse ein",
+    "submissionFailed": "Senden fehlgeschlagen",
+    "loading": "Formular wird geladen...",
+    "notAvailableTitle": "Formular nicht verfügbar",
+    "submissionReceived": "Einreichung erhalten",
+    "thankYou": "Vielen Dank!",
+    "submissionSuccess": "Deine Einreichung wurde erfolgreich empfangen.",
+    "integrationNoticeTitle": "Integrationshinweis",
+    "integrationNoticeBody": "Deine Einreichung wurde gespeichert, aber es gab ein Problem bei der Verbindung mit dem Projektmanagementsystem. Der Formularbesitzer wurde benachrichtigt.",
+    "progressCompleted": "abgeschlossen",
+    "placeholders": {
+      "text": "Antwort hier eingeben...",
+      "email": "name@beispiel.de",
+      "number": "0",
+      "textarea": "Antwort hier eingeben...",
+      "select": "Option auswählen"
+    },
+    "fileUpload": {
+      "clickToUpload": "Zum Hochladen klicken",
+      "dragAndDrop": "oder Datei hierher ziehen",
+      "fileTypes": "PNG, JPG, PDF bis 10 MB"
+    },
+    "logoAlt": "Logo",
+    "submit": "Senden",
+    "submitting": "Wird gesendet...",
+    "poweredByPrefix": "Bereitgestellt von"
+  }
+}

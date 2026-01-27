@@ -1,4 +1,4 @@
-import { type FormField } from '@/lib/form-types';
+import { type FormField, getFieldTypeLabel } from '@/lib/form-types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface FieldCardProps {
   field: FormField;
@@ -42,6 +43,7 @@ export function FieldCard({
   onDuplicate,
   dragHandleProps,
 }: FieldCardProps) {
+  const { t } = useTranslation();
   return (
     <Card
       className={cn(
@@ -72,12 +74,12 @@ export function FieldCard({
               <p className="font-medium truncate">{field.label}</p>
               {field.required && (
                 <Badge variant="secondary" className="text-xs">
-                  Required
+                  {t('common.required')}
                 </Badge>
               )}
             </div>
             <p className="text-sm text-muted-foreground capitalize">
-              {getFieldTypeLabel(field.type)}
+              {getFieldTypeLabel(field.type, t)}
               {field.placeholder && (
                 <span className="text-muted-foreground/60">
                   {' · '}
@@ -87,7 +89,7 @@ export function FieldCard({
             </p>
             {field.type === 'select' && field.options && (
               <p className="text-xs text-muted-foreground mt-1">
-                {field.options.length} option{field.options.length !== 1 ? 's' : ''}
+                {t('common.optionsCount', { count: field.options.length })}
               </p>
             )}
           </div>
@@ -106,14 +108,14 @@ export function FieldCard({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onDuplicate}>
                   <Copy className="w-4 h-4 mr-2" />
-                  Duplicate
+                  {t('fieldCard.duplicate')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={onDelete}
                   className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+                  {t('fieldCard.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -151,25 +153,31 @@ function FieldIcon({ type, className }: { type: string; className?: string }) {
 }
 
 function FieldPreview({ field }: { field: FormField }) {
+  const { t } = useTranslation();
   switch (field.type) {
     case 'text':
     case 'email':
     case 'number':
       return (
         <div className="h-9 rounded-md border bg-muted/50 px-3 flex items-center text-sm text-muted-foreground">
-          {field.placeholder || `Enter ${field.type}`}
+          {field.placeholder ||
+            (field.type === 'email'
+              ? t('fieldPreview.enterEmail')
+              : field.type === 'number'
+                ? t('fieldPreview.enterNumber')
+                : t('fieldPreview.enterText'))}
         </div>
       );
     case 'textarea':
       return (
         <div className="h-20 rounded-md border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-          {field.placeholder || 'Enter text...'}
+          {field.placeholder || t('fieldPreview.enterText')}
         </div>
       );
     case 'select':
       return (
         <div className="h-9 rounded-md border bg-muted/50 px-3 flex items-center justify-between text-sm text-muted-foreground">
-          <span>Select an option</span>
+          <span>{t('fieldPreview.selectOption')}</span>
           <ChevronDown className="w-4 h-4" />
         </div>
       );
@@ -183,32 +191,11 @@ function FieldPreview({ field }: { field: FormField }) {
     case 'date':
       return (
         <div className="h-9 rounded-md border bg-muted/50 px-3 flex items-center justify-between text-sm text-muted-foreground">
-          <span>Select a date</span>
+          <span>{t('fieldPreview.selectDate')}</span>
           <Calendar className="w-4 h-4" />
         </div>
       );
     default:
       return null;
-  }
-}
-
-function getFieldTypeLabel(type: string): string {
-  switch (type) {
-    case 'text':
-      return 'Text';
-    case 'email':
-      return 'Email';
-    case 'number':
-      return 'Number';
-    case 'textarea':
-      return 'Long Text';
-    case 'select':
-      return 'Dropdown';
-    case 'checkbox':
-      return 'Checkbox';
-    case 'date':
-      return 'Date';
-    default:
-      return type;
   }
 }
