@@ -48,7 +48,9 @@ if (string.IsNullOrWhiteSpace(jwtSecretKey) || jwtSecretKey.Length < 32)
 builder.Services.AddSingleton(new JwtService(jwtSecretKey));
 
 // Services
-var frontendUrl = builder.Configuration["Frontend:Url"] ?? "http://localhost:5173";
+var frontendUrl = Environment.GetEnvironmentVariable("BASE_URL") 
+    ?? builder.Configuration["Frontend:Url"] 
+    ?? "http://localhost:5173";
 var redirectUri = $"{frontendUrl}/auth/callback";
 
 builder.Services.AddSingleton(sp => new AuthService(
