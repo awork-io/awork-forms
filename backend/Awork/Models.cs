@@ -107,6 +107,7 @@ public class AworkCreateTaskRequest
     public string BaseType { get; set; } = "projecttask";
     public Guid? ProjectId { get; set; }
     public Guid? EntityId { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("isPrio")]
     public bool IsPriority { get; set; }
     public DateTime? DueOn { get; set; }
     public DateTime? StartOn { get; set; }
