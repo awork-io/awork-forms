@@ -6,23 +6,28 @@ using Backend.Endpoints;
 using Backend.Forms;
 using Backend.Submissions;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// CORS
-builder.Services.AddCors(options =>
+var enableCors = builder.Environment.IsDevelopment() ||
+    string.Equals(builder.Configuration["Cors:Enabled"] ?? Environment.GetEnvironmentVariable("CORS_ENABLED"), "true", StringComparison.OrdinalIgnoreCase);
+if (enableCors)
 {
-    options.AddDefaultPolicy(policy =>
+    builder.Services.AddCors(options =>
     {
-        policy.WithOrigins(
-            builder.Configuration["Frontend:Url"] ?? "http://localhost:5173"
-        )
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.WithOrigins(
+                builder.Configuration["Frontend:Url"] ?? "http://localhost:5173"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+        });
     });
-});
+}
 
 // Database - PostgreSQL in production, SQLite in development
 var dbUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
@@ -61,7 +66,7 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
     options.AddPolicy("auth", context =>
-        RateLimiterPartition.GetFixedWindowLimiter(
+        RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
@@ -72,7 +77,7 @@ builder.Services.AddRateLimiter(options =>
             }));
 
     options.AddPolicy("public", context =>
-        RateLimiterPartition.GetFixedWindowLimiter(
+        RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
@@ -123,9 +128,8 @@ app.UseForwardedHeaders(forwardedOptions);
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
-
-app.UseHttpsRedirection();
 
 app.Use(async (context, next) =>
 {
@@ -158,7 +162,10 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
-app.UseCors();
+if (enableCors)
+{
+    app.UseCors();
+}
 app.UseRateLimiter();
 
 // Static files

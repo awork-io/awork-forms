@@ -51,6 +51,9 @@ export function AuthCallbackPage() {
 
       try {
         const response = await api.handleCallback(code, state);
+        if (response.token) {
+          api.setToken(response.token);
+        }
         setUser(response.user);
         navigate('/', { replace: true });
       } catch (err) {

@@ -10,7 +10,7 @@ public class LogoutEndpoint : IEndpoint
             {
                 HttpOnly = true,
                 Secure = context.Request.IsHttps,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.Lax,
                 Expires = DateTimeOffset.UtcNow.AddDays(-1),
                 Path = "/"
             };
