@@ -145,29 +145,36 @@ export function FormsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('formsPage.title')}</h1>
-          <p className="text-muted-foreground mt-1">{t('formsPage.subtitle')}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('formsPage.title')}</h1>
+          <p className="text-muted-foreground mt-1 text-lg">{t('formsPage.subtitle')}</p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)} className="shadow-sm">
+        <Button 
+          onClick={() => setIsCreateDialogOpen(true)} 
+          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:-translate-y-0.5"
+        >
           <Plus className="w-4 h-4 mr-2" />
           {t('formsPage.createForm')}
         </Button>
       </div>
 
       {forms.length === 0 ? (
-        <Card className="border-dashed border-2 bg-white/60">
-          <CardHeader className="text-center py-12">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4">
-              <FileText className="w-8 h-8 text-primary" />
+        <Card className="border-dashed border-2 border-blue-200/50 bg-gradient-to-br from-white/80 to-blue-50/30">
+          <CardHeader className="text-center py-16">
+            <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-6 shadow-xl shadow-blue-500/30">
+              <FileText className="w-10 h-10 text-white" />
             </div>
-            <CardTitle className="text-xl">{t('formsPage.emptyTitle')}</CardTitle>
-            <CardDescription className="max-w-sm mx-auto">
+            <CardTitle className="text-2xl">{t('formsPage.emptyTitle')}</CardTitle>
+            <CardDescription className="max-w-sm mx-auto text-base mt-2">
               {t('formsPage.emptyDesc')}
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center pb-12">
-            <Button onClick={() => setIsCreateDialogOpen(true)} size="lg">
-              <Plus className="w-4 h-4 mr-2" />
+          <CardContent className="text-center pb-16">
+            <Button 
+              onClick={() => setIsCreateDialogOpen(true)} 
+              size="lg"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:-translate-y-0.5 h-12 px-8"
+            >
+              <Plus className="w-5 h-5 mr-2" />
               {t('formsPage.emptyCta')}
             </Button>
           </CardContent>
@@ -177,7 +184,7 @@ export function FormsPage() {
           {forms.map((form) => (
             <Card 
               key={form.id} 
-              className="group hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 cursor-pointer bg-white/80 backdrop-blur-sm"
+              className="group hover:shadow-[0_20px_40px_-12px_rgba(0,109,250,0.15)] hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
               onClick={() => navigate(`/forms/${form.id}/edit`)}
             >
               <CardHeader className="pb-3">

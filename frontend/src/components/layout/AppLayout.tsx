@@ -47,8 +47,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="w-64 glass-sidebar flex flex-col shrink-0">
         {/* Logo */}
         <div className="h-16 flex items-center px-5 border-b border-border/50">
-          <Link to="/" className="flex items-center gap-3">
-            <AworkLogo className="h-5" />
+          <Link to="/" className="flex items-baseline gap-2">
+            <AworkLogo className="h-[18px] relative top-[1px]" />
             <span className="text-sm font-medium text-muted-foreground">{t('brand.product')}</span>
           </Link>
         </div>

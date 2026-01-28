@@ -633,6 +633,11 @@ export function PublicFormPage() {
 
               {/* Form content */}
               <div className="p-6 sm:p-8">
+                {/* Language switcher */}
+                <div className="flex justify-end mb-4 -mt-2">
+                  <LanguageSwitcher variant="minimal" />
+                </div>
+
                 {/* Logo */}
                 {logoUrl && (
                   <div className="flex justify-center mb-6">
@@ -721,9 +726,7 @@ export function PublicFormPage() {
             </div>
 
             {/* Footer */}
-            <div className="mt-6 flex items-center justify-center gap-4">
-              <LanguageSwitcher variant="pill" />
-              <span className="text-gray-300">·</span>
+            <div className="mt-6 flex items-center justify-center">
               <p className="text-xs text-gray-400">
                 {t('publicForm.poweredByPrefix')}{' '}
                 <a 

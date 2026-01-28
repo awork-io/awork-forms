@@ -324,19 +324,23 @@ export function FormEditorPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b bg-background px-4 py-3 flex items-center justify-between shrink-0">
+      <div className="border-b bg-white/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between shrink-0 sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/forms')}
+            className="hover:bg-muted/80"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h1 className="text-lg font-semibold">{formName || t('formEditor.untitled')}</h1>
+            <h1 className="text-lg font-bold">{formName || t('formEditor.untitled')}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Badge variant={isActive ? 'default' : 'secondary'}>
+              <Badge 
+                variant={isActive ? 'default' : 'secondary'}
+                className={isActive ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0' : ''}
+              >
                 {isActive ? t('common.active') : t('common.inactive')}
               </Badge>
               <span>·</span>
@@ -351,6 +355,7 @@ export function FormEditorPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => window.open(`/f/${form.publicId}`, '_blank')}
+                className="hover:bg-muted/80"
               >
                 <Eye className="w-4 h-4 mr-2" />
                 {t('formEditor.preview')}
@@ -359,13 +364,19 @@ export function FormEditorPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsShareDialogOpen(true)}
+                className="hover:bg-muted/80"
               >
                 <Share2 className="w-4 h-4 mr-2" />
                 {t('formEditor.share')}
               </Button>
             </>
           )}
-          <Button size="sm" onClick={handleSave} disabled={isSaving}>
+          <Button 
+            size="sm" 
+            onClick={handleSave} 
+            disabled={isSaving}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 transition-all"
+          >
             {isSaving ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
