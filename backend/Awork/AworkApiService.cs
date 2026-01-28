@@ -144,6 +144,32 @@ public class AworkApiService
         }
     }
 
+    public async Task<bool> AssignUserToTask(Guid userId, Guid taskId, Guid assigneeUserId)
+    {
+        try
+        {
+            var accessToken = await GetValidAccessToken(userId);
+            if (string.IsNullOrEmpty(accessToken))
+                return false;
+
+            // awork API expects an array of user ID strings
+            var body = new[] { assigneeUserId.ToString() };
+            var jsonBody = JsonSerializer.Serialize(body);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{AworkApiBaseUrl}/tasks/{taskId}/setassignees");
+            request.Headers.Add("Authorization", $"Bearer {accessToken}");
+            request.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.SendAsync(request);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to assign user {assigneeUserId} to task {taskId}: {ex.Message}");
+            return false;
+        }
+    }
+
     public async Task<bool> AttachFileToTask(Guid userId, Guid taskId, byte[] fileData, string fileName)
     {
         var accessToken = await GetValidAccessToken(userId);

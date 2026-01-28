@@ -96,13 +96,19 @@ public class SubmissionProcessor
 
                     var taskRequest = BuildTaskRequest(formData, formFields, fieldMappings.TaskFieldMappings,
                         targetProjectId.Value, form.AworkTaskStatusId, form.AworkTypeOfWorkId, form.AworkTaskListId,
-                        form.AworkAssigneeId, form.AworkTaskIsPriority ?? false);
+                        form.AworkTaskIsPriority ?? false);
 
                     var task = await _aworkService.CreateTask(userId.Value, targetProjectId.Value, taskRequest);
                     if (task != null)
                     {
                         createdTaskId = task.Id;
                         result.AworkTaskId = task.Id;
+
+                        // Assign user to task (separate API call)
+                        if (form.AworkAssigneeId != null)
+                        {
+                            await _aworkService.AssignUserToTask(userId.Value, task.Id, form.AworkAssigneeId.Value);
+                        }
 
                         // Set custom field values
                         var customFieldValues = BuildCustomFieldValues(formData, formFields, customFieldMappings, customFieldDefinitionMap);
@@ -269,7 +275,7 @@ public class SubmissionProcessor
     }
 
     private static AworkCreateTaskRequest BuildTaskRequest(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings,
-        Guid projectId, Guid? taskStatusId, Guid? typeOfWorkId, Guid? taskListId, Guid? assigneeId, bool isPriority)
+        Guid projectId, Guid? taskStatusId, Guid? typeOfWorkId, Guid? taskListId, bool isPriority)
     {
         var request = new AworkCreateTaskRequest
         {
@@ -282,9 +288,6 @@ public class SubmissionProcessor
 
         if (taskListId != null)
             request.Lists = [new AworkTaskListAssignment { Id = taskListId.Value }];
-
-        if (assigneeId != null)
-            request.Assignments = [new AworkTaskAssignment { UserId = assigneeId.Value }];
 
         foreach (var mapping in mappings)
         {
