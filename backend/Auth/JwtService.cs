@@ -13,6 +13,8 @@ public class JwtService
     private readonly string _audience;
     private readonly int _expirationDays;
 
+    public int ExpirationDays => _expirationDays;
+
     public JwtService(string? secretKey = null, string issuer = "awork-forms", string audience = "awork-forms-client", int expirationDays = 7)
     {
         // Generate a random key if not provided (for development)

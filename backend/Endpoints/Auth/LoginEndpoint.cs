@@ -1,4 +1,5 @@
 using Backend.Auth;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Backend.Endpoints.Auth;
 
@@ -10,6 +11,6 @@ public class LoginEndpoint : IEndpoint
         {
             var result = await authService.InitiateAuth();
             return Results.Ok(new { authorizationUrl = result.AuthorizationUrl, state = result.State });
-        });
+        }).RequireRateLimiting("auth");
     }
 }

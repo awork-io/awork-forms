@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Submission> Submissions => Set<Submission>();
     public DbSet<Setting> Settings => Set<Setting>();
     public DbSet<OAuthState> OAuthStates => Set<OAuthState>();
+    public DbSet<FileUpload> FileUploads => Set<FileUpload>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,6 +46,12 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(e => e.State).IsUnique();
             entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<FileUpload>(entity =>
+        {
+            entity.HasIndex(e => e.PublicId).IsUnique();
+            entity.HasIndex(e => e.FormPublicId);
         });
     }
 }

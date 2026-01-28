@@ -27,20 +27,30 @@ export function AuthCallbackPage() {
       const errorParam = searchParams.get('error');
 
       if (errorParam) {
+        sessionStorage.removeItem('oauth_state');
         setError(t('authCallback.denied', { error: errorParam }));
         setIsProcessing(false);
         return;
       }
 
       if (!code || !state) {
+        sessionStorage.removeItem('oauth_state');
         setError(t('authCallback.missingParams'));
         setIsProcessing(false);
         return;
       }
 
+      const storedState = sessionStorage.getItem('oauth_state');
+      if (!storedState || storedState !== state) {
+        setError(t('authCallback.denied', { error: 'Invalid state' }));
+        setIsProcessing(false);
+        return;
+      }
+
+      sessionStorage.removeItem('oauth_state');
+
       try {
         const response = await api.handleCallback(code, state);
-        api.setToken(response.token);
         setUser(response.user);
         navigate('/', { replace: true });
       } catch (err) {

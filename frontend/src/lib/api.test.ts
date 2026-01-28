@@ -7,8 +7,6 @@ describe('ApiClient', () => {
 
   beforeEach(() => {
     globalThis.fetch = mockFetch;
-    // Clear localStorage
-    localStorage.clear();
     // Reset api token
     api.setToken(null);
   });
@@ -19,30 +17,17 @@ describe('ApiClient', () => {
   });
 
   describe('token management', () => {
-    it('should store token in localStorage when set', () => {
+    it('should store token in memory when set', () => {
       api.setToken('test-token');
 
-      expect(localStorage.getItem('auth_token')).toBe('test-token');
       expect(api.getToken()).toBe('test-token');
     });
 
-    it('should remove token from localStorage when set to null', () => {
+    it('should clear token when set to null', () => {
       api.setToken('test-token');
       api.setToken(null);
 
-      expect(localStorage.getItem('auth_token')).toBeNull();
       expect(api.getToken()).toBeNull();
-    });
-
-    it('should restore token from localStorage on init', () => {
-      localStorage.setItem('auth_token', 'stored-token');
-
-      // Create a new api instance to simulate initialization
-      // The api singleton already reads from localStorage in constructor
-      // So we verify by checking the get/set behavior
-      expect(api.getToken()).toBeNull(); // Previous test cleared it
-      api.setToken('new-token');
-      expect(api.getToken()).toBe('new-token');
     });
   });
 
@@ -57,8 +42,9 @@ describe('ApiClient', () => {
       const result = await api.healthCheck();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:5100/api/health',
+        '/api/health',
         expect.objectContaining({
+          credentials: 'include',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
           }),
@@ -84,7 +70,7 @@ describe('ApiClient', () => {
 
       const result = await api.getPublicForm('abc-123');
 
-      expect(mockFetch).toHaveBeenCalledWith('http://localhost:5100/api/f/abc-123');
+      expect(mockFetch).toHaveBeenCalledWith('/api/f/abc-123');
       expect(result).toEqual(mockForm);
     });
 
@@ -114,7 +100,7 @@ describe('ApiClient', () => {
       const result = await api.submitPublicForm('abc-123', formData);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:5100/api/f/abc-123/submit',
+        '/api/f/abc-123/submit',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -155,8 +141,9 @@ describe('ApiClient', () => {
       await api.getForms();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:5100/api/forms',
+        '/api/forms',
         expect.objectContaining({
+          credentials: 'include',
           headers: expect.objectContaining({
             Authorization: 'Bearer my-token',
           }),

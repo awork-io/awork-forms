@@ -7,10 +7,10 @@ export interface User {
   avatarUrl?: string;
   workspaceId: string;
   workspaceName?: string;
+  workspaceUrl?: string;
 }
 
 export interface AuthResponse {
-  token: string;
   user: User;
 }
 
@@ -209,17 +209,11 @@ class ApiClient {
   private token: string | null = null;
 
   constructor() {
-    // Try to restore token from localStorage
-    this.token = localStorage.getItem('auth_token');
+    this.token = null;
   }
 
   setToken(token: string | null) {
     this.token = token;
-    if (token) {
-      localStorage.setItem('auth_token', token);
-    } else {
-      localStorage.removeItem('auth_token');
-    }
   }
 
   getToken(): string | null {

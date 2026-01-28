@@ -3,6 +3,7 @@ using System;
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260128082015_AddFileUploads")]
+    partial class AddFileUploads
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -117,12 +120,6 @@ namespace backend.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("LogoContentType")
-                        .HasColumnType("text");
-
-                    b.Property<byte[]>("LogoData")
-                        .HasColumnType("bytea");
 
                     b.Property<string>("LogoUrl")
                         .HasColumnType("text");
@@ -295,9 +292,6 @@ namespace backend.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("WorkspaceName")
-                        .HasColumnType("text");
-
-                    b.Property<string>("WorkspaceUrl")
                         .HasColumnType("text");
 
                     b.HasKey("Id");

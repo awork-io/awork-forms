@@ -21,16 +21,42 @@ import {
 import { api, type Submission, type FormDetail } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import type { FormField } from '@/lib/form-types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function SubmissionsPage() {
   const { t, i18n } = useTranslation();
   const { formId } = useParams<{ formId?: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [form, setForm] = useState<FormDetail | null>(null);
+  const [selectedForm, setSelectedForm] = useState<FormDetail | null>(null); // For viewing submission details
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+
+  // Build awork URL using workspace URL or fallback to app.awork.com
+  const getAworkUrl = (path: string) => {
+    const baseUrl = user?.workspaceUrl || 'https://app.awork.com';
+    return `${baseUrl}/${path}`;
+  };
+
+  // Handle selecting a submission to view details
+  const handleSelectSubmission = async (submission: Submission | null) => {
+    setSelectedSubmission(submission);
+    if (submission && !formId) {
+      // When viewing all submissions, fetch the form for field labels
+      try {
+        const formData = await api.getForm(submission.formId);
+        setSelectedForm(formData);
+      } catch {
+        setSelectedForm(null);
+      }
+    } else {
+      setSelectedForm(null);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -105,6 +131,44 @@ export function SubmissionsPage() {
     }
   };
 
+  // Parse form fields to get field ID to label mapping
+  const getFieldLabels = (formData: FormDetail | null): Record<string, string> => {
+    if (!formData?.fieldsJson) return {};
+    try {
+      const fields: FormField[] = JSON.parse(formData.fieldsJson);
+      return fields.reduce((acc, field) => {
+        acc[field.id] = field.label;
+        return acc;
+      }, {} as Record<string, string>);
+    } catch {
+      return {};
+    }
+  };
+
+  // Use form (for specific form view) or selectedForm (for all submissions view)
+  const activeForm = form || selectedForm;
+  const fieldLabels = getFieldLabels(activeForm);
+
+  // Check if a value is a file object (uploaded file metadata)
+  const isFileValue = (value: unknown): value is { fileName: string; fileUrl: string; fileSize?: number } => {
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      'fileName' in value &&
+      'fileUrl' in value &&
+      typeof (value as Record<string, unknown>).fileName === 'string' &&
+      typeof (value as Record<string, unknown>).fileUrl === 'string'
+    );
+  };
+
+  // Format file size for display
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   const getSubmissionPreview = (dataJson: string): string => {
     const data = parseSubmissionData(dataJson);
     const entries = Object.entries(data);
@@ -114,12 +178,97 @@ export function SubmissionsPage() {
     const preview = entries
       .slice(0, 2)
       .map(([, value]) => {
+        // Handle file values
+        if (isFileValue(value)) {
+          return value.fileName;
+        }
         const strValue = String(value);
         return strValue.length > 30 ? strValue.substring(0, 30) + '...' : strValue;
       })
       .join(', ');
 
     return preview || t('submissions.noData');
+  };
+
+  // Render a field value based on its type
+  const renderFieldValue = (value: unknown) => {
+    // Handle file values
+    if (isFileValue(value)) {
+      const fileSize = formatFileSize(value.fileSize);
+      return (
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 px-3 py-2 bg-background rounded-lg border">
+            <svg className="w-4 h-4 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+            <div className="min-w-0 flex-1">
+              <a
+                href={value.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-primary hover:underline truncate block"
+              >
+                {value.fileName}
+              </a>
+              {fileSize && (
+                <span className="text-xs text-muted-foreground">{fileSize}</span>
+              )}
+            </div>
+            <a
+              href={value.fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1 hover:bg-muted rounded"
+              title={t('submissions.downloadFile')}
+            >
+              <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    // Handle boolean values
+    if (typeof value === 'boolean') {
+      return (
+        <span className={`inline-flex items-center gap-1.5 ${value ? 'text-green-700' : 'text-muted-foreground'}`}>
+          {value ? (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          {value ? t('common.yes') : t('common.no')}
+        </span>
+      );
+    }
+
+    // Handle empty values
+    if (value === null || value === undefined || value === '') {
+      return <span className="text-muted-foreground italic">{t('submissions.emptyValue')}</span>;
+    }
+
+    // Handle arrays
+    if (Array.isArray(value)) {
+      return <span className="break-words">{value.join(', ')}</span>;
+    }
+
+    // Handle objects (that aren't files - those are handled above)
+    if (typeof value === 'object') {
+      return (
+        <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
+          {JSON.stringify(value, null, 2)}
+        </pre>
+      );
+    }
+
+    // Handle regular string/number values
+    return <span className="break-words">{String(value)}</span>;
   };
 
   if (isLoading) {
@@ -253,7 +402,7 @@ export function SubmissionsPage() {
                       <div className="flex items-center gap-2">
                         {submission.aworkProjectId && (
                           <a
-                            href={`https://app.awork.com/projects/${submission.aworkProjectId}`}
+                            href={getAworkUrl(`projects/${submission.aworkProjectId}`)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary hover:underline text-sm flex items-center gap-1"
@@ -266,7 +415,7 @@ export function SubmissionsPage() {
                         )}
                         {submission.aworkTaskId && (
                           <a
-                            href={`https://app.awork.com/tasks/${submission.aworkTaskId}`}
+                            href={getAworkUrl(`tasks/${submission.aworkTaskId}`)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-primary hover:underline text-sm flex items-center gap-1"
@@ -289,7 +438,7 @@ export function SubmissionsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setSelectedSubmission(submission)}
+                        onClick={() => handleSelectSubmission(submission)}
                       >
                         {t('submissions.view')}
                       </Button>
@@ -303,7 +452,7 @@ export function SubmissionsPage() {
       )}
 
       {/* Submission Detail Dialog */}
-      <Dialog open={selectedSubmission !== null} onOpenChange={() => setSelectedSubmission(null)}>
+      <Dialog open={selectedSubmission !== null} onOpenChange={() => handleSelectSubmission(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('submissions.detailsTitle')}</DialogTitle>
@@ -332,7 +481,7 @@ export function SubmissionsPage() {
                   <div className="mt-1 flex gap-2">
                     {selectedSubmission.aworkProjectId && (
                       <a
-                        href={`https://app.awork.com/projects/${selectedSubmission.aworkProjectId}`}
+                        href={getAworkUrl(`projects/${selectedSubmission.aworkProjectId}`)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-primary hover:underline"
@@ -345,7 +494,7 @@ export function SubmissionsPage() {
                     )}
                     {selectedSubmission.aworkTaskId && (
                       <a
-                        href={`https://app.awork.com/tasks/${selectedSubmission.aworkTaskId}`}
+                        href={getAworkUrl(`tasks/${selectedSubmission.aworkTaskId}`)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-primary hover:underline"
@@ -361,22 +510,18 @@ export function SubmissionsPage() {
               )}
 
               <div>
-                <span className="text-sm text-muted-foreground">{t('submissions.submittedData')}</span>
-                <div className="mt-2 bg-muted rounded-lg p-4">
-                  <table className="w-full">
-                    <tbody>
-                      {Object.entries(parseSubmissionData(selectedSubmission.dataJson)).map(([key, value]) => (
-                        <tr key={key} className="border-b border-border last:border-0">
-                          <td className="py-2 pr-4 text-sm font-medium text-muted-foreground align-top w-1/3">
-                            {key}
-                          </td>
-                          <td className="py-2 text-sm break-words">
-                            {typeof value === 'boolean' ? (value ? t('common.yes') : t('common.no')) : String(value)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <span className="text-sm font-medium text-foreground">{t('submissions.submittedData')}</span>
+                <div className="mt-3 space-y-3">
+                  {Object.entries(parseSubmissionData(selectedSubmission.dataJson)).map(([key, value]) => (
+                    <div key={key} className="bg-muted/50 rounded-lg p-4 border border-border/50">
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                        {fieldLabels[key] || key}
+                      </div>
+                      <div className="text-sm">
+                        {renderFieldValue(value)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

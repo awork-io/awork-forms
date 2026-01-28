@@ -12,10 +12,19 @@ public static class AuthMiddleware
         app.Use(async (context, next) =>
         {
             var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+            string? token = null;
 
             if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
             {
-                var token = authHeader.Substring("Bearer ".Length);
+                token = authHeader.Substring("Bearer ".Length);
+            }
+            else if (context.Request.Cookies.TryGetValue("awf_session", out var cookieToken))
+            {
+                token = cookieToken;
+            }
+
+            if (!string.IsNullOrEmpty(token))
+            {
                 var principal = jwtService.ValidateToken(token);
 
                 if (principal != null)

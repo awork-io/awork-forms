@@ -165,7 +165,7 @@ public class SubmissionProcessor
         var fileFields = formFields.Where(f => f.Type == "file").ToList();
         if (fileFields.Count == 0) return;
 
-        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "submissions");
+        await using var db = await _dbFactory.CreateDbContextAsync();
 
         foreach (var field in fileFields)
         {
@@ -180,9 +180,9 @@ public class SubmissionProcessor
                         var fileData = JsonSerializer.Deserialize<FileUploadData>(jsonElement.GetRawText(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                         if (fileData != null && !string.IsNullOrEmpty(fileData.FileUrl))
                         {
-                            var localPath = GetLocalFilePath(fileData.FileUrl, uploadsPath);
-                            if (File.Exists(localPath))
-                                await _aworkService.AttachFileToTask(userId, taskId, localPath, fileData.FileName);
+                            var fileBytes = await GetFileFromDatabase(db, fileData.FileUrl);
+                            if (fileBytes != null)
+                                await _aworkService.AttachFileToTask(userId, taskId, fileBytes, fileData.FileName);
                         }
                     }
                     else if (jsonElement.ValueKind == JsonValueKind.Array)
@@ -192,9 +192,9 @@ public class SubmissionProcessor
                         {
                             foreach (var fileData in files.Where(f => !string.IsNullOrEmpty(f.FileUrl)))
                             {
-                                var localPath = GetLocalFilePath(fileData.FileUrl, uploadsPath);
-                                if (File.Exists(localPath))
-                                    await _aworkService.AttachFileToTask(userId, taskId, localPath, fileData.FileName);
+                                var fileBytes = await GetFileFromDatabase(db, fileData.FileUrl);
+                                if (fileBytes != null)
+                                    await _aworkService.AttachFileToTask(userId, taskId, fileBytes, fileData.FileName);
                             }
                         }
                     }
@@ -207,11 +207,15 @@ public class SubmissionProcessor
         }
     }
 
-    private static string GetLocalFilePath(string fileUrl, string uploadsPath)
+    private static async Task<byte[]?> GetFileFromDatabase(AppDbContext db, string fileUrl)
     {
-        // fileUrl is like "/uploads/submissions/filename.ext"
+        // fileUrl is like "/api/files/{guid}"
         var fileName = Path.GetFileName(fileUrl);
-        return Path.Combine(uploadsPath, fileName);
+        if (!Guid.TryParse(fileName, out var fileId))
+            return null;
+
+        var file = await db.FileUploads.FirstOrDefaultAsync(f => f.PublicId == fileId);
+        return file?.Data;
     }
 
     private static Dictionary<string, object?> ParseFormData(string dataJson)

@@ -21,7 +21,8 @@ public class MeEndpoint : IEndpoint
                 Name = user.Name,
                 AvatarUrl = user.AvatarUrl,
                 WorkspaceId = user.AworkWorkspaceId,
-                WorkspaceName = user.WorkspaceName
+                WorkspaceName = user.WorkspaceName,
+                WorkspaceUrl = user.WorkspaceUrl
             });
         }).RequireAuth();
     }

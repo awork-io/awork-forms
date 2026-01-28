@@ -1,10 +1,38 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Inbox, CheckSquare, Plus, ArrowRight, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { api } from '@/lib/api';
 
 export function DashboardPage() {
   const { t } = useTranslation();
+  const [totalForms, setTotalForms] = useState<number>(0);
+  const [totalSubmissions, setTotalSubmissions] = useState<number>(0);
+  const [tasksCreated, setTasksCreated] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [forms, submissions] = await Promise.all([
+          api.getForms(),
+          api.getSubmissions(),
+        ]);
+
+        setTotalForms(forms.length);
+        setTotalSubmissions(submissions.length);
+        // Count submissions that resulted in an awork task
+        setTasksCreated(submissions.filter(s => s.aworkTaskId).length);
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
   return (
     <div className="p-6 lg:p-8">
       {/* Page Header */}
@@ -26,7 +54,9 @@ export function DashboardPage() {
                 <FileText className="w-5 h-5 text-white" />
               </div>
             </div>
-            <CardTitle className="text-4xl font-bold mt-2">0</CardTitle>
+            <CardTitle className="text-4xl font-bold mt-2">
+              {isLoading ? '—' : totalForms}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
@@ -43,7 +73,9 @@ export function DashboardPage() {
                 <Inbox className="w-5 h-5 text-white" />
               </div>
             </div>
-            <CardTitle className="text-4xl font-bold mt-2">0</CardTitle>
+            <CardTitle className="text-4xl font-bold mt-2">
+              {isLoading ? '—' : totalSubmissions}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
@@ -60,7 +92,9 @@ export function DashboardPage() {
                 <CheckSquare className="w-5 h-5 text-white" />
               </div>
             </div>
-            <CardTitle className="text-4xl font-bold mt-2">0</CardTitle>
+            <CardTitle className="text-4xl font-bold mt-2">
+              {isLoading ? '—' : tasksCreated}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">

@@ -39,27 +39,30 @@ done
 # Set DATABASE_URL for local development
 export DATABASE_URL="Host=localhost;Database=awork_forms;Username=postgres;Password=postgres"
 
-# Build backend
+# Build backend (initial build only)
 echo "Building backend..."
 dotnet build "$PROJECT_DIR/backend/backend.csproj" > /tmp/backend_build.log 2>&1 || {
     echo "Backend build failed. See /tmp/backend_build.log"
     exit 1
 }
 
-# Build frontend
-echo "Building frontend..."
+# Install frontend dependencies if needed
+echo "Checking frontend dependencies..."
 cd "$PROJECT_DIR/frontend"
-npm run build > /tmp/frontend_build.log 2>&1 || {
-    echo "Frontend build failed. See /tmp/frontend_build.log"
-    exit 1
-}
+npm install --silent
 
 # Function to cleanup on exit
 cleanup() {
     echo ""
     echo "Shutting down..."
+    # Kill the background processes
     kill $BACKEND_PID 2>/dev/null
     kill $FRONTEND_PID 2>/dev/null
+    # Give them a moment to terminate gracefully
+    sleep 1
+    # Force kill any remaining child processes
+    pkill -P $BACKEND_PID 2>/dev/null
+    pkill -P $FRONTEND_PID 2>/dev/null
     # Keep postgres running for faster restarts (use 'docker compose down' to stop)
     exit 0
 }
@@ -76,10 +79,10 @@ dotnet ef database update > /tmp/migrations.log 2>&1 || {
 }
 echo "Migrations applied!"
 
-# Start backend
-echo "Starting backend (http://localhost:5100)..."
+# Start backend with hot reload
+echo "Starting backend with hot reload (http://localhost:5100)..."
 cd "$PROJECT_DIR/backend"
-dotnet run > /tmp/backend.log 2>&1 &
+ASPNETCORE_URLS="http://localhost:5100" dotnet watch run --no-launch-profile > /tmp/backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Wait for backend to be ready
@@ -112,8 +115,8 @@ echo ""
 echo "=========================================="
 echo "  awork Forms Development Servers"
 echo "=========================================="
-echo "  Frontend: http://localhost:5173"
-echo "  Backend:  http://localhost:5100"
+echo "  Frontend: http://localhost:5173 (HMR enabled)"
+echo "  Backend:  http://localhost:5100 (hot reload enabled)"
 echo ""
 echo "  Logs:"
 echo "    Backend:  tail -f /tmp/backend.log"

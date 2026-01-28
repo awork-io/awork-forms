@@ -156,12 +156,13 @@ export function PublicFormPage() {
   };
 
   // Get custom styles
+  const apiBaseUrl = import.meta.env.VITE_API_URL || '';
   const primaryColor = form?.primaryColor || '#6366f1';
   const backgroundColor = form?.backgroundColor || '#f8fafc';
   const logoUrl = form?.logoUrl
     ? form.logoUrl.startsWith('http')
       ? form.logoUrl
-      : `http://localhost:5100${form.logoUrl}`
+      : `${apiBaseUrl}${form.logoUrl}`
     : null;
 
   // Loading state

@@ -1,9 +1,11 @@
+using System.Threading.RateLimiting;
 using Backend.Auth;
 using Backend.Awork;
 using Backend.Data;
 using Backend.Endpoints;
 using Backend.Forms;
 using Backend.Submissions;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,7 +47,41 @@ if (string.IsNullOrWhiteSpace(jwtSecretKey) || jwtSecretKey.Length < 32)
 {
     throw new InvalidOperationException("JWT_SECRET_KEY is required and must be at least 32 characters.");
 }
-builder.Services.AddSingleton(new JwtService(jwtSecretKey));
+var defaultExpirationDays = builder.Environment.IsDevelopment() ? 7 : 1;
+var jwtExpirationDays = int.TryParse(
+    builder.Configuration["Jwt:ExpirationDays"] ?? Environment.GetEnvironmentVariable("JWT_EXPIRATION_DAYS"),
+    out var parsedDays)
+    ? parsedDays
+    : defaultExpirationDays;
+builder.Services.AddSingleton(new JwtService(jwtSecretKey, expirationDays: jwtExpirationDays));
+
+// Rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("auth", context =>
+        RateLimiterPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+
+    options.AddPolicy("public", context =>
+        RateLimiterPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+});
 
 // Services
 var frontendUrl = Environment.GetEnvironmentVariable("BASE_URL") 
@@ -76,6 +112,45 @@ builder.Services.AddSingleton(sp => new SubmissionProcessor(
 
 var app = builder.Build();
 
+var forwardedOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+forwardedOptions.KnownNetworks.Clear();
+forwardedOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedOptions);
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    context.Response.Headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
+    context.Response.Headers["X-XSS-Protection"] = "0";
+
+    if (!app.Environment.IsDevelopment())
+    {
+        context.Response.Headers["Content-Security-Policy"] =
+            "default-src 'self'; " +
+            "base-uri 'self'; " +
+            "object-src 'none'; " +
+            "frame-ancestors 'none'; " +
+            "img-src 'self' data: https:; " +
+            "script-src 'self'; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "connect-src 'self' https://api.awork.com;";
+    }
+
+    await next();
+});
+
 // Apply migrations
 using (var scope = app.Services.CreateScope())
 {
@@ -84,6 +159,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors();
+app.UseRateLimiter();
 
 // Static files
 app.UseDefaultFiles();

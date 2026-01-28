@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Backend.Forms;
 using Backend.Submissions;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Backend.Endpoints.Submissions;
 
@@ -42,6 +43,6 @@ public class SubmitFormEndpoint : IEndpoint
                 integrationStatus = result.Status,
                 integrationError = result.ErrorMessage
             });
-        });
+        }).RequireRateLimiting("public");
     }
 }

@@ -6,6 +6,7 @@ public class User
     public Guid AworkUserId { get; set; }
     public Guid AworkWorkspaceId { get; set; }
     public string? WorkspaceName { get; set; }
+    public string? WorkspaceUrl { get; set; }
     public string Email { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? AvatarUrl { get; set; }

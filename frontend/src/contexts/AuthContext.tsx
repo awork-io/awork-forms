@@ -19,18 +19,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check if user is already authenticated on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const token = api.getToken();
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
       try {
         const currentUser = await api.getCurrentUser();
         setUser(currentUser);
       } catch {
-        // Token is invalid, clear it
-        api.setToken(null);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -41,7 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async () => {
     try {
-      const { authorizationUrl } = await api.initiateLogin();
+      const { authorizationUrl, state } = await api.initiateLogin();
+      sessionStorage.setItem('oauth_state', state);
       // Redirect to awork OAuth page
       window.location.href = authorizationUrl;
     } catch (error) {

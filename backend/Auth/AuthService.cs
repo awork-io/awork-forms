@@ -129,7 +129,8 @@ public class AuthService
                     Name = user.Name,
                     AvatarUrl = user.AvatarUrl,
                     WorkspaceId = user.AworkWorkspaceId,
-                    WorkspaceName = user.WorkspaceName
+                    WorkspaceName = user.WorkspaceName,
+                    WorkspaceUrl = user.WorkspaceUrl
                 }
             };
         }
@@ -221,7 +222,10 @@ public class AuthService
         if (!response.IsSuccessStatusCode) return null;
 
         var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<AworkUserInfo>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        Console.WriteLine($"[DEBUG] awork /me response: {json}");
+        var userInfo = JsonSerializer.Deserialize<AworkUserInfo>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        Console.WriteLine($"[DEBUG] Parsed workspace: Name={userInfo?.Workspace?.Name}, Url={userInfo?.Workspace?.Url}");
+        return userInfo;
     }
 
     private async Task<User> UpsertUser(AworkUserInfo userInfo, TokenResult tokenResult)
@@ -244,6 +248,7 @@ public class AuthService
                 AworkUserId = userInfo.Id,
                 AworkWorkspaceId = workspaceId,
                 WorkspaceName = userInfo.Workspace?.Name,
+                WorkspaceUrl = userInfo.Workspace?.Url,
                 Email = userInfo.Email ?? "",
                 Name = $"{userInfo.FirstName} {userInfo.LastName}".Trim(),
                 AvatarUrl = userInfo.ProfileImage,
@@ -264,6 +269,8 @@ public class AuthService
             user.AvatarUrl = userInfo.ProfileImage;
             if (!string.IsNullOrWhiteSpace(userInfo.Workspace?.Name))
                 user.WorkspaceName = userInfo.Workspace.Name;
+            if (!string.IsNullOrWhiteSpace(userInfo.Workspace?.Url))
+                user.WorkspaceUrl = userInfo.Workspace.Url;
             user.AccessToken = tokenResult.AccessToken;
             user.RefreshToken = tokenResult.RefreshToken;
             user.TokenExpiresAt = now.AddSeconds(tokenResult.ExpiresIn);

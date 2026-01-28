@@ -22,6 +22,8 @@ public class Form
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }
     public string? LogoUrl { get; set; }
+    public byte[]? LogoData { get; set; }
+    public string? LogoContentType { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

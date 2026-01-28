@@ -346,8 +346,6 @@ export function AworkIntegrationSettings({
             <SelectContent>
               <SelectItem value="none">{t('aworkIntegration.actionType.none')}</SelectItem>
               <SelectItem value="task">{t('aworkIntegration.actionType.task')}</SelectItem>
-              <SelectItem value="project">{t('aworkIntegration.actionType.project')}</SelectItem>
-              <SelectItem value="both">{t('aworkIntegration.actionType.both')}</SelectItem>
             </SelectContent>
           </Select>
         </div>

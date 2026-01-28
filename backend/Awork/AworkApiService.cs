@@ -144,7 +144,7 @@ public class AworkApiService
         }
     }
 
-    public async Task<bool> AttachFileToTask(Guid userId, Guid taskId, string localFilePath, string fileName)
+    public async Task<bool> AttachFileToTask(Guid userId, Guid taskId, byte[] fileData, string fileName)
     {
         var accessToken = await GetValidAccessToken(userId);
         if (string.IsNullOrEmpty(accessToken))
@@ -153,8 +153,7 @@ public class AworkApiService
         try
         {
             using var form = new MultipartFormDataContent();
-            using var fileStream = File.OpenRead(localFilePath);
-            using var fileContent = new StreamContent(fileStream);
+            using var fileContent = new ByteArrayContent(fileData);
 
             var mimeType = GetMimeType(fileName);
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mimeType);

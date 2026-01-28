@@ -1,3 +1,4 @@
+using Backend.Data;
 using Backend.Forms;
 
 namespace Backend.Endpoints.Forms;
@@ -6,9 +7,7 @@ public class FormLogoEndpoint : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app)
     {
-        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
-
-        app.MapPost("/api/forms/{id:int}/logo", async (HttpContext context, FormsService formsService, int id) =>
+        app.MapPost("/api/forms/{id:int}/logo", async (HttpContext context, AppDbContext db, FormsService formsService, int id) =>
         {
             var userId = context.GetCurrentUserId();
             if (userId == null) return Results.Unauthorized();
@@ -23,7 +22,7 @@ public class FormLogoEndpoint : IEndpoint
             if (formFile == null || formFile.Length == 0)
                 return Results.BadRequest(new { error = "No file uploaded" });
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg" };
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
             var extension = Path.GetExtension(formFile.FileName).ToLowerInvariant();
             if (!allowedExtensions.Contains(extension))
                 return Results.BadRequest(new { error = "Invalid file type. Allowed: jpg, jpeg, png, gif, webp, svg" });
@@ -31,28 +30,44 @@ public class FormLogoEndpoint : IEndpoint
             if (formFile.Length > 5 * 1024 * 1024)
                 return Results.BadRequest(new { error = "File size must be less than 5MB" });
 
-            Directory.CreateDirectory(uploadsPath);
-            var fileName = $"{form.PublicId}-logo{extension}";
-            var filePath = Path.Combine(uploadsPath, fileName);
+            // Read file into memory
+            using var memoryStream = new MemoryStream();
+            await formFile.CopyToAsync(memoryStream);
+            var fileData = memoryStream.ToArray();
 
-            if (!string.IsNullOrEmpty(form.LogoUrl))
-            {
-                var oldFilePath = Path.Combine(uploadsPath, Path.GetFileName(form.LogoUrl));
-                if (File.Exists(oldFilePath)) File.Delete(oldFilePath);
-            }
+            // Update form with logo data
+            var dbForm = await db.Forms.FindAsync(id);
+            if (dbForm == null) return Results.NotFound();
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await formFile.CopyToAsync(stream);
-            }
+            dbForm.LogoData = fileData;
+            dbForm.LogoContentType = formFile.ContentType ?? "image/png";
+            dbForm.LogoUrl = $"/api/f/{dbForm.PublicId}/logo";
+            dbForm.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
 
-            var logoUrl = $"/uploads/{fileName}";
-            formsService.UpdateForm(id, new UpdateFormDto { LogoUrl = logoUrl }, userId.Value);
-
-            return Results.Ok(new { logoUrl });
+            return Results.Ok(new { logoUrl = dbForm.LogoUrl });
         }).RequireAuth().DisableAntiforgery();
 
-        app.MapDelete("/api/forms/{id:int}/logo", (HttpContext context, FormsService formsService, int id) =>
+        app.MapGet("/api/forms/{id:int}/logo", async (AppDbContext db, int id) =>
+        {
+            var form = await db.Forms.FindAsync(id);
+            if (form?.LogoData == null)
+                return Results.NotFound();
+
+            return Results.File(form.LogoData, form.LogoContentType ?? "image/png");
+        });
+
+        // Public logo endpoint (for public form viewers)
+        app.MapGet("/api/f/{publicId:guid}/logo", (AppDbContext db, Guid publicId) =>
+        {
+            var form = db.Forms.FirstOrDefault(f => f.PublicId == publicId);
+            if (form?.LogoData == null)
+                return Results.NotFound();
+
+            return Results.File(form.LogoData, form.LogoContentType ?? "image/png");
+        });
+
+        app.MapDelete("/api/forms/{id:int}/logo", async (HttpContext context, AppDbContext db, FormsService formsService, int id) =>
         {
             var userId = context.GetCurrentUserId();
             if (userId == null) return Results.Unauthorized();
@@ -60,13 +75,15 @@ public class FormLogoEndpoint : IEndpoint
             var form = formsService.GetFormById(id, userId.Value);
             if (form == null) return Results.NotFound(new { error = "Form not found" });
 
-            if (!string.IsNullOrEmpty(form.LogoUrl))
-            {
-                var filePath = Path.Combine(uploadsPath, Path.GetFileName(form.LogoUrl));
-                if (File.Exists(filePath)) File.Delete(filePath);
-            }
+            var dbForm = await db.Forms.FindAsync(id);
+            if (dbForm == null) return Results.NotFound();
 
-            formsService.UpdateForm(id, new UpdateFormDto { LogoUrl = "" }, userId.Value);
+            dbForm.LogoData = null;
+            dbForm.LogoContentType = null;
+            dbForm.LogoUrl = null;
+            dbForm.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+
             return Results.Ok(new { message = "Logo removed successfully" });
         }).RequireAuth();
     }

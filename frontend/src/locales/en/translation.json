@@ -449,7 +449,9 @@
     "aworkLinks": "awork Links:",
     "viewProject": "View Project in awork",
     "viewTask": "View Task in awork",
-    "submittedData": "Submitted Data:"
+    "submittedData": "Submitted Data",
+    "downloadFile": "Download file",
+    "emptyValue": "Not provided"
   },
   "settings": {
     "title": "Settings",
