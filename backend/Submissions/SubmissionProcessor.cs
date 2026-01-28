@@ -279,7 +279,6 @@ public class SubmissionProcessor
     {
         var request = new AworkCreateTaskRequest
         {
-            ProjectId = projectId,
             EntityId = projectId,
             TaskStatusId = taskStatusId,
             TypeOfWorkId = typeOfWorkId,

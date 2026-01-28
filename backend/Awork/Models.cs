@@ -105,7 +105,6 @@ public class AworkCreateTaskRequest
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string BaseType { get; set; } = "projecttask";
-    public Guid? ProjectId { get; set; }
     public Guid? EntityId { get; set; }
     [System.Text.Json.Serialization.JsonPropertyName("isPrio")]
     public bool IsPriority { get; set; }
@@ -115,18 +114,12 @@ public class AworkCreateTaskRequest
     public Guid? TaskStatusId { get; set; }
     public Guid? TypeOfWorkId { get; set; }
     public List<AworkTaskListAssignment>? Lists { get; set; }
-    public List<AworkTaskAssignment>? Assignments { get; set; }
 }
 
 public class AworkTaskListAssignment
 {
     public Guid Id { get; set; }
     public int Order { get; set; } = int.MaxValue;
-}
-
-public class AworkTaskAssignment
-{
-    public Guid UserId { get; set; }
 }
 
 public class AworkCreateTaskResponse
