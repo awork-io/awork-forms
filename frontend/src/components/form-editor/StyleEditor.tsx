@@ -28,6 +28,7 @@ interface StyleEditorProps {
 
 const DEFAULT_PRIMARY_COLOR = '#3B82F6';
 const DEFAULT_BACKGROUND_COLOR = '#F8FAFC';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export function StyleEditor({
   formId,
@@ -232,7 +233,7 @@ export function StyleEditor({
               <div className="space-y-3">
                 <div className="relative w-full h-32 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                   <img
-                    src={`http://localhost:5100${styling.logoUrl}`}
+                    src={styling.logoUrl.startsWith('http') ? styling.logoUrl : `${API_BASE_URL}${styling.logoUrl}`}
                     alt={t('styleEditor.formLogoAlt')}
                     className="max-w-full max-h-full object-contain"
                   />
@@ -316,7 +317,7 @@ export function StyleEditor({
                 {styling.logoUrl && (
                   <div className="flex justify-center mb-6">
                     <img
-                      src={`http://localhost:5100${styling.logoUrl}`}
+                      src={styling.logoUrl.startsWith('http') ? styling.logoUrl : `${API_BASE_URL}${styling.logoUrl}`}
                       alt={t('styleEditor.formLogoAlt')}
                       className="max-h-16 object-contain"
                     />
