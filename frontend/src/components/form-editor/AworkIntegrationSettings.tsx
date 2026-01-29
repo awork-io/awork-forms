@@ -500,7 +500,17 @@ export function AworkIntegrationSettings({
                         ...users.map((user) => ({
                           value: user.id,
                           label: getUserDisplayName(user),
-                          secondaryLabel: user.email || undefined,
+                          icon: user.profileImage ? (
+                            <img 
+                              src={user.profileImage} 
+                              alt="" 
+                              className="w-7 h-7 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-medium">
+                              {(user.firstName?.[0] || user.email?.[0] || '?').toUpperCase()}
+                            </div>
+                          ),
                         })),
                       ]}
                       value={config.assigneeId || 'none'}
