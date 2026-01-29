@@ -39,7 +39,7 @@ public class AworkProjectStatus
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
-    public int Order { get; set; }
+    public double Order { get; set; }
 }
 
 public class AworkTaskStatus
@@ -47,15 +47,15 @@ public class AworkTaskStatus
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
-    public int Order { get; set; }
+    public double Order { get; set; }
 }
 
 public class AworkTaskList
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public int Order { get; set; }
-    public int OrderOfNewTasks { get; set; }
+    public double Order { get; set; }
+    public double OrderOfNewTasks { get; set; }
 }
 
 public class AworkTypeOfWork
@@ -119,7 +119,7 @@ public class AworkCreateTaskRequest
 public class AworkTaskListAssignment
 {
     public Guid Id { get; set; }
-    public int Order { get; set; } = int.MaxValue;
+    public double Order { get; set; } = double.MaxValue;
 }
 
 public class AworkCreateTaskResponse
@@ -150,7 +150,7 @@ public class AworkCustomFieldSelectionOption
 {
     public Guid Id { get; set; }
     public string Value { get; set; } = string.Empty;
-    public int Order { get; set; }
+    public double Order { get; set; }
     public string? Color { get; set; }
 }
 
