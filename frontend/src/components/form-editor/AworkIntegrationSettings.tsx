@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FormField as FormFieldWrapper } from '@/components/ui/form-field';
 import {
   Select,
   SelectContent,
@@ -338,8 +339,7 @@ export function AworkIntegrationSettings({
         )}
 
         {/* Action Type Selector */}
-        <div className="space-y-2">
-          <Label>{t('aworkIntegration.actionType.label')}</Label>
+        <FormFieldWrapper label={t('aworkIntegration.actionType.label')}>
           <Select
             value={config.actionType || 'none'}
             onValueChange={handleActionTypeChange}
@@ -352,7 +352,7 @@ export function AworkIntegrationSettings({
               <SelectItem value="task">{t('aworkIntegration.actionType.task')}</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormFieldWrapper>
 
         {/* Task Settings */}
         {showTaskSettings && (
@@ -365,8 +365,7 @@ export function AworkIntegrationSettings({
               </div>
 
               {/* Project Selector */}
-              <div className="space-y-2">
-                <Label>{t('aworkIntegration.task.addToProject')}</Label>
+              <FormFieldWrapper label={t('aworkIntegration.task.addToProject')}>
                 {isLoadingProjects ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -395,12 +394,11 @@ export function AworkIntegrationSettings({
                     {t('aworkIntegration.task.loadProjects')}
                   </Button>
                 )}
-              </div>
+              </FormFieldWrapper>
 
               {/* Task List Selector */}
               {config.projectId && (
-                <div className="space-y-2">
-                  <Label>{t('aworkIntegration.task.taskList')}</Label>
+                <FormFieldWrapper label={t('aworkIntegration.task.taskList')}>
                   {isLoadingTaskData ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -422,13 +420,12 @@ export function AworkIntegrationSettings({
                       emptyText={t('aworkIntegration.task.noTaskListsFound')}
                     />
                   )}
-                </div>
+                </FormFieldWrapper>
               )}
 
               {/* Task Status Selector */}
               {config.projectId && (
-                <div className="space-y-2">
-                  <Label>{t('aworkIntegration.task.taskStatus')}</Label>
+                <FormFieldWrapper label={t('aworkIntegration.task.taskStatus')}>
                   {isLoadingTaskData ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -450,13 +447,12 @@ export function AworkIntegrationSettings({
                       emptyText={t('aworkIntegration.task.noStatusesFound')}
                     />
                   )}
-                </div>
+                </FormFieldWrapper>
               )}
 
               {/* Type of Work Selector */}
               {config.projectId && (
-                <div className="space-y-2">
-                  <Label>{t('aworkIntegration.task.typeOfWork')}</Label>
+                <FormFieldWrapper label={t('aworkIntegration.task.typeOfWork')}>
                   {isLoadingTaskData ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -478,13 +474,12 @@ export function AworkIntegrationSettings({
                       emptyText={t('aworkIntegration.task.noTypesOfWorkFound')}
                     />
                   )}
-                </div>
+                </FormFieldWrapper>
               )}
 
               {/* Assignee Selector */}
               {config.projectId && (
-                <div className="space-y-2">
-                  <Label>{t('aworkIntegration.task.assignTo')}</Label>
+                <FormFieldWrapper label={t('aworkIntegration.task.assignTo')}>
                   {isLoadingTaskData ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -517,7 +512,7 @@ export function AworkIntegrationSettings({
                       emptyText={t('aworkIntegration.task.noUsersFound')}
                     />
                   )}
-                </div>
+                </FormFieldWrapper>
               )}
 
               {/* Priority Toggle */}

@@ -428,7 +428,7 @@ export function SubmissionsPage() {
                           href={getAworkUrl(`tasks/${submission.aworkTaskId}`)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded transition-colors"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-[#006dfa] bg-[#edf5ff] hover:bg-[#dbebff] rounded transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <ClipboardList className="w-3 h-3" />
@@ -504,7 +504,7 @@ export function SubmissionsPage() {
                     href={getAworkUrl(`tasks/${selectedSubmission.aworkTaskId}`)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-md transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#006dfa] bg-[#edf5ff] hover:bg-[#dbebff] rounded-md transition-colors"
                   >
                     <ClipboardList className="w-4 h-4" />
                     {t('submissions.viewTask')}

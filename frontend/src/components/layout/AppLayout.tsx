@@ -47,9 +47,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="w-64 glass-sidebar flex flex-col shrink-0">
         {/* Logo */}
         <div className="h-16 flex items-center px-5 border-b border-border/50">
-          <Link to="/" className="flex items-baseline gap-2">
-            <AworkLogo className="h-[18px] relative top-[1px]" />
-            <span className="text-sm font-medium text-muted-foreground">{t('brand.product')}</span>
+          <Link to="/" className="flex items-center">
+            <AworkLogo className="h-[18px]" />
           </Link>
         </div>
 
@@ -67,7 +66,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                       isActive
                         ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        : 'text-muted-foreground hover:bg-accent hover:text-[#006dfa]'
                     )}
                   >
                     {item.icon}
@@ -106,7 +105,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
+            className="w-full justify-start text-muted-foreground hover:text-[#006dfa] hover:bg-accent"
             onClick={logout}
           >
             <LogOut className="w-4 h-4 mr-2" />

@@ -26,8 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { InputField } from '@/components/ui/form-field';
 import { api, type Form } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
@@ -272,20 +271,18 @@ export function FormsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">{t('formsPage.dialog.nameLabel')}</Label>
-              <Input
-                id="name"
-                placeholder={t('formsPage.dialog.namePlaceholder')}
-                value={newFormName}
-                onChange={(e) => setNewFormName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleCreateForm();
-                  }
-                }}
-              />
-            </div>
+            <InputField
+              label={t('formsPage.dialog.nameLabel')}
+              id="name"
+              placeholder={t('formsPage.dialog.namePlaceholder')}
+              value={newFormName}
+              onChange={(e) => setNewFormName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleCreateForm();
+                }
+              }}
+            />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>

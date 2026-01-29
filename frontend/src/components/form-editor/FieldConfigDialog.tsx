@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { InputField } from '@/components/ui/form-field';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -64,28 +65,24 @@ export function FieldConfigDialog({
 
         <div className="space-y-6 py-4">
           {/* Label */}
-          <div className="space-y-2">
-            <Label htmlFor="field-label">{t('fieldConfigDialog.label')}</Label>
-            <Input
-              id="field-label"
-              value={field.label}
-              onChange={(e) => handleUpdate({ label: e.target.value })}
-              placeholder={t('fieldConfigDialog.labelPlaceholder')}
-              autoFocus
-            />
-          </div>
+          <InputField
+            label={t('fieldConfigDialog.label')}
+            id="field-label"
+            value={field.label}
+            onChange={(e) => handleUpdate({ label: e.target.value })}
+            placeholder={t('fieldConfigDialog.labelPlaceholder')}
+            autoFocus
+          />
 
           {/* Placeholder (not for checkbox) */}
           {field.type !== 'checkbox' && (
-            <div className="space-y-2">
-              <Label htmlFor="field-placeholder">{t('fieldConfigDialog.placeholder')}</Label>
-              <Input
-                id="field-placeholder"
-                value={field.placeholder || ''}
-                onChange={(e) => handleUpdate({ placeholder: e.target.value })}
-                placeholder={t('fieldConfigDialog.placeholderOptional')}
-              />
-            </div>
+            <InputField
+              label={t('fieldConfigDialog.placeholder')}
+              id="field-placeholder"
+              value={field.placeholder || ''}
+              onChange={(e) => handleUpdate({ placeholder: e.target.value })}
+              placeholder={t('fieldConfigDialog.placeholderOptional')}
+            />
           )}
 
           <Separator />
@@ -112,28 +109,26 @@ export function FieldConfigDialog({
               <Separator />
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="accepted-types">{t('fieldConfigDialog.acceptedTypes')}</Label>
-                  <Input
+                  <InputField
+                    label={t('fieldConfigDialog.acceptedTypes')}
                     id="accepted-types"
                     value={field.acceptedFileTypes || ''}
                     onChange={(e) => handleUpdate({ acceptedFileTypes: e.target.value })}
                     placeholder={t('fieldConfigDialog.acceptedTypesPlaceholder')}
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground pl-2">
                     {t('fieldConfigDialog.acceptedTypesHelp')}
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="max-size">{t('fieldConfigDialog.maxFileSize')}</Label>
-                  <Input
-                    id="max-size"
-                    type="number"
-                    value={field.maxFileSizeMB || 10}
-                    onChange={(e) => handleUpdate({ maxFileSizeMB: parseInt(e.target.value) || 10 })}
-                    min={1}
-                    max={100}
-                  />
-                </div>
+                <InputField
+                  label={t('fieldConfigDialog.maxFileSize')}
+                  id="max-size"
+                  type="number"
+                  value={field.maxFileSizeMB || 10}
+                  onChange={(e) => handleUpdate({ maxFileSizeMB: parseInt(e.target.value) || 10 })}
+                  min={1}
+                  max={100}
+                />
               </div>
             </>
           )}

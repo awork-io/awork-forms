@@ -16,9 +16,8 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { InputField, TextareaField } from '@/components/ui/form-field';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -415,25 +414,21 @@ export function FormEditorPage() {
                   <CardTitle className="text-base">{t('formEditor.formSettings')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="form-name">{t('formEditor.formName')}</Label>
-                    <Input
-                      id="form-name"
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                      placeholder={t('formEditor.formNamePlaceholder')}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="form-description">{t('formEditor.descriptionLabel')}</Label>
-                    <Textarea
-                      id="form-description"
-                      value={formDescription}
-                      onChange={(e) => setFormDescription(e.target.value)}
-                      placeholder={t('formEditor.descriptionPlaceholder')}
-                      rows={2}
-                    />
-                  </div>
+                  <InputField
+                    label={t('formEditor.formName')}
+                    id="form-name"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    placeholder={t('formEditor.formNamePlaceholder')}
+                  />
+                  <TextareaField
+                    label={t('formEditor.descriptionLabel')}
+                    id="form-description"
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    placeholder={t('formEditor.descriptionPlaceholder')}
+                    rows={2}
+                  />
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label>{t('formEditor.formStatus')}</Label>
@@ -468,8 +463,8 @@ export function FormEditorPage() {
                     {translationLanguages.map((language) => (
                       <TabsContent key={language.code} value={language.code} className="space-y-4 mt-4">
                         <div className="space-y-2">
-                          <Label>{t('formEditor.translations.formName')}</Label>
-                          <Input
+                          <InputField
+                            label={t('formEditor.translations.formName')}
                             value={nameTranslations[language.code] || ''}
                             onChange={(e) =>
                               setNameTranslations((prev) => ({
@@ -479,24 +474,22 @@ export function FormEditorPage() {
                             }
                             placeholder={formName || t('formEditor.formNamePlaceholder')}
                           />
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground pl-2">
                             {t('formEditor.translations.fallbackHint')}
                           </p>
                         </div>
-                        <div className="space-y-2">
-                          <Label>{t('formEditor.translations.formDescription')}</Label>
-                          <Textarea
-                            value={descriptionTranslations[language.code] || ''}
-                            onChange={(e) =>
-                              setDescriptionTranslations((prev) => ({
-                                ...prev,
-                                [language.code]: e.target.value,
-                              }))
-                            }
-                            placeholder={formDescription || t('formEditor.descriptionPlaceholder')}
-                            rows={2}
-                          />
-                        </div>
+                        <TextareaField
+                          label={t('formEditor.translations.formDescription')}
+                          value={descriptionTranslations[language.code] || ''}
+                          onChange={(e) =>
+                            setDescriptionTranslations((prev) => ({
+                              ...prev,
+                              [language.code]: e.target.value,
+                            }))
+                          }
+                          placeholder={formDescription || t('formEditor.descriptionPlaceholder')}
+                          rows={2}
+                        />
                       </TabsContent>
                     ))}
                   </Tabs>
