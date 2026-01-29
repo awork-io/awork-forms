@@ -7,8 +7,10 @@ describe('cn', () => {
   });
 
   it('should handle conditional classes', () => {
-    expect(cn('base', true && 'active')).toBe('base active');
-    expect(cn('base', false && 'active')).toBe('base');
+    const isActive = true;
+    const isHidden = false;
+    expect(cn('base', isActive && 'active')).toBe('base active');
+    expect(cn('base', isHidden && 'hidden')).toBe('base');
   });
 
   it('should handle arrays of classes', () => {

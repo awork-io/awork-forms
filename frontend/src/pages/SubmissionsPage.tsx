@@ -86,7 +86,7 @@ export function SubmissionsPage() {
     };
 
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [formId, toast, t]);
 
   const formatDate = (dateString: string) => {
