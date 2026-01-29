@@ -385,7 +385,6 @@ export function FormEditorPage() {
             size="sm" 
             onClick={handleSave} 
             disabled={isSaving}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 transition-all"
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

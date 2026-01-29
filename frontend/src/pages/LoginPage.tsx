@@ -69,7 +69,7 @@ export function LoginPage() {
             )}
             
             <Button
-              className="w-full h-12 text-base font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 hover:-translate-y-0.5 group"
+              size="lg"
               onClick={handleLogin}
               disabled={isLoggingIn}
             >

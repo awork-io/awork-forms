@@ -151,8 +151,7 @@ export function FormsPage() {
           <p className="text-muted-foreground mt-1 text-lg">{t('formsPage.subtitle')}</p>
         </div>
         <Button 
-          onClick={() => setIsCreateDialogOpen(true)} 
-          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:-translate-y-0.5"
+          onClick={() => setIsCreateDialogOpen(true)}
         >
           <Plus className="w-4 h-4 mr-2" />
           {t('formsPage.createForm')}
@@ -174,7 +173,6 @@ export function FormsPage() {
             <Button 
               onClick={() => setIsCreateDialogOpen(true)} 
               size="lg"
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:-translate-y-0.5 h-12 px-8"
             >
               <Plus className="w-5 h-5 mr-2" />
               {t('formsPage.emptyCta')}
