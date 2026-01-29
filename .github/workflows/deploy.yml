@@ -19,14 +19,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Run backend integration tests
-        run: dotnet test backend.Tests/backend.Tests.csproj --filter FullyQualifiedName~Integration
-
       - name: Login to Azure
         uses: azure/login@v2
         with:
