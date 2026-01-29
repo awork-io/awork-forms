@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 
 interface SubmissionAworkLinksProps {
   workspaceUrl?: string | null;
-  aworkProjectId?: number | null;
-  aworkTaskId?: number | null;
+  aworkProjectId?: string | null;
+  aworkTaskId?: string | null;
   size?: 'sm' | 'md';
   showLabels?: boolean;
 }
