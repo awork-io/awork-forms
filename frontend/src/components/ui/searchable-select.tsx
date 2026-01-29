@@ -1,14 +1,6 @@
 import * as React from "react"
-import { Check, ChevronDown } from "lucide-react"
+import { Check, ChevronDown, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
 import {
   Popover,
   PopoverContent,
@@ -44,13 +36,28 @@ export function SearchableSelect({
   className,
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState("")
+  const inputRef = React.useRef<HTMLInputElement>(null)
 
   const selectedOption = options.find((option) => option.value === value)
 
-  const sortedOptions = React.useMemo(
-    () => [...options].sort((a, b) => a.label.localeCompare(b.label)),
-    [options]
-  )
+  const filteredOptions = React.useMemo(() => {
+    const sorted = [...options].sort((a, b) => a.label.localeCompare(b.label))
+    if (!search) return sorted
+    const lower = search.toLowerCase()
+    return sorted.filter(
+      (opt) =>
+        opt.label.toLowerCase().includes(lower) ||
+        opt.secondaryLabel?.toLowerCase().includes(lower)
+    )
+  }, [options, search])
+
+  React.useEffect(() => {
+    if (open) {
+      setSearch("")
+      setTimeout(() => inputRef.current?.focus(), 0)
+    }
+  }, [open])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -70,64 +77,85 @@ export function SearchableSelect({
             className
           )}
         >
-          <span className="truncate">
-            {selectedOption ? selectedOption.label : placeholder}
-          </span>
-          <ChevronDown className={cn(
-            "h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200",
-            open && "rotate-180"
-          )} />
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {selectedOption?.icon && (
+              <span className="shrink-0">{selectedOption.icon}</span>
+            )}
+            <span className="truncate">
+              {selectedOption ? selectedOption.label : placeholder}
+            </span>
+          </div>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200",
+              open && "rotate-180"
+            )}
+          />
         </button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-[--radix-popover-trigger-width] p-0 rounded-[12px] shadow-lg border-0" 
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0 rounded-[14px] shadow-xl border border-gray-100 bg-white overflow-hidden"
         align="start"
         sideOffset={4}
       >
-        <Command className="rounded-[12px]">
-          <CommandInput 
-            placeholder={searchPlaceholder} 
-            className="h-11"
+        {/* Search input */}
+        <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100">
+          <Search className="h-4 w-4 text-gray-400 shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={searchPlaceholder}
+            className="flex-1 text-sm bg-transparent outline-none placeholder:text-gray-400"
           />
-          <CommandList className="max-h-[280px]">
-            <CommandEmpty className="py-6 text-center text-sm text-gray-500">
+        </div>
+
+        {/* Options list */}
+        <div className="max-h-[280px] overflow-y-auto p-1.5">
+          {filteredOptions.length === 0 ? (
+            <div className="py-8 text-center text-sm text-gray-400">
               {emptyText}
-            </CommandEmpty>
-            <CommandGroup className="p-1">
-              {sortedOptions.map((option) => (
-                <CommandItem
+            </div>
+          ) : (
+            filteredOptions.map((option) => {
+              const isSelected = option.value === value
+              return (
+                <button
                   key={option.value}
-                  value={option.label}
-                  onSelect={() => {
+                  type="button"
+                  onClick={() => {
                     onValueChange(option.value === value ? "none" : option.value)
                     setOpen(false)
                   }}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer",
-                    "data-[selected=true]:bg-blue-50",
-                    value === option.value && "bg-blue-50"
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-left transition-colors",
+                    "hover:bg-gray-50",
+                    isSelected && "bg-[#edf5ff] hover:bg-[#e0efff]"
                   )}
                 >
                   {option.icon && (
                     <span className="shrink-0">{option.icon}</span>
                   )}
-                  <span className="flex-1 truncate">{option.label}</span>
+                  <span className={cn(
+                    "flex-1 text-sm truncate",
+                    isSelected ? "text-[#006dfa] font-medium" : "text-gray-700"
+                  )}>
+                    {option.label}
+                  </span>
                   {option.secondaryLabel && (
-                    <span className="text-xs text-gray-400 truncate">
+                    <span className="text-xs text-gray-400 truncate max-w-[120px]">
                       {option.secondaryLabel}
                     </span>
                   )}
-                  <Check
-                    className={cn(
-                      "h-4 w-4 shrink-0 text-[#006dfa]",
-                      value === option.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+                  {isSelected && (
+                    <Check className="h-4 w-4 shrink-0 text-[#006dfa]" />
+                  )}
+                </button>
+              )
+            })
+          )}
+        </div>
       </PopoverContent>
     </Popover>
   )
