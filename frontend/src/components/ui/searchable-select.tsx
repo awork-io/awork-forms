@@ -38,6 +38,8 @@ export function SearchableSelect({
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const triggerRef = React.useRef<HTMLButtonElement>(null)
+  const [triggerWidth, setTriggerWidth] = React.useState(0)
 
   const selectedOption = options.find((option) => option.value === value)
 
@@ -55,6 +57,9 @@ export function SearchableSelect({
   React.useEffect(() => {
     if (open) {
       setSearch("")
+      if (triggerRef.current) {
+        setTriggerWidth(triggerRef.current.offsetWidth)
+      }
       setTimeout(() => inputRef.current?.focus(), 0)
     }
   }, [open])
@@ -63,6 +68,7 @@ export function SearchableSelect({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
+          ref={triggerRef}
           type="button"
           role="combobox"
           aria-expanded={open}
@@ -94,9 +100,10 @@ export function SearchableSelect({
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[--radix-popover-trigger-width] p-0 rounded-[14px] shadow-xl border border-gray-100 bg-white overflow-hidden"
+        className="p-0 rounded-[14px] shadow-xl border border-gray-100 bg-white overflow-hidden"
         align="start"
         sideOffset={4}
+        style={{ width: triggerWidth > 0 ? triggerWidth : undefined }}
       >
         {/* Search input */}
         <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100">
