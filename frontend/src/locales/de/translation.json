@@ -374,6 +374,8 @@
       "assignTo": "Zuweisen an",
       "loadingUsers": "Benutzer werden geladen...",
       "selectAssignee": "Zuständigen auswählen",
+      "searchUsers": "Benutzer suchen...",
+      "noUsersFound": "Keine Benutzer gefunden.",
       "unassigned": "Nicht zugewiesen",
       "priority": "Als Priorität markieren",
       "priorityHelp": "Erstellte Aufgaben werden als hohe Priorität markiert",

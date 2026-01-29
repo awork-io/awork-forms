@@ -494,22 +494,21 @@ export function AworkIntegrationSettings({
                       {t('aworkIntegration.task.loadingUsers')}
                     </div>
                   ) : (
-                    <Select
+                    <SearchableSelect
+                      options={[
+                        { value: 'none', label: t('aworkIntegration.task.unassigned') },
+                        ...users.map((user) => ({
+                          value: user.id,
+                          label: getUserDisplayName(user),
+                          secondaryLabel: user.email || undefined,
+                        })),
+                      ]}
                       value={config.assigneeId || 'none'}
                       onValueChange={handleAssigneeChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('aworkIntegration.task.selectAssignee')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t('aworkIntegration.task.unassigned')}</SelectItem>
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {getUserDisplayName(user)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={t('aworkIntegration.task.selectAssignee')}
+                      searchPlaceholder={t('aworkIntegration.task.searchUsers')}
+                      emptyText={t('aworkIntegration.task.noUsersFound')}
+                    />
                   )}
                 </div>
               )}

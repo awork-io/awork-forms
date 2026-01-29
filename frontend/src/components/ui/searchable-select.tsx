@@ -1,7 +1,6 @@
 import * as React from "react"
-import { Check, ChevronsUpDown, Search } from "lucide-react"
+import { Check, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -19,6 +18,8 @@ import {
 export interface SearchableSelectOption {
   value: string
   label: string
+  secondaryLabel?: string
+  icon?: React.ReactNode
 }
 
 interface SearchableSelectProps {
@@ -46,7 +47,6 @@ export function SearchableSelect({
 
   const selectedOption = options.find((option) => option.value === value)
 
-  // Sort options alphabetically by label
   const sortedOptions = React.useMemo(
     () => [...options].sort((a, b) => a.label.localeCompare(b.label)),
     [options]
@@ -55,33 +55,45 @@ export function SearchableSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <button
+          type="button"
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "w-full justify-between font-normal h-12 rounded-[14px] border-gray-200 bg-white pl-4 pr-2 hover:bg-white hover:shadow-[0_1px_3px_rgba(20,45,82,0.08)] hover:border-transparent",
+            "flex w-full items-center justify-between h-12 rounded-[14px] border border-gray-200 bg-white pl-4 pr-3 text-sm transition-all",
+            "hover:shadow-[0_1px_3px_rgba(20,45,82,0.08)] hover:border-gray-300",
+            "focus:outline-none focus:shadow-[inset_0_0_0_1px_#006dfa]",
+            "disabled:cursor-not-allowed disabled:opacity-50",
             !selectedOption && "text-gray-400 italic",
+            selectedOption && "text-gray-900 font-medium",
             className
           )}
         >
-          {selectedOption ? selectedOption.label : placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+          <span className="truncate">
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+          <ChevronDown className={cn(
+            "h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200",
+            open && "rotate-180"
+          )} />
+        </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command>
-          <div className="flex items-center border-b px-3">
-            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-            <CommandInput 
-              placeholder={searchPlaceholder} 
-              className="h-11 border-0 focus:ring-0"
-            />
-          </div>
-          <CommandList>
-            <CommandEmpty>{emptyText}</CommandEmpty>
-            <CommandGroup>
+      <PopoverContent 
+        className="w-[--radix-popover-trigger-width] p-0 rounded-[12px] shadow-lg border-0" 
+        align="start"
+        sideOffset={4}
+      >
+        <Command className="rounded-[12px]">
+          <CommandInput 
+            placeholder={searchPlaceholder} 
+            className="h-11"
+          />
+          <CommandList className="max-h-[280px]">
+            <CommandEmpty className="py-6 text-center text-sm text-gray-500">
+              {emptyText}
+            </CommandEmpty>
+            <CommandGroup className="p-1">
               {sortedOptions.map((option) => (
                 <CommandItem
                   key={option.value}
@@ -90,15 +102,27 @@ export function SearchableSelect({
                     onValueChange(option.value === value ? "none" : option.value)
                     setOpen(false)
                   }}
-                  className="cursor-pointer"
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer",
+                    "data-[selected=true]:bg-blue-50",
+                    value === option.value && "bg-blue-50"
+                  )}
                 >
+                  {option.icon && (
+                    <span className="shrink-0">{option.icon}</span>
+                  )}
+                  <span className="flex-1 truncate">{option.label}</span>
+                  {option.secondaryLabel && (
+                    <span className="text-xs text-gray-400 truncate">
+                      {option.secondaryLabel}
+                    </span>
+                  )}
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
+                      "h-4 w-4 shrink-0 text-[#006dfa]",
                       value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {option.label}
                 </CommandItem>
               ))}
             </CommandGroup>

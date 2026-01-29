@@ -374,6 +374,8 @@
       "assignTo": "Assign to",
       "loadingUsers": "Loading users...",
       "selectAssignee": "Select assignee",
+      "searchUsers": "Search users...",
+      "noUsersFound": "No users found.",
       "unassigned": "Unassigned",
       "priority": "Mark as priority",
       "priorityHelp": "Created tasks will be marked as high priority",
