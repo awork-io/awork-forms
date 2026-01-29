@@ -141,6 +141,20 @@ public class AuthService
         }
     }
 
+    public async Task ClearUserTokens(Guid userId)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null) return;
+
+        user.AccessToken = null;
+        user.RefreshToken = null;
+        user.TokenExpiresAt = null;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await db.SaveChangesAsync();
+    }
+
     private async Task<string> GetOrCreateDcrClientId()
     {
         if (!string.IsNullOrEmpty(_dcrClientId))

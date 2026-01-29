@@ -52,6 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
+      sessionStorage.removeItem('auth_token');
+      sessionStorage.removeItem('oauth_state');
       setUser(null);
     }
   };
