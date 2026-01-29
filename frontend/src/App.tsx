@@ -35,26 +35,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }
 
-// Protected route wrapper without AppLayout (for pages with custom layouts)
-function ProtectedRouteNoLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-  const { t } = useTranslation();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">{t('common.loading')}</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-}
-
 // Public route wrapper (redirects to dashboard if already authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -106,9 +86,9 @@ function AppRoutes() {
       <Route
         path="/forms/:id/edit"
         element={
-          <ProtectedRouteNoLayout>
+          <ProtectedRoute>
             <FormEditorPage />
-          </ProtectedRouteNoLayout>
+          </ProtectedRoute>
         }
       />
       <Route
