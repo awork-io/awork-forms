@@ -147,18 +147,31 @@ public class AuthService
             return _dcrClientId;
 
         await using var db = await _dbFactory.CreateDbContextAsync();
-        var setting = await db.Settings.FirstOrDefaultAsync(s => s.Key == "dcr_client_id");
+        var clientIdSetting = await db.Settings.FirstOrDefaultAsync(s => s.Key == "dcr_client_id");
+        var redirectUriSetting = await db.Settings.FirstOrDefaultAsync(s => s.Key == "dcr_redirect_uri");
 
-        if (setting != null)
+        // Re-register if redirect URI changed
+        if (clientIdSetting != null && redirectUriSetting?.Value == _redirectUri)
         {
-            _dcrClientId = setting.Value;
+            _dcrClientId = clientIdSetting.Value;
             return _dcrClientId;
         }
 
+        // Register new client
         var dcrResponse = await RegisterDcrClient();
         _dcrClientId = dcrResponse.ClientId;
 
-        db.Settings.Add(new Setting { Key = "dcr_client_id", Value = _dcrClientId });
+        // Update or create settings
+        if (clientIdSetting != null)
+            clientIdSetting.Value = _dcrClientId;
+        else
+            db.Settings.Add(new Setting { Key = "dcr_client_id", Value = _dcrClientId });
+
+        if (redirectUriSetting != null)
+            redirectUriSetting.Value = _redirectUri;
+        else
+            db.Settings.Add(new Setting { Key = "dcr_redirect_uri", Value = _redirectUri });
+
         await db.SaveChangesAsync();
 
         return _dcrClientId;
