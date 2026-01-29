@@ -438,6 +438,7 @@ function FieldTranslationsEditor({ field, onUpdate }: FieldTranslationsEditorPro
                 <Input
                   value={translation?.label || ''}
                   onChange={(e) => updateTranslation(language.code, { label: e.target.value })}
+                  onKeyDown={(e) => e.stopPropagation()}
                   placeholder={field.label}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -450,6 +451,7 @@ function FieldTranslationsEditor({ field, onUpdate }: FieldTranslationsEditorPro
                   <Input
                     value={translation?.placeholder || ''}
                     onChange={(e) => updateTranslation(language.code, { placeholder: e.target.value })}
+                    onKeyDown={(e) => e.stopPropagation()}
                     placeholder={field.placeholder || t('fieldConfigDialog.placeholderOptional')}
                   />
                 </div>
@@ -468,6 +470,7 @@ function FieldTranslationsEditor({ field, onUpdate }: FieldTranslationsEditorPro
                           onChange={(e) =>
                             updateOptionTranslation(language.code, option.value, e.target.value)
                           }
+                          onKeyDown={(e) => e.stopPropagation()}
                           placeholder={t('fieldConfigDialog.optionTranslationPlaceholder')}
                         />
                       </div>

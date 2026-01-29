@@ -407,7 +407,7 @@
       "description": "Beschreibung",
       "dueOn": "Fälligkeitsdatum",
       "startOn": "Startdatum",
-      "plannedDuration": "Geplante Dauer (Sekunden)",
+      "plannedDuration": "Geplante Dauer (Stunden)",
       "tags": "Tags (durch Kommas getrennt)"
     },
     "projectFields": {

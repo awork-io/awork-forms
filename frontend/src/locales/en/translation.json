@@ -407,7 +407,7 @@
       "description": "Description",
       "dueOn": "Due Date",
       "startOn": "Start Date",
-      "plannedDuration": "Planned Duration (seconds)",
+      "plannedDuration": "Planned Duration (hours)",
       "tags": "Tags (comma-separated)"
     },
     "projectFields": {

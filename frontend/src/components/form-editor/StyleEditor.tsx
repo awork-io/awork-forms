@@ -43,6 +43,7 @@ export function StyleEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeletingLogo, setIsDeletingLogo] = useState(false);
+  const [logoCacheBuster, setLogoCacheBuster] = useState(() => Date.now());
 
   const handleColorChange = useCallback(
     (key: 'primaryColor' | 'backgroundColor', value: string) => {
@@ -80,6 +81,7 @@ export function StyleEditor({
     try {
       const result = await api.uploadLogo(formId, file);
       onChange({ ...styling, logoUrl: result.logoUrl });
+      setLogoCacheBuster(Date.now());
       toast({
         title: t('styleEditor.toast.uploadSuccessTitle'),
         description: t('styleEditor.toast.uploadSuccessDesc'),
@@ -233,7 +235,7 @@ export function StyleEditor({
               <div className="space-y-3">
                 <div className="relative w-full h-32 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                   <img
-                    src={styling.logoUrl.startsWith('http') ? styling.logoUrl : `${API_BASE_URL}${styling.logoUrl}`}
+                    src={`${styling.logoUrl.startsWith('http') ? styling.logoUrl : `${API_BASE_URL}${styling.logoUrl}`}?v=${logoCacheBuster}`}
                     alt={t('styleEditor.formLogoAlt')}
                     className="max-w-full max-h-full object-contain"
                   />
@@ -317,7 +319,7 @@ export function StyleEditor({
                 {styling.logoUrl && (
                   <div className="flex justify-center mb-6">
                     <img
-                      src={styling.logoUrl.startsWith('http') ? styling.logoUrl : `${API_BASE_URL}${styling.logoUrl}`}
+                      src={`${styling.logoUrl.startsWith('http') ? styling.logoUrl : `${API_BASE_URL}${styling.logoUrl}`}?v=${logoCacheBuster}`}
                       alt={t('styleEditor.formLogoAlt')}
                       className="max-h-16 object-contain"
                     />

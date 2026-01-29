@@ -269,6 +269,14 @@ public class SubmissionProcessor
             {
                 case "name": request.Name = value; break;
                 case "description": request.Description = value; break;
+                case "startDate":
+                    if (TryParseDate(value, out var startDate))
+                        request.StartDate = startDate;
+                    break;
+                case "dueDate":
+                    if (TryParseDate(value, out var dueDate))
+                        request.DueDate = dueDate;
+                    break;
             }
         }
 
@@ -301,6 +309,18 @@ public class SubmissionProcessor
             {
                 case "name": request.Name = value; break;
                 case "description": request.Description = value; break;
+                case "dueOn":
+                    if (TryParseDate(value, out var dueOn))
+                        request.DueOn = dueOn;
+                    break;
+                case "startOn":
+                    if (TryParseDate(value, out var startOn))
+                        request.StartOn = startOn;
+                    break;
+                case "plannedDuration":
+                    if (double.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var hours))
+                        request.PlannedDuration = (int)(hours * 3600);
+                    break;
             }
         }
 
