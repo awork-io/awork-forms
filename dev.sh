@@ -96,7 +96,8 @@ LATEST_MIGRATION=$(rg --files -g '*.cs' "$PROJECT_DIR/backend/Migrations" \
 if [ -n "$LATEST_MIGRATION" ]; then
     APPLIED=$(docker compose -f "$PROJECT_DIR/docker-compose.yml" exec -T postgres \
       psql -U postgres -d awork_forms -tAc \
-      "SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '$LATEST_MIGRATION';")
+      "SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '$LATEST_MIGRATION';" \
+      | tr -d '[:space:]')
     if [ "$APPLIED" != "1" ]; then
         echo "Latest migration not applied to Postgres: $LATEST_MIGRATION"
         exit 1
