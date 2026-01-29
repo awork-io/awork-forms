@@ -56,6 +56,7 @@ import {
 } from 'lucide-react';
 import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
 import { useTranslation } from 'react-i18next';
+import { trackEvent, trackScreenSeen } from '@/lib/tracking';
 
 export function FormEditorPage() {
   const { t, i18n } = useTranslation();
@@ -160,6 +161,7 @@ export function FormEditorPage() {
   useEffect(() => {
     if (id) {
       loadForm(parseInt(id));
+      trackScreenSeen(2); // Form editor screen
     }
   }, [id, loadForm]);
 
@@ -188,6 +190,13 @@ export function FormEditorPage() {
         isActive,
         ...aworkData,
         ...stylingData,
+      });
+      trackEvent('Forms User Action', { 
+        action: 'form_saved', 
+        tool: 'awork-forms', 
+        formId: parseInt(id),
+        fieldCount: fields.length,
+        actionType: aworkConfig.actionType,
       });
       toast({
         title: t('formEditor.toast.saveSuccessTitle'),

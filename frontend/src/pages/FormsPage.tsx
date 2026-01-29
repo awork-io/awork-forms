@@ -33,6 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
 import { Plus, MoreVertical, Pencil, ClipboardList, Eye, Share2, Trash2, FileText, Layers, Inbox } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { trackEvent, trackScreenSeen } from '@/lib/tracking';
 
 export function FormsPage() {
   const { t, i18n } = useTranslation();
@@ -64,6 +65,7 @@ export function FormsPage() {
 
   useEffect(() => {
     fetchForms();
+    trackScreenSeen(1); // Forms list screen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -80,13 +82,13 @@ export function FormsPage() {
     setIsCreating(true);
     try {
       const form = await api.createForm({ name: newFormName.trim() });
+      trackEvent('Forms User Action', { action: 'form_created', tool: 'awork-forms', formId: form.id });
       toast({
         title: t('common.success'),
         description: t('formsPage.toast.createSuccess'),
       });
       setIsCreateDialogOpen(false);
       setNewFormName('');
-      // Navigate to form editor (will be implemented later)
       navigate(`/forms/${form.id}/edit`);
     } catch {
       toast({
@@ -105,6 +107,7 @@ export function FormsPage() {
     setIsDeleting(true);
     try {
       await api.deleteForm(deleteFormId);
+      trackEvent('Forms User Action', { action: 'form_deleted', tool: 'awork-forms', formId: deleteFormId });
       toast({
         title: t('common.success'),
         description: t('formsPage.toast.deleteSuccess'),

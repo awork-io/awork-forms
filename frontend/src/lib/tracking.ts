@@ -1,3 +1,5 @@
+import { api } from './api';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export interface TrackingContext {
@@ -14,7 +16,8 @@ export async function trackEvent(
   pageContext?: TrackingContext
 ): Promise<boolean> {
   try {
-    const token = sessionStorage.getItem('auth_token');
+    // Try sessionStorage first, then fall back to api client
+    const token = sessionStorage.getItem('auth_token') || api.getToken();
     if (!token) return false;
 
     const currentPage = pageContext || {

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { getErrorMessage } from '@/lib/i18n-errors';
 import { useTranslation } from 'react-i18next';
+import { trackEvent } from '@/lib/tracking';
 
 export function AuthCallbackPage() {
   const { t } = useTranslation();
@@ -53,8 +54,10 @@ export function AuthCallbackPage() {
         const response = await api.handleCallback(code, state);
         if (response.token) {
           api.setToken(response.token);
+          sessionStorage.setItem('auth_token', response.token);
         }
         setUser(response.user);
+        trackEvent('Forms User Action', { action: 'login_success', tool: 'awork-forms' });
         navigate('/', { replace: true });
       } catch (err) {
         console.error('Callback error:', err);

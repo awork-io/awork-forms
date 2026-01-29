@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { api, type User } from '@/lib/api';
+import { trackEvent } from '@/lib/tracking';
 
 interface AuthContextType {
   user: User | null;
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      trackEvent('Forms User Action', { action: 'logout', tool: 'awork-forms' });
       await api.logout();
     } catch (error) {
       console.error('Logout failed:', error);
