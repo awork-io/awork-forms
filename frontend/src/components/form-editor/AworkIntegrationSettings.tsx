@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -46,6 +47,7 @@ export interface AworkIntegrationConfig {
   typeOfWorkId: string | null;
   assigneeId: string | null;
   isPriority: boolean;
+  taskTag: string | null;
   taskFieldMappings: FieldMapping[];
   projectFieldMappings: FieldMapping[];
 }
@@ -195,6 +197,7 @@ export function AworkIntegrationSettings({
       typeOfWorkId: null,
       assigneeId: null,
       isPriority: false,
+      taskTag: null,
       taskFieldMappings: [],
       projectFieldMappings: [],
     });
@@ -533,6 +536,35 @@ export function AworkIntegrationSettings({
                 </div>
               )}
 
+              {/* Task Tag */}
+              {config.projectId && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>{t('aworkIntegration.task.tag', 'Tag')}</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t('aworkIntegration.task.tagHelp', 'Add a tag to all tasks created from this form')}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={config.taskTag !== null}
+                      onCheckedChange={(enabled) =>
+                        onChange({ ...config, taskTag: enabled ? '' : null })
+                      }
+                    />
+                  </div>
+                  {config.taskTag !== null && (
+                    <Input
+                      placeholder={t('aworkIntegration.task.tagPlaceholder', 'Enter tag name...')}
+                      value={config.taskTag}
+                      onChange={(e) =>
+                        onChange({ ...config, taskTag: e.target.value })
+                      }
+                    />
+                  )}
+                </div>
+              )}
+
               {/* Task Field Mappings */}
               {formFields.length > 0 && (
                 <div className="space-y-3">
@@ -713,6 +745,7 @@ export function parseAworkConfig(
   typeOfWorkId: string | null | undefined,
   assigneeId: string | null | undefined,
   isPriority: boolean | null | undefined,
+  taskTag: string | null | undefined,
   fieldMappingsJson: string | null | undefined
 ): AworkIntegrationConfig {
   let taskFieldMappings: FieldMapping[] = [];
@@ -737,6 +770,7 @@ export function parseAworkConfig(
     typeOfWorkId: typeOfWorkId || null,
     assigneeId: assigneeId || null,
     isPriority: isPriority || false,
+    taskTag: taskTag ?? null,
     taskFieldMappings,
     projectFieldMappings,
   };
@@ -752,6 +786,7 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
   aworkTypeOfWorkId: string | undefined;
   aworkAssigneeId: string | undefined;
   aworkTaskIsPriority: boolean | undefined;
+  aworkTaskTag: string | undefined;
   fieldMappingsJson: string | undefined;
 } {
   const hasTaskMappings = config.taskFieldMappings.length > 0;
@@ -766,6 +801,7 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
     aworkTypeOfWorkId: config.typeOfWorkId || undefined,
     aworkAssigneeId: config.assigneeId || undefined,
     aworkTaskIsPriority: config.isPriority || undefined,
+    aworkTaskTag: config.taskTag || undefined,
     fieldMappingsJson: (hasTaskMappings || hasProjectMappings)
       ? JSON.stringify({
           taskFieldMappings: config.taskFieldMappings,

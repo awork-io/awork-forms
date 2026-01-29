@@ -85,6 +85,7 @@ export function FormEditorPage() {
     typeOfWorkId: null,
     assigneeId: null,
     isPriority: false,
+    taskTag: null,
     taskFieldMappings: [],
     projectFieldMappings: [],
   });
@@ -137,6 +138,7 @@ export function FormEditorPage() {
         data.aworkTypeOfWorkId,
         data.aworkAssigneeId,
         data.aworkTaskIsPriority,
+        data.aworkTaskTag,
         data.fieldMappingsJson
       ));
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,10 +18,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { api, type Submission, type FormDetail } from '@/lib/api';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { api, type Submission, type Form, type FormDetail } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
-import type { FormField } from '@/lib/form-types';
+import { isFileValue, formatFileSize, getFieldLabels } from '@/lib/form-types';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function SubmissionsPage() {
@@ -31,22 +38,21 @@ export function SubmissionsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [forms, setForms] = useState<Form[]>([]);
   const [form, setForm] = useState<FormDetail | null>(null);
-  const [selectedForm, setSelectedForm] = useState<FormDetail | null>(null); // For viewing submission details
+  const [selectedForm, setSelectedForm] = useState<FormDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [filterFormId, setFilterFormId] = useState<string>('all');
 
-  // Build awork URL using workspace URL or fallback to app.awork.com
   const getAworkUrl = (path: string) => {
     const baseUrl = user?.workspaceUrl || 'https://app.awork.com';
     return `${baseUrl}/${path}`;
   };
 
-  // Handle selecting a submission to view details
   const handleSelectSubmission = async (submission: Submission | null) => {
     setSelectedSubmission(submission);
     if (submission && !formId) {
-      // When viewing all submissions, fetch the form for field labels
       try {
         const formData = await api.getForm(submission.formId);
         setSelectedForm(formData);
@@ -62,7 +68,6 @@ export function SubmissionsPage() {
     const fetchData = async () => {
       try {
         if (formId) {
-          // Fetch form details and submissions for specific form
           const [formData, submissionsData] = await Promise.all([
             api.getForm(parseInt(formId)),
             api.getFormSubmissions(parseInt(formId)),
@@ -70,9 +75,12 @@ export function SubmissionsPage() {
           setForm(formData);
           setSubmissions(submissionsData);
         } else {
-          // Fetch all submissions across all forms
-          const submissionsData = await api.getSubmissions();
+          const [submissionsData, formsData] = await Promise.all([
+            api.getSubmissions(),
+            api.getForms(),
+          ]);
           setSubmissions(submissionsData);
+          setForms(formsData);
         }
       } catch {
         toast({
@@ -86,8 +94,13 @@ export function SubmissionsPage() {
     };
 
     fetchData();
-     
   }, [formId, toast, t]);
+
+  // Filter submissions by selected form
+  const filteredSubmissions = useMemo(() => {
+    if (formId || filterFormId === 'all') return submissions;
+    return submissions.filter((s) => s.formId === parseInt(filterFormId));
+  }, [submissions, filterFormId, formId]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString(i18n.language || 'en', {
@@ -131,54 +144,17 @@ export function SubmissionsPage() {
     }
   };
 
-  // Parse form fields to get field ID to label mapping
-  const getFieldLabels = (formData: FormDetail | null): Record<string, string> => {
-    if (!formData?.fieldsJson) return {};
-    try {
-      const fields: FormField[] = JSON.parse(formData.fieldsJson);
-      return fields.reduce((acc, field) => {
-        acc[field.id] = field.label;
-        return acc;
-      }, {} as Record<string, string>);
-    } catch {
-      return {};
-    }
-  };
-
-  // Use form (for specific form view) or selectedForm (for all submissions view)
   const activeForm = form || selectedForm;
-  const fieldLabels = getFieldLabels(activeForm);
-
-  // Check if a value is a file object (uploaded file metadata)
-  const isFileValue = (value: unknown): value is { fileName: string; fileUrl: string; fileSize?: number } => {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      'fileName' in value &&
-      'fileUrl' in value &&
-      typeof (value as Record<string, unknown>).fileName === 'string' &&
-      typeof (value as Record<string, unknown>).fileUrl === 'string'
-    );
-  };
-
-  // Format file size for display
-  const formatFileSize = (bytes?: number): string => {
-    if (!bytes) return '';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
+  const fieldLabels = getFieldLabels(activeForm?.fieldsJson);
 
   const getSubmissionPreview = (dataJson: string): string => {
     const data = parseSubmissionData(dataJson);
     const entries = Object.entries(data);
     if (entries.length === 0) return t('submissions.noData');
 
-    // Get first few values as preview
     const preview = entries
       .slice(0, 2)
       .map(([, value]) => {
-        // Handle file values
         if (isFileValue(value)) {
           return value.fileName;
         }
@@ -190,9 +166,7 @@ export function SubmissionsPage() {
     return preview || t('submissions.noData');
   };
 
-  // Render a field value based on its type
   const renderFieldValue = (value: unknown) => {
-    // Handle file values
     if (isFileValue(value)) {
       const fileSize = formatFileSize(value.fileSize);
       return (
@@ -230,7 +204,6 @@ export function SubmissionsPage() {
       );
     }
 
-    // Handle boolean values
     if (typeof value === 'boolean') {
       return (
         <span className={`inline-flex items-center gap-1.5 ${value ? 'text-green-700' : 'text-muted-foreground'}`}>
@@ -248,17 +221,14 @@ export function SubmissionsPage() {
       );
     }
 
-    // Handle empty values
     if (value === null || value === undefined || value === '') {
       return <span className="text-muted-foreground italic">{t('submissions.emptyValue')}</span>;
     }
 
-    // Handle arrays
     if (Array.isArray(value)) {
       return <span className="break-words">{value.join(', ')}</span>;
     }
 
-    // Handle objects (that aren't files - those are handled above)
     if (typeof value === 'object') {
       return (
         <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
@@ -267,7 +237,6 @@ export function SubmissionsPage() {
       );
     }
 
-    // Handle regular string/number values
     return <span className="break-words">{String(value)}</span>;
   };
 
@@ -309,17 +278,35 @@ export function SubmissionsPage() {
               : t('submissions.subtitleAll')}
           </p>
         </div>
-        {formId && (
-          <Button variant="outline" onClick={() => navigate(`/forms/${formId}/edit`)}>
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            {t('submissions.editForm')}
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Form filter dropdown - only show when viewing all submissions */}
+          {!formId && forms.length > 0 && (
+            <Select value={filterFormId} onValueChange={setFilterFormId}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder={t('submissions.filterByForm')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('submissions.allForms')}</SelectItem>
+                {forms.map((f) => (
+                  <SelectItem key={f.id} value={String(f.id)}>
+                    {f.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {formId && (
+            <Button variant="outline" onClick={() => navigate(`/forms/${formId}/edit`)}>
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              {t('submissions.editForm')}
+            </Button>
+          )}
+        </div>
       </div>
 
-      {submissions.length === 0 ? (
+      {filteredSubmissions.length === 0 ? (
         <Card className="border-dashed">
           <CardHeader className="text-center">
             <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -331,7 +318,9 @@ export function SubmissionsPage() {
             <CardDescription>
               {form
                 ? t('submissions.emptyDescForm')
-                : t('submissions.emptyDescAll')}
+                : filterFormId !== 'all'
+                  ? t('submissions.emptyDescFiltered')
+                  : t('submissions.emptyDescAll')}
             </CardDescription>
           </CardHeader>
           {form && (
@@ -370,7 +359,7 @@ export function SubmissionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {submissions.map((submission) => (
+                {filteredSubmissions.map((submission) => (
                   <TableRow key={submission.id}>
                     {!formId && (
                       <TableCell>

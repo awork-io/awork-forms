@@ -117,11 +117,15 @@ public class SubmissionProcessor
                             await _aworkService.SetTaskCustomFields(userId.Value, task.Id, customFieldValues);
                         }
 
-                        // Handle tags
+                        // Handle tags (from mappings + form-level tag)
                         var tags = GetTagsFromMappings(formData, formFields, fieldMappings.TaskFieldMappings);
+                        if (!string.IsNullOrWhiteSpace(form.AworkTaskTag))
+                        {
+                            tags.Add(form.AworkTaskTag.Trim());
+                        }
                         if (tags.Count > 0)
                         {
-                            await _aworkService.AddTagsToTask(userId.Value, task.Id, tags);
+                            await _aworkService.AddTagsToTask(userId.Value, task.Id, tags.Distinct().ToList());
                         }
 
                         await AttachFilesToTask(userId.Value, task.Id, formData, formFields);

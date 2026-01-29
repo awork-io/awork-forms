@@ -1,3 +1,5 @@
+import type { TFunction } from 'i18next';
+
 // Field types supported by the form editor
 export type FieldType =
   | 'text'
@@ -281,4 +283,44 @@ function getDefaultOptionLabel(
   }
   return option === 'option1' ? 'Option 1' : 'Option 2';
 }
-import type { TFunction } from 'i18next';
+
+// File value type from form submissions
+export interface FileValue {
+  fileName: string;
+  fileUrl: string;
+  fileSize?: number;
+}
+
+// Check if a value is a file object (uploaded file metadata)
+export function isFileValue(value: unknown): value is FileValue {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'fileName' in value &&
+    'fileUrl' in value &&
+    typeof (value as Record<string, unknown>).fileName === 'string' &&
+    typeof (value as Record<string, unknown>).fileUrl === 'string'
+  );
+}
+
+// Format file size for display
+export function formatFileSize(bytes?: number): string {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Parse form fields to get field ID to label mapping
+export function getFieldLabels(fieldsJson: string | undefined): Record<string, string> {
+  if (!fieldsJson) return {};
+  try {
+    const fields: FormField[] = JSON.parse(fieldsJson);
+    return fields.reduce((acc, field) => {
+      acc[field.id] = field.label;
+      return acc;
+    }, {} as Record<string, string>);
+  } catch {
+    return {};
+  }
+}

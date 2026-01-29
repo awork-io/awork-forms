@@ -30,6 +30,7 @@ public class FormDetailDto
     public Guid? AworkTypeOfWorkId { get; set; }
     public Guid? AworkAssigneeId { get; set; }
     public bool? AworkTaskIsPriority { get; set; }
+    public string? AworkTaskTag { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }
@@ -54,6 +55,7 @@ public class CreateFormDto
     public Guid? AworkTypeOfWorkId { get; set; }
     public Guid? AworkAssigneeId { get; set; }
     public bool? AworkTaskIsPriority { get; set; }
+    public string? AworkTaskTag { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }
@@ -75,6 +77,7 @@ public class UpdateFormDto
     public Guid? AworkTypeOfWorkId { get; set; }
     public Guid? AworkAssigneeId { get; set; }
     public bool? AworkTaskIsPriority { get; set; }
+    public string? AworkTaskTag { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }

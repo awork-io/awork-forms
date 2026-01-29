@@ -39,6 +39,7 @@ export interface FormDetail extends Form {
   aworkTypeOfWorkId?: string;
   aworkAssigneeId?: string;
   aworkTaskIsPriority?: boolean;
+  aworkTaskTag?: string;
   fieldMappingsJson?: string;
   primaryColor?: string;
   backgroundColor?: string;
@@ -59,6 +60,7 @@ export interface CreateFormDto {
   aworkTypeOfWorkId?: string;
   aworkAssigneeId?: string;
   aworkTaskIsPriority?: boolean;
+  aworkTaskTag?: string;
   fieldMappingsJson?: string;
   primaryColor?: string;
   backgroundColor?: string;
@@ -79,6 +81,7 @@ export interface UpdateFormDto {
   aworkTypeOfWorkId?: string;
   aworkAssigneeId?: string;
   aworkTaskIsPriority?: boolean;
+  aworkTaskTag?: string;
   fieldMappingsJson?: string;
   primaryColor?: string;
   backgroundColor?: string;

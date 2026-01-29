@@ -72,6 +72,7 @@ public class FormsService
             AworkTypeOfWorkId = dto.AworkTypeOfWorkId,
             AworkAssigneeId = dto.AworkAssigneeId,
             AworkTaskIsPriority = dto.AworkTaskIsPriority,
+            AworkTaskTag = dto.AworkTaskTag,
             FieldMappingsJson = dto.FieldMappingsJson,
             PrimaryColor = dto.PrimaryColor,
             BackgroundColor = dto.BackgroundColor,
@@ -107,6 +108,7 @@ public class FormsService
         if (dto.AworkTypeOfWorkId != null) form.AworkTypeOfWorkId = dto.AworkTypeOfWorkId;
         if (dto.AworkAssigneeId != null) form.AworkAssigneeId = dto.AworkAssigneeId;
         if (dto.AworkTaskIsPriority != null) form.AworkTaskIsPriority = dto.AworkTaskIsPriority;
+        if (dto.AworkTaskTag != null) form.AworkTaskTag = dto.AworkTaskTag == "" ? null : dto.AworkTaskTag;
         if (dto.FieldMappingsJson != null) form.FieldMappingsJson = dto.FieldMappingsJson;
         if (dto.PrimaryColor != null) form.PrimaryColor = dto.PrimaryColor;
         if (dto.BackgroundColor != null) form.BackgroundColor = dto.BackgroundColor;
@@ -248,6 +250,7 @@ public class FormsService
         AworkTypeOfWorkId = form.AworkTypeOfWorkId,
         AworkAssigneeId = form.AworkAssigneeId,
         AworkTaskIsPriority = form.AworkTaskIsPriority,
+        AworkTaskTag = form.AworkTaskTag,
         FieldMappingsJson = form.FieldMappingsJson,
         PrimaryColor = form.PrimaryColor,
         BackgroundColor = form.BackgroundColor,
