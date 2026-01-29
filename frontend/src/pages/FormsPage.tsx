@@ -33,6 +33,9 @@ import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
 import { Plus, MoreVertical, Pencil, ClipboardList, Eye, Share2, Trash2, FileText, Layers, Inbox } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { trackEvent, trackScreenSeen } from '@/lib/tracking';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { EmptyStateCard } from '@/components/common/EmptyStateCard';
+import { formatDateForLocale } from '@/lib/date-format';
 
 export function FormsPage() {
   const { t, i18n } = useTranslation();
@@ -125,7 +128,7 @@ export function FormsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(i18n.language || 'en', {
+    return formatDateForLocale(dateString, i18n.language, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -144,41 +147,38 @@ export function FormsPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      {/* Page Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('formsPage.title')}</h1>
-          <p className="text-muted-foreground mt-1 text-lg">{t('formsPage.subtitle')}</p>
-        </div>
-        <Button 
-          onClick={() => setIsCreateDialogOpen(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          {t('formsPage.createForm')}
-        </Button>
-      </div>
+      <PageHeader
+        title={t('formsPage.title')}
+        subtitle={t('formsPage.subtitle')}
+        actions={(
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            {t('formsPage.createForm')}
+          </Button>
+        )}
+        className="mb-8"
+        titleClassName="text-3xl font-bold tracking-tight"
+        subtitleClassName="mt-1 text-lg"
+      />
 
       {forms.length === 0 ? (
-        <Card className="border-dashed border-2 border-blue-200/50 bg-gradient-to-br from-white/80 to-blue-50/30">
-          <CardHeader className="text-center py-16">
-            <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-6 shadow-xl shadow-blue-500/30">
-              <FileText className="w-10 h-10 text-white" />
-            </div>
-            <CardTitle className="text-2xl">{t('formsPage.emptyTitle')}</CardTitle>
-            <CardDescription className="max-w-sm mx-auto text-base mt-2">
-              {t('formsPage.emptyDesc')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center pb-16">
-            <Button 
-              onClick={() => setIsCreateDialogOpen(true)} 
-              size="lg"
-            >
+        <EmptyStateCard
+          className="border-dashed border-2 border-blue-200/50 bg-gradient-to-br from-white/80 to-blue-50/30"
+          headerClassName="py-16"
+          contentClassName="pb-16"
+          iconWrapperClassName="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-xl shadow-blue-500/30 mb-6"
+          icon={<FileText className="w-10 h-10 text-white" />}
+          title={t('formsPage.emptyTitle')}
+          titleClassName="text-2xl"
+          description={t('formsPage.emptyDesc')}
+          descriptionClassName="max-w-sm mx-auto text-base mt-2"
+          action={(
+            <Button onClick={() => setIsCreateDialogOpen(true)} size="lg">
               <Plus className="w-5 h-5 mr-2" />
               {t('formsPage.emptyCta')}
             </Button>
-          </CardContent>
-        </Card>
+          )}
+        />
       ) : (
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {forms.map((form) => (

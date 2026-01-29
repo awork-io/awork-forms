@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FileText, Inbox, CheckSquare, Plus, ArrowRight, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 export function DashboardPage() {
   const { t } = useTranslation();
@@ -35,14 +36,18 @@ export function DashboardPage() {
   }, []);
   return (
     <div className="p-6 lg:p-8">
-      {/* Page Header */}
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
-          <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
-        </div>
-        <p className="text-muted-foreground text-lg">{t('dashboard.welcome')}</p>
-      </div>
+      <PageHeader
+        title={(
+          <span className="flex items-center gap-3">
+            {t('dashboard.title')}
+            <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
+          </span>
+        )}
+        subtitle={t('dashboard.welcome')}
+        className="mb-10"
+        titleClassName="text-3xl font-bold tracking-tight"
+        subtitleClassName="text-lg"
+      />
 
       {/* Stats Grid */}
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 mb-12">

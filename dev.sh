@@ -8,6 +8,12 @@ PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo "Starting awork Forms development servers..."
 echo ""
 
+# Preflight: stop existing dev servers if running
+echo "Stopping any existing dev servers..."
+pkill -f "dotnet watch run" 2>/dev/null || true
+pkill -f "npm run dev" 2>/dev/null || true
+sleep 1
+
 # Load .env if present
 if [ -f "$PROJECT_DIR/.env" ]; then
     set -a
@@ -78,6 +84,24 @@ dotnet ef database update > /tmp/migrations.log 2>&1 || {
     exit 1
 }
 echo "Migrations applied!"
+
+# Verify latest migration applied to Postgres
+echo "Verifying migrations on Postgres..."
+LATEST_MIGRATION=$(rg --files -g '*.cs' "$PROJECT_DIR/backend/Migrations" \
+  | rg -v 'Designer|Snapshot' \
+  | xargs -n1 basename \
+  | sed 's/\\.cs$//' \
+  | sort \
+  | tail -1)
+if [ -n "$LATEST_MIGRATION" ]; then
+    APPLIED=$(docker compose -f "$PROJECT_DIR/docker-compose.yml" exec -T postgres \
+      psql -U postgres -d awork_forms -tAc \
+      "SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '$LATEST_MIGRATION';")
+    if [ "$APPLIED" != "1" ]; then
+        echo "Latest migration not applied to Postgres: $LATEST_MIGRATION"
+        exit 1
+    fi
+fi
 
 # Start backend with hot reload
 echo "Starting backend with hot reload (http://localhost:5100)..."

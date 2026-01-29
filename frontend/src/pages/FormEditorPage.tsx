@@ -15,16 +15,9 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { InputField, TextareaField } from '@/components/ui/form-field';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { api, type FormDetail } from '@/lib/api';
+import { api, type AworkCustomFieldDefinition, type FormDetail } from '@/lib/api';
 import {
   type FormField,
   type FieldType,
@@ -46,16 +39,16 @@ import {
   parseStyling,
   serializeStyling,
 } from '@/components/form-editor/StyleEditor';
-import {
-  ArrowLeft,
-  Save,
-  Eye,
-  Loader2,
-  Share2,
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
 import { useTranslation } from 'react-i18next';
 import { trackEvent, trackScreenSeen } from '@/lib/tracking';
+import { FormEditorHeader } from '@/components/form-editor/FormEditorHeader';
+import { FormEditorMetaPanel } from '@/components/form-editor/FormEditorMetaPanel';
+import {
+  resolveProjectMappingLabel,
+  resolveTaskMappingLabel,
+} from '@/components/form-editor/awork-field-options';
 
 export function FormEditorPage() {
   const { t, i18n } = useTranslation();
@@ -93,6 +86,7 @@ export function FormEditorPage() {
     backgroundColor: '#F8FAFC',
     logoUrl: null,
   });
+  const [aworkCustomFields, setAworkCustomFields] = useState<AworkCustomFieldDefinition[]>([]);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isFieldDialogOpen, setIsFieldDialogOpen] = useState(false);
 
@@ -290,6 +284,11 @@ export function FormEditorPage() {
     if (selectedFieldId === fieldId) {
       setSelectedFieldId(null);
     }
+    setAworkConfig((prev) => ({
+      ...prev,
+      taskFieldMappings: prev.taskFieldMappings.filter((mapping) => mapping.formFieldId !== fieldId),
+      projectFieldMappings: prev.projectFieldMappings.filter((mapping) => mapping.formFieldId !== fieldId),
+    }));
   };
 
   const handleFieldDuplicate = (fieldId: string) => {
@@ -318,10 +317,24 @@ export function FormEditorPage() {
 
   const selectedField = fields.find((f) => f.id === selectedFieldId);
   const defaultTranslationLanguage = getSupportedLanguage(i18n.resolvedLanguage || i18n.language);
-  const translationLanguages = [
-    { code: 'de', label: t('language.german') },
-    { code: 'en', label: t('language.english') },
-  ];
+  const showTaskMappings = aworkConfig.actionType === 'task' || aworkConfig.actionType === 'both';
+  const showProjectMappings = aworkConfig.actionType === 'project' || aworkConfig.actionType === 'both';
+  const taskMappingByFieldId = showTaskMappings
+    ? Object.fromEntries(
+        aworkConfig.taskFieldMappings.map((mapping) => [
+          mapping.formFieldId,
+          resolveTaskMappingLabel(mapping, t, aworkCustomFields),
+        ])
+      )
+    : {};
+  const projectMappingByFieldId = showProjectMappings
+    ? Object.fromEntries(
+        aworkConfig.projectFieldMappings.map((mapping) => [
+          mapping.formFieldId,
+          resolveProjectMappingLabel(mapping, t),
+        ])
+      )
+    : {};
 
   if (isLoading) {
     return (
@@ -333,68 +346,17 @@ export function FormEditorPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b bg-white/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between shrink-0 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/forms')}
-            className="hover:bg-muted/80"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h1 className="text-lg font-bold">{formName || t('formEditor.untitled')}</h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Badge 
-                variant={isActive ? 'default' : 'secondary'}
-                className={isActive ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0' : ''}
-              >
-                {isActive ? t('common.active') : t('common.inactive')}
-              </Badge>
-              <span>·</span>
-              <span>{t('common.fieldsCount', { count: fields.length })}</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {form?.publicId && (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(`/f/${form.publicId}`, '_blank')}
-                className="hover:bg-muted/80"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                {t('formEditor.preview')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsShareDialogOpen(true)}
-                className="hover:bg-muted/80"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                {t('formEditor.share')}
-              </Button>
-            </>
-          )}
-          <Button 
-            size="sm" 
-            onClick={handleSave} 
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
-            )}
-            {t('formEditor.save')}
-          </Button>
-        </div>
-      </div>
+      <FormEditorHeader
+        formName={formName}
+        isActive={isActive}
+        fieldsCount={fields.length}
+        publicId={form?.publicId}
+        onBack={() => navigate('/forms')}
+        onPreview={() => window.open(`/f/${form?.publicId}`, '_blank')}
+        onShare={() => setIsShareDialogOpen(true)}
+        onSave={handleSave}
+        isSaving={isSaving}
+      />
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
@@ -407,93 +369,23 @@ export function FormEditorPage() {
           {/* Center - Form Canvas */}
           <div className="flex-1 overflow-auto bg-muted/30">
             <div className="max-w-2xl mx-auto p-6">
-              {/* Form Settings */}
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle className="text-base">{t('formEditor.formSettings')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <InputField
-                    label={t('formEditor.formName')}
-                    id="form-name"
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    placeholder={t('formEditor.formNamePlaceholder')}
-                  />
-                  <TextareaField
-                    label={t('formEditor.descriptionLabel')}
-                    id="form-description"
-                    value={formDescription}
-                    onChange={(e) => setFormDescription(e.target.value)}
-                    placeholder={t('formEditor.descriptionPlaceholder')}
-                    rows={2}
-                  />
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t('formEditor.formStatus')}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {isActive ? t('formEditor.formStatusActive') : t('formEditor.formStatusInactive')}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={isActive}
-                      onCheckedChange={setIsActive}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle className="text-base">{t('formEditor.translations.title')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    {t('formEditor.translations.description')}
-                  </p>
-                  <Tabs defaultValue={defaultTranslationLanguage} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      {translationLanguages.map((language) => (
-                        <TabsTrigger key={language.code} value={language.code} className="text-xs">
-                          {language.label}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                    {translationLanguages.map((language) => (
-                      <TabsContent key={language.code} value={language.code} className="space-y-4 mt-4">
-                        <div className="space-y-2">
-                          <InputField
-                            label={t('formEditor.translations.formName')}
-                            value={nameTranslations[language.code] || ''}
-                            onChange={(e) =>
-                              setNameTranslations((prev) => ({
-                                ...prev,
-                                [language.code]: e.target.value,
-                              }))
-                            }
-                            placeholder={formName || t('formEditor.formNamePlaceholder')}
-                          />
-                          <p className="text-xs text-muted-foreground pl-2">
-                            {t('formEditor.translations.fallbackHint')}
-                          </p>
-                        </div>
-                        <TextareaField
-                          label={t('formEditor.translations.formDescription')}
-                          value={descriptionTranslations[language.code] || ''}
-                          onChange={(e) =>
-                            setDescriptionTranslations((prev) => ({
-                              ...prev,
-                              [language.code]: e.target.value,
-                            }))
-                          }
-                          placeholder={formDescription || t('formEditor.descriptionPlaceholder')}
-                          rows={2}
-                        />
-                      </TabsContent>
-                    ))}
-                  </Tabs>
-                </CardContent>
-              </Card>
+              <FormEditorMetaPanel
+                formName={formName}
+                formDescription={formDescription}
+                isActive={isActive}
+                onFormNameChange={(event) => setFormName(event.target.value)}
+                onFormDescriptionChange={(event) => setFormDescription(event.target.value)}
+                onActiveChange={setIsActive}
+                nameTranslations={nameTranslations}
+                descriptionTranslations={descriptionTranslations}
+                onNameTranslationChange={(language, value) =>
+                  setNameTranslations((prev) => ({ ...prev, [language]: value }))
+                }
+                onDescriptionTranslationChange={(language, value) =>
+                  setDescriptionTranslations((prev) => ({ ...prev, [language]: value }))
+                }
+                defaultTranslationLanguage={defaultTranslationLanguage}
+              />
 
               {/* Form Styling */}
               {form && (
@@ -515,6 +407,7 @@ export function FormEditorPage() {
                   formFields={fields}
                   config={aworkConfig}
                   onChange={setAworkConfig}
+                  onCustomFieldsChange={setAworkCustomFields}
                 />
               </div>
 
@@ -531,6 +424,8 @@ export function FormEditorPage() {
                   onFieldDelete={handleFieldDelete}
                   onFieldDuplicate={handleFieldDuplicate}
                   onAddField={handleAddField}
+                  taskMappingByFieldId={taskMappingByFieldId}
+                  projectMappingByFieldId={projectMappingByFieldId}
                 />
               </div>
             </div>
@@ -574,6 +469,9 @@ export function FormEditorPage() {
         onOpenChange={setIsFieldDialogOpen}
         onUpdate={handleFieldUpdate}
         onDelete={handleFieldDelete}
+        aworkConfig={aworkConfig}
+        onAworkConfigChange={setAworkConfig}
+        aworkCustomFields={aworkCustomFields}
       />
     </div>
   );

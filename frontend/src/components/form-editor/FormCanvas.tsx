@@ -15,6 +15,8 @@ interface FormCanvasProps {
   onFieldDelete: (fieldId: string) => void;
   onFieldDuplicate: (fieldId: string) => void;
   onAddField: (fieldType: FieldType, atIndex: number) => void;
+  taskMappingByFieldId?: Record<string, string>;
+  projectMappingByFieldId?: Record<string, string>;
 }
 
 export function FormCanvas({
@@ -24,6 +26,8 @@ export function FormCanvas({
   onFieldDelete,
   onFieldDuplicate,
   onAddField,
+  taskMappingByFieldId,
+  projectMappingByFieldId,
 }: FormCanvasProps) {
   const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({
@@ -75,6 +79,8 @@ export function FormCanvas({
                   onSelect={() => onFieldSelect(field.id)}
                   onDelete={() => onFieldDelete(field.id)}
                   onDuplicate={() => onFieldDuplicate(field.id)}
+                  taskMappingLabel={taskMappingByFieldId?.[field.id]}
+                  projectMappingLabel={projectMappingByFieldId?.[field.id]}
                 />
               </div>
             ))}

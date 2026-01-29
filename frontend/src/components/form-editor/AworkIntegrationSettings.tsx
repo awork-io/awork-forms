@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type Dispatch, type SetStateAction } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Link2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader2, Link2, AlertCircle } from 'lucide-react';
 import {
   api,
   type AworkProject,
@@ -28,7 +28,6 @@ import {
   type AworkCustomFieldDefinition,
 } from '@/lib/api';
 import type { FormField } from '@/lib/form-types';
-import { ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export type ActionType = 'task' | 'project' | 'both' | null;
@@ -53,34 +52,18 @@ export interface AworkIntegrationConfig {
   projectFieldMappings: FieldMapping[];
 }
 
-// Standard awork project fields that can be mapped
-const AWORK_PROJECT_FIELDS = [
-  { value: 'name', labelKey: 'aworkIntegration.projectFields.name', fallbackLabel: 'Project Name' },
-  { value: 'description', labelKey: 'aworkIntegration.projectFields.description', fallbackLabel: 'Description' },
-  { value: 'startDate', labelKey: 'aworkIntegration.projectFields.startDate', fallbackLabel: 'Start Date' },
-  { value: 'dueDate', labelKey: 'aworkIntegration.projectFields.dueDate', fallbackLabel: 'Due Date' },
-];
-
-// Standard awork task fields that can be mapped
-const AWORK_TASK_FIELDS = [
-  { value: 'name', labelKey: 'aworkIntegration.taskFields.name', fallbackLabel: 'Task Name' },
-  { value: 'description', labelKey: 'aworkIntegration.taskFields.description', fallbackLabel: 'Description' },
-  { value: 'dueOn', labelKey: 'aworkIntegration.taskFields.dueOn', fallbackLabel: 'Due Date' },
-  { value: 'startOn', labelKey: 'aworkIntegration.taskFields.startOn', fallbackLabel: 'Start Date' },
-  { value: 'plannedDuration', labelKey: 'aworkIntegration.taskFields.plannedDuration', fallbackLabel: 'Planned Duration (seconds)' },
-  { value: 'tags', labelKey: 'aworkIntegration.taskFields.tags', fallbackLabel: 'Tags (comma-separated)' },
-];
-
 interface AworkIntegrationSettingsProps {
   formFields: FormField[];
   config: AworkIntegrationConfig;
-  onChange: (config: AworkIntegrationConfig) => void;
+  onChange: Dispatch<SetStateAction<AworkIntegrationConfig>>;
+  onCustomFieldsChange?: (fields: AworkCustomFieldDefinition[]) => void;
 }
 
 export function AworkIntegrationSettings({
   formFields,
   config,
   onChange,
+  onCustomFieldsChange,
 }: AworkIntegrationSettingsProps) {
   const { t } = useTranslation();
   const [projects, setProjects] = useState<AworkProject[]>([]);
@@ -89,7 +72,6 @@ export function AworkIntegrationSettings({
   const [taskLists, setTaskLists] = useState<AworkTaskList[]>([]);
   const [typesOfWork, setTypesOfWork] = useState<AworkTypeOfWork[]>([]);
   const [users, setUsers] = useState<AworkUser[]>([]);
-  const [customFields, setCustomFields] = useState<AworkCustomFieldDefinition[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [isLoadingProjectTypes, setIsLoadingProjectTypes] = useState(false);
   const [isLoadingTaskData, setIsLoadingTaskData] = useState(false);
@@ -149,7 +131,7 @@ export function AworkIntegrationSettings({
       setTaskLists(listsData);
       setTypesOfWork(typesData.filter((type) => !type.isArchived));
       setUsers(usersData.filter(u => !u.isArchived && !u.isExternal));
-      setCustomFields(customFieldsData.filter(f => !f.isArchived));
+      onCustomFieldsChange?.(customFieldsData.filter(f => !f.isArchived));
     } catch (err) {
       const error = err as Error;
       if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
@@ -157,10 +139,11 @@ export function AworkIntegrationSettings({
       } else {
         setAworkError(t('aworkIntegration.errors.loadTaskData'));
       }
+      onCustomFieldsChange?.([]);
     } finally {
       setIsLoadingTaskData(false);
     }
-  }, [t]);
+  }, [onCustomFieldsChange, t]);
 
   // Load awork data when action type requires it
   useEffect(() => {
@@ -182,13 +165,14 @@ export function AworkIntegrationSettings({
       setTaskLists([]);
       setTypesOfWork([]);
       setUsers([]);
+      onCustomFieldsChange?.([]);
     }
-  }, [config.projectId, config.actionType, fetchTaskData]);
+  }, [config.projectId, config.actionType, fetchTaskData, onCustomFieldsChange]);
 
   const handleActionTypeChange = (value: string) => {
     const actionType = value === 'none' ? null : (value as ActionType);
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       actionType,
       // Reset selections when action type changes
       projectId: null,
@@ -201,111 +185,59 @@ export function AworkIntegrationSettings({
       taskTag: null,
       taskFieldMappings: [],
       projectFieldMappings: [],
-    });
+    }));
   };
 
   const handleProjectChange = (projectId: string) => {
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       projectId: projectId === 'none' ? null : projectId,
       // Reset task-specific settings when project changes
       taskListId: null,
       taskStatusId: null,
-    });
+    }));
   };
 
   const handleProjectTypeChange = (projectTypeId: string) => {
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       projectTypeId: projectTypeId === 'none' ? null : projectTypeId,
-    });
+    }));
   };
 
   const handleTaskListChange = (taskListId: string) => {
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       taskListId: taskListId === 'none' ? null : taskListId,
-    });
+    }));
   };
 
   const handleTaskStatusChange = (taskStatusId: string) => {
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       taskStatusId: taskStatusId === 'none' ? null : taskStatusId,
-    });
+    }));
   };
 
   const handleTypeOfWorkChange = (typeOfWorkId: string) => {
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       typeOfWorkId: typeOfWorkId === 'none' ? null : typeOfWorkId,
-    });
+    }));
   };
 
   const handleAssigneeChange = (assigneeId: string) => {
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       assigneeId: assigneeId === 'none' ? null : assigneeId,
-    });
+    }));
   };
 
   const handlePriorityChange = (isPriority: boolean) => {
-    onChange({
-      ...config,
+    onChange((prev) => ({
+      ...prev,
       isPriority,
-    });
-  };
-
-  const updateTaskMapping = (formFieldId: string, aworkField: string) => {
-    const aworkFieldInfo = AWORK_TASK_FIELDS.find(f => f.value === aworkField);
-    const existing = config.taskFieldMappings.filter(m => m.formFieldId !== formFieldId);
-
-    if (aworkField === 'none') {
-      onChange({ ...config, taskFieldMappings: existing });
-    } else {
-      onChange({
-        ...config,
-        taskFieldMappings: [
-          ...existing,
-          {
-            formFieldId,
-            aworkField,
-            aworkFieldLabel: aworkFieldInfo?.fallbackLabel || aworkField,
-          },
-        ],
-      });
-    }
-  };
-
-  const updateProjectMapping = (formFieldId: string, aworkField: string) => {
-    const aworkFieldInfo = AWORK_PROJECT_FIELDS.find(f => f.value === aworkField);
-    const existing = config.projectFieldMappings.filter(m => m.formFieldId !== formFieldId);
-
-    if (aworkField === 'none') {
-      onChange({ ...config, projectFieldMappings: existing });
-    } else {
-      onChange({
-        ...config,
-        projectFieldMappings: [
-          ...existing,
-          {
-            formFieldId,
-            aworkField,
-            aworkFieldLabel: aworkFieldInfo?.fallbackLabel || aworkField,
-          },
-        ],
-      });
-    }
-  };
-
-  const getTaskMappingForField = (formFieldId: string): string => {
-    const mapping = config.taskFieldMappings.find(m => m.formFieldId === formFieldId);
-    return mapping?.aworkField || 'none';
-  };
-
-  const getProjectMappingForField = (formFieldId: string): string => {
-    const mapping = config.projectFieldMappings.find(m => m.formFieldId === formFieldId);
-    return mapping?.aworkField || 'none';
+    }));
   };
 
   const showTaskSettings = config.actionType === 'task' || config.actionType === 'both';
@@ -544,7 +476,7 @@ export function AworkIntegrationSettings({
                     <Switch
                       checked={config.taskTag !== null}
                       onCheckedChange={(enabled) =>
-                        onChange({ ...config, taskTag: enabled ? '' : null })
+                        onChange((prev) => ({ ...prev, taskTag: enabled ? '' : null }))
                       }
                     />
                   </div>
@@ -553,76 +485,13 @@ export function AworkIntegrationSettings({
                       placeholder={t('aworkIntegration.task.tagPlaceholder', 'Enter tag name...')}
                       value={config.taskTag}
                       onChange={(e) =>
-                        onChange({ ...config, taskTag: e.target.value })
+                        onChange((prev) => ({ ...prev, taskTag: e.target.value }))
                       }
                     />
                   )}
                 </div>
               )}
 
-              {/* Task Field Mappings */}
-              {formFields.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">{t('aworkIntegration.task.mapFields')}</Label>
-                    {config.taskFieldMappings.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        {t('aworkIntegration.task.mappedCount', { count: config.taskFieldMappings.length })}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    {formFields.map((field) => (
-                      <div key={field.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50">
-                        <span className="text-sm min-w-[140px] font-medium truncate" title={field.label}>
-                          {field.label}
-                        </span>
-                        <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <Select
-                          value={getTaskMappingForField(field.id)}
-                          onValueChange={(value) => updateTaskMapping(field.id, value)}
-                        >
-                          <SelectTrigger className="flex-1 h-9">
-                            <SelectValue placeholder={t('aworkIntegration.task.notMapped')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">
-                              <span className="text-muted-foreground">{t('aworkIntegration.task.notMapped')}</span>
-                            </SelectItem>
-                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              {t('common.defaultFields')}
-                            </div>
-                            {AWORK_TASK_FIELDS.map((aworkField) => (
-                              <SelectItem key={aworkField.value} value={aworkField.value}>
-                                {t(aworkField.labelKey)}
-                              </SelectItem>
-                            ))}
-                            {customFields.length > 0 && (
-                              <>
-                                <Separator className="my-1" />
-                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                  {t('common.customFields')}
-                                </div>
-                                {customFields.map((cf) => (
-                                  <SelectItem key={`custom:${cf.id}`} value={`custom:${cf.id}`}>
-                                    <div className="flex items-center gap-2">
-                                      <span>{cf.name}</span>
-                                      <Badge variant="outline" className="text-[10px] px-1 py-0">
-                                        {cf.type}
-                                      </Badge>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </>
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </>
         )}
@@ -672,46 +541,6 @@ export function AworkIntegrationSettings({
                 )}
               </div>
 
-              {/* Project Field Mappings */}
-              {formFields.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">{t('aworkIntegration.project.mapFields')}</Label>
-                    {config.projectFieldMappings.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        <CheckCircle2 className="w-3 h-3 mr-1" />
-                        {t('aworkIntegration.task.mappedCount', { count: config.projectFieldMappings.length })}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="space-y-2 pl-2 border-l-2 border-muted">
-                    {formFields.map((field) => (
-                      <div key={field.id} className="flex items-center gap-2">
-                        <span className="text-sm w-32 truncate" title={field.label}>
-                          {field.label}
-                        </span>
-                        <span className="text-muted-foreground">→</span>
-                        <Select
-                          value={getProjectMappingForField(field.id)}
-                          onValueChange={(value) => updateProjectMapping(field.id, value)}
-                        >
-                          <SelectTrigger className="w-40 h-8 text-xs">
-                            <SelectValue placeholder={t('aworkIntegration.task.notMapped')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">{t('aworkIntegration.task.notMapped')}</SelectItem>
-                            {AWORK_PROJECT_FIELDS.map((aworkField) => (
-                              <SelectItem key={aworkField.value} value={aworkField.value}>
-                                {t(aworkField.labelKey)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </>
         )}
@@ -795,8 +624,8 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
     aworkTaskStatusId: config.taskStatusId || undefined,
     aworkTypeOfWorkId: config.typeOfWorkId || undefined,
     aworkAssigneeId: config.assigneeId || undefined,
-    aworkTaskIsPriority: config.isPriority || undefined,
-    aworkTaskTag: config.taskTag || undefined,
+    aworkTaskIsPriority: config.isPriority ?? undefined,
+    aworkTaskTag: config.taskTag === null ? undefined : config.taskTag,
     fieldMappingsJson: (hasTaskMappings || hasProjectMappings)
       ? JSON.stringify({
           taskFieldMappings: config.taskFieldMappings,

@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AworkLogo } from '@/components/ui/awork-logo';
 import { User, Building2, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 export function SettingsPage() {
   const { user } = useAuth();
@@ -10,11 +11,11 @@ export function SettingsPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('settings.title')}</h1>
-        <p className="text-muted-foreground mt-1">{t('settings.subtitle')}</p>
-      </div>
+      <PageHeader
+        title={t('settings.title')}
+        subtitle={t('settings.subtitle')}
+        className="mb-8"
+      />
 
       <div className="grid gap-5 max-w-2xl">
         {/* Account section */}

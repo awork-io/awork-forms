@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Backend.Forms;
 
 public class FormListDto
@@ -30,6 +32,8 @@ public class FormDetailDto
     public Guid? AworkTypeOfWorkId { get; set; }
     public Guid? AworkAssigneeId { get; set; }
     public bool? AworkTaskIsPriority { get; set; }
+    [JsonPropertyName("aworkTaskTag")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
     public string? AworkTaskTag { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
@@ -55,6 +59,7 @@ public class CreateFormDto
     public Guid? AworkTypeOfWorkId { get; set; }
     public Guid? AworkAssigneeId { get; set; }
     public bool? AworkTaskIsPriority { get; set; }
+    [JsonPropertyName("aworkTaskTag")]
     public string? AworkTaskTag { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
@@ -77,6 +82,7 @@ public class UpdateFormDto
     public Guid? AworkTypeOfWorkId { get; set; }
     public Guid? AworkAssigneeId { get; set; }
     public bool? AworkTaskIsPriority { get; set; }
+    [JsonPropertyName("aworkTaskTag")]
     public string? AworkTaskTag { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }

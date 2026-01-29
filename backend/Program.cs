@@ -107,7 +107,8 @@ builder.Services.AddSingleton(sp => new FormsService(
 
 builder.Services.AddSingleton(sp => new AworkApiService(
     sp.GetRequiredService<IHttpClientFactory>().CreateClient(),
-    sp.GetRequiredService<IDbContextFactory<AppDbContext>>()
+    sp.GetRequiredService<IDbContextFactory<AppDbContext>>(),
+    Environment.GetEnvironmentVariable("AWORK_API_BASE_URL")
 ));
 
 builder.Services.AddSingleton(sp => new SubmissionProcessor(

@@ -7,15 +7,19 @@ namespace Backend.Awork;
 
 public class AworkApiService
 {
-    private const string AworkApiBaseUrl = "https://api.awork.com/api/v1";
+    private const string DefaultAworkApiBaseUrl = "https://api.awork.com/api/v1";
 
     private readonly HttpClient _httpClient;
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly string _baseUrl;
 
-    public AworkApiService(HttpClient httpClient, IDbContextFactory<AppDbContext> dbFactory)
+    public AworkApiService(HttpClient httpClient, IDbContextFactory<AppDbContext> dbFactory, string? baseUrl = null)
     {
         _httpClient = httpClient;
         _dbFactory = dbFactory;
+        _baseUrl = string.IsNullOrWhiteSpace(baseUrl)
+            ? DefaultAworkApiBaseUrl
+            : baseUrl.TrimEnd('/');
     }
 
     public async Task<string?> GetValidAccessToken(Guid userId)
@@ -156,7 +160,7 @@ public class AworkApiService
             var body = new[] { assigneeUserId.ToString() };
             var jsonBody = JsonSerializer.Serialize(body);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{AworkApiBaseUrl}/tasks/{taskId}/setassignees");
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/tasks/{taskId}/setassignees");
             request.Headers.Add("Authorization", $"Bearer {accessToken}");
             request.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
 
@@ -185,7 +189,7 @@ public class AworkApiService
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mimeType);
             form.Add(fileContent, "file", fileName);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{AworkApiBaseUrl}/tasks/{taskId}/files");
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/tasks/{taskId}/files");
             request.Headers.Add("Authorization", $"Bearer {accessToken}");
             request.Content = form;
 
@@ -231,7 +235,7 @@ public class AworkApiService
         if (string.IsNullOrEmpty(accessToken))
             throw new UnauthorizedAccessException("No valid awork access token available. Please re-authenticate.");
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"{AworkApiBaseUrl}/{endpoint}");
+        var request = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/{endpoint}");
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
         var response = await _httpClient.SendAsync(request);
@@ -255,7 +259,7 @@ public class AworkApiService
         if (string.IsNullOrEmpty(accessToken))
             throw new UnauthorizedAccessException("No valid awork access token available. Please re-authenticate.");
 
-        var request = new HttpRequestMessage(HttpMethod.Post, $"{AworkApiBaseUrl}/{endpoint}");
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/{endpoint}");
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
         var jsonBody = JsonSerializer.Serialize(body, new JsonSerializerOptions

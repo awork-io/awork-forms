@@ -9,6 +9,8 @@ interface SortableFieldCardProps {
   onSelect: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  taskMappingLabel?: string;
+  projectMappingLabel?: string;
 }
 
 export function SortableFieldCard({
@@ -17,6 +19,8 @@ export function SortableFieldCard({
   onSelect,
   onDelete,
   onDuplicate,
+  taskMappingLabel,
+  projectMappingLabel,
 }: SortableFieldCardProps) {
   const {
     attributes,
@@ -48,6 +52,8 @@ export function SortableFieldCard({
         onSelect={onSelect}
         onDelete={onDelete}
         onDuplicate={onDuplicate}
+        taskMappingLabel={taskMappingLabel}
+        projectMappingLabel={projectMappingLabel}
         dragHandleProps={{ ...attributes, ...listeners }}
       />
     </div>

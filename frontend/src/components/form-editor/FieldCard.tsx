@@ -32,6 +32,8 @@ interface FieldCardProps {
   onDelete?: () => void;
   onDuplicate?: () => void;
   dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
+  taskMappingLabel?: string;
+  projectMappingLabel?: string;
 }
 
 export function FieldCard({
@@ -42,8 +44,11 @@ export function FieldCard({
   onDelete,
   onDuplicate,
   dragHandleProps,
+  taskMappingLabel,
+  projectMappingLabel,
 }: FieldCardProps) {
   const { t } = useTranslation();
+  const hasMappings = Boolean(taskMappingLabel || projectMappingLabel);
   return (
     <Card
       className={cn(
@@ -91,6 +96,20 @@ export function FieldCard({
               <p className="text-xs text-muted-foreground mt-1">
                 {t('common.optionsCount', { count: field.options.length })}
               </p>
+            )}
+            {hasMappings && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {taskMappingLabel && (
+                  <Badge variant="outline" className="text-[10px] px-2 py-0">
+                    {t('aworkIntegration.task.badge')} → {taskMappingLabel}
+                  </Badge>
+                )}
+                {projectMappingLabel && (
+                  <Badge variant="outline" className="text-[10px] px-2 py-0">
+                    {t('aworkIntegration.project.badge')} → {projectMappingLabel}
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
 

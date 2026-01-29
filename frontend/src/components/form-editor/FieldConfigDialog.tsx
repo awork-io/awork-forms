@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import {
   type FieldTranslation,
   type FormField,
@@ -12,6 +12,7 @@ import { InputField } from '@/components/ui/form-field';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
@@ -22,6 +23,9 @@ import {
 } from '@/components/ui/dialog';
 import { Plus, Trash2, GripVertical, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { AworkCustomFieldDefinition } from '@/lib/api';
+import type { AworkIntegrationConfig } from '@/components/form-editor/AworkIntegrationSettings';
+import { AWORK_PROJECT_FIELDS, AWORK_TASK_FIELDS } from '@/components/form-editor/awork-field-options';
 
 interface FieldConfigDialogProps {
   field: FormField | null;
@@ -29,6 +33,9 @@ interface FieldConfigDialogProps {
   onOpenChange: (open: boolean) => void;
   onUpdate: (fieldId: string, updates: Partial<FormField>) => void;
   onDelete: (fieldId: string) => void;
+  aworkConfig: AworkIntegrationConfig;
+  onAworkConfigChange: Dispatch<SetStateAction<AworkIntegrationConfig>>;
+  aworkCustomFields: AworkCustomFieldDefinition[];
 }
 
 export function FieldConfigDialog({
@@ -37,12 +44,72 @@ export function FieldConfigDialog({
   onOpenChange,
   onUpdate,
   onDelete,
+  aworkConfig,
+  onAworkConfigChange,
+  aworkCustomFields,
 }: FieldConfigDialogProps) {
   const { t } = useTranslation();
   if (!field) return null;
 
   const handleUpdate = (updates: Partial<FormField>) => {
     onUpdate(field.id, updates);
+  };
+
+  const showTaskMapping = aworkConfig.actionType === 'task' || aworkConfig.actionType === 'both';
+  const showProjectMapping = aworkConfig.actionType === 'project' || aworkConfig.actionType === 'both';
+
+  const getTaskMapping = () => {
+    const mapping = aworkConfig.taskFieldMappings.find((item) => item.formFieldId === field.id);
+    return mapping?.aworkField || 'none';
+  };
+
+  const getProjectMapping = () => {
+    const mapping = aworkConfig.projectFieldMappings.find((item) => item.formFieldId === field.id);
+    return mapping?.aworkField || 'none';
+  };
+
+  const updateTaskMapping = (aworkField: string) => {
+    onAworkConfigChange((prev) => {
+      const existing = prev.taskFieldMappings.filter((item) => item.formFieldId !== field.id);
+      if (aworkField === 'none') {
+        return { ...prev, taskFieldMappings: existing };
+      }
+
+      const defaultField = AWORK_TASK_FIELDS.find((item) => item.value === aworkField);
+      const customFieldId = aworkField.startsWith('custom:') ? aworkField.replace('custom:', '') : null;
+      const customField = customFieldId
+        ? aworkCustomFields.find((item) => item.id === customFieldId)
+        : null;
+      const label = customField?.name || defaultField?.fallbackLabel || aworkField;
+
+      return {
+        ...prev,
+        taskFieldMappings: [
+          ...existing,
+          { formFieldId: field.id, aworkField, aworkFieldLabel: label },
+        ],
+      };
+    });
+  };
+
+  const updateProjectMapping = (aworkField: string) => {
+    onAworkConfigChange((prev) => {
+      const existing = prev.projectFieldMappings.filter((item) => item.formFieldId !== field.id);
+      if (aworkField === 'none') {
+        return { ...prev, projectFieldMappings: existing };
+      }
+
+      const defaultField = AWORK_PROJECT_FIELDS.find((item) => item.value === aworkField);
+      const label = defaultField?.fallbackLabel || aworkField;
+
+      return {
+        ...prev,
+        projectFieldMappings: [
+          ...existing,
+          { formFieldId: field.id, aworkField, aworkFieldLabel: label },
+        ],
+      };
+    });
   };
 
   const handleDelete = () => {
@@ -88,6 +155,72 @@ export function FieldConfigDialog({
           <Separator />
 
           <FieldTranslationsEditor field={field} onUpdate={handleUpdate} />
+
+          {(showTaskMapping || showProjectMapping) && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                {showTaskMapping && (
+                  <div className="space-y-2">
+                    <Label>{t('aworkIntegration.task.mapFields')}</Label>
+                    <Select value={getTaskMapping()} onValueChange={updateTaskMapping}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('aworkIntegration.task.notMapped')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('aworkIntegration.task.notMapped')}</SelectItem>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          {t('common.defaultFields')}
+                        </div>
+                        {AWORK_TASK_FIELDS.map((aworkField) => (
+                          <SelectItem key={aworkField.value} value={aworkField.value}>
+                            {t(aworkField.labelKey)}
+                          </SelectItem>
+                        ))}
+                        {aworkCustomFields.length > 0 && (
+                          <>
+                            <Separator className="my-1" />
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              {t('common.customFields')}
+                            </div>
+                            {aworkCustomFields.map((customField) => (
+                              <SelectItem key={`custom:${customField.id}`} value={`custom:${customField.id}`}>
+                                <div className="flex items-center gap-2">
+                                  <span>{customField.name}</span>
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                    {customField.type}
+                                  </Badge>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {showProjectMapping && (
+                  <div className="space-y-2">
+                    <Label>{t('aworkIntegration.project.mapFields')}</Label>
+                    <Select value={getProjectMapping()} onValueChange={updateProjectMapping}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('aworkIntegration.task.notMapped')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('aworkIntegration.task.notMapped')}</SelectItem>
+                        {AWORK_PROJECT_FIELDS.map((aworkField) => (
+                          <SelectItem key={aworkField.value} value={aworkField.value}>
+                            {t(aworkField.labelKey)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           {/* Required Toggle */}
           <div className="flex items-center justify-between rounded-lg border p-4">
