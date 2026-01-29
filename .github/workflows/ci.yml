@@ -24,10 +24,20 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Run backend integration tests
-        run: dotnet test backend.Tests/backend.Tests.csproj --filter FullyQualifiedName~Integration
+        run: dotnet test awork-forms.slnx
+
+      - name: Install frontend deps
+        run: npm ci
+        working-directory: frontend
+
+      - name: Lint frontend
+        run: npm run lint
+        working-directory: frontend
+
+      - name: Test frontend
+        run: npm run test
+        working-directory: frontend
 
       - name: Build frontend
-        run: |
-          cd frontend
-          npm ci
-          npm run build
+        run: npm run build
+        working-directory: frontend
