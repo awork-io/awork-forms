@@ -404,22 +404,20 @@ export function AworkIntegrationSettings({
                       {t('aworkIntegration.task.loadingTaskLists')}
                     </div>
                   ) : (
-                    <Select
+                    <SearchableSelect
+                      options={[
+                        { value: 'none', label: t('aworkIntegration.task.defaultTaskList') },
+                        ...taskLists.map((list) => ({
+                          value: list.id,
+                          label: list.name,
+                        })),
+                      ]}
                       value={config.taskListId || 'none'}
                       onValueChange={handleTaskListChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('aworkIntegration.task.selectTaskList')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t('aworkIntegration.task.defaultTaskList')}</SelectItem>
-                        {taskLists.map((list) => (
-                          <SelectItem key={list.id} value={list.id}>
-                            {list.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={t('aworkIntegration.task.selectTaskList')}
+                      searchPlaceholder={t('aworkIntegration.task.searchTaskLists')}
+                      emptyText={t('aworkIntegration.task.noTaskListsFound')}
+                    />
                   )}
                 </div>
               )}
@@ -434,22 +432,20 @@ export function AworkIntegrationSettings({
                       {t('aworkIntegration.task.loadingStatuses')}
                     </div>
                   ) : (
-                    <Select
+                    <SearchableSelect
+                      options={[
+                        { value: 'none', label: t('aworkIntegration.task.defaultStatus') },
+                        ...taskStatuses.map((status) => ({
+                          value: status.id,
+                          label: status.name,
+                        })),
+                      ]}
                       value={config.taskStatusId || 'none'}
                       onValueChange={handleTaskStatusChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('aworkIntegration.task.selectStatus')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t('aworkIntegration.task.defaultStatus')}</SelectItem>
-                        {taskStatuses.map((status) => (
-                          <SelectItem key={status.id} value={status.id}>
-                            {status.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={t('aworkIntegration.task.selectStatus')}
+                      searchPlaceholder={t('aworkIntegration.task.searchStatuses')}
+                      emptyText={t('aworkIntegration.task.noStatusesFound')}
+                    />
                   )}
                 </div>
               )}
@@ -464,22 +460,20 @@ export function AworkIntegrationSettings({
                       {t('aworkIntegration.task.loadingTypesOfWork')}
                     </div>
                   ) : (
-                    <Select
+                    <SearchableSelect
+                      options={[
+                        { value: 'none', label: t('aworkIntegration.task.noTypeOfWork') },
+                        ...typesOfWork.map((type) => ({
+                          value: type.id,
+                          label: type.name,
+                        })),
+                      ]}
                       value={config.typeOfWorkId || 'none'}
                       onValueChange={handleTypeOfWorkChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('aworkIntegration.task.selectTypeOfWork')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t('aworkIntegration.task.noTypeOfWork')}</SelectItem>
-                        {typesOfWork.map((type) => (
-                          <SelectItem key={type.id} value={type.id}>
-                            {type.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder={t('aworkIntegration.task.selectTypeOfWork')}
+                      searchPlaceholder={t('aworkIntegration.task.searchTypesOfWork')}
+                      emptyText={t('aworkIntegration.task.noTypesOfWorkFound')}
+                    />
                   )}
                 </div>
               )}
@@ -624,22 +618,20 @@ export function AworkIntegrationSettings({
                     {t('aworkIntegration.project.loadingProjectTypes')}
                   </div>
                 ) : (
-                  <Select
+                  <SearchableSelect
+                    options={[
+                      { value: 'none', label: t('aworkIntegration.project.selectProjectTypePlaceholder') },
+                      ...projectTypes.map((pt) => ({
+                        value: pt.id,
+                        label: pt.name,
+                      })),
+                    ]}
                     value={config.projectTypeId || 'none'}
                     onValueChange={handleProjectTypeChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('aworkIntegration.project.selectProjectType')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('aworkIntegration.project.selectProjectTypePlaceholder')}</SelectItem>
-                      {projectTypes.map((pt) => (
-                        <SelectItem key={pt.id} value={pt.id}>
-                          {pt.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder={t('aworkIntegration.project.selectProjectType')}
+                    searchPlaceholder={t('aworkIntegration.project.searchProjectTypes')}
+                    emptyText={t('aworkIntegration.project.noProjectTypesFound')}
+                  />
                 )}
                 {projectTypes.length === 0 && !isLoadingProjectTypes && !aworkError && (
                   <Button
