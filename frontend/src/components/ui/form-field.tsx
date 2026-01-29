@@ -26,7 +26,8 @@ interface InputFieldProps extends React.ComponentProps<typeof Input> {
 
 const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
   ({ label, id, className, ...props }, ref) => {
-    const inputId = id || React.useId()
+    const generatedId = React.useId()
+    const inputId = id ?? generatedId
     return (
       <FormField label={label} id={inputId}>
         <Input ref={ref} id={inputId} className={className} {...props} />
@@ -42,7 +43,8 @@ interface TextareaFieldProps extends React.ComponentProps<typeof Textarea> {
 
 const TextareaField = React.forwardRef<HTMLTextAreaElement, TextareaFieldProps>(
   ({ label, id, className, ...props }, ref) => {
-    const inputId = id || React.useId()
+    const generatedId = React.useId()
+    const inputId = id ?? generatedId
     return (
       <FormField label={label} id={inputId}>
         <Textarea ref={ref} id={inputId} className={className} {...props} />
