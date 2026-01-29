@@ -356,6 +356,8 @@
       "loadingProjects": "Loading projects...",
       "selectProject": "Select a project",
       "selectProjectPlaceholder": "Select a project...",
+      "searchProjects": "Search projects...",
+      "noProjectsFound": "No projects found.",
       "loadProjects": "Load Projects",
       "taskList": "Task list",
       "loadingTaskLists": "Loading task lists...",

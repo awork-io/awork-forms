@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -369,22 +370,17 @@ export function AworkIntegrationSettings({
                     {t('aworkIntegration.task.loadingProjects')}
                   </div>
                 ) : (
-                  <Select
-                    value={config.projectId || 'none'}
+                  <SearchableSelect
+                    options={projects.map((project) => ({
+                      value: project.id,
+                      label: project.name,
+                    }))}
+                    value={config.projectId}
                     onValueChange={handleProjectChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('aworkIntegration.task.selectProject')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('aworkIntegration.task.selectProjectPlaceholder')}</SelectItem>
-                      {projects.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder={t('aworkIntegration.task.selectProject')}
+                    searchPlaceholder={t('aworkIntegration.task.searchProjects')}
+                    emptyText={t('aworkIntegration.task.noProjectsFound')}
+                  />
                 )}
                 {projects.length === 0 && !isLoadingProjects && !aworkError && (
                   <Button
