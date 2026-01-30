@@ -48,7 +48,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Logo */}
         <div className="h-16 flex items-center px-5 border-b border-border/50">
           <Link to="/" className="flex items-center">
-            <AworkLogo className="h-[18px]" />
+            <AworkLogo className="h-[28px]" />
           </Link>
         </div>
 
@@ -63,10 +63,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <Link
                     to={item.href}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                      'flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-sm transition-all duration-200',
                       isActive
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'text-muted-foreground hover:bg-accent hover:text-[#006dfa]'
+                        ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                        : 'text-muted-foreground hover:bg-accent hover:text-[#006dfa] font-medium'
                     )}
                   >
                     {item.icon}

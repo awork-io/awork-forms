@@ -64,7 +64,7 @@ export function PublicFormField({
           <Label
             htmlFor={field.id}
             className={cn(
-              'block text-sm font-semibold mb-2 transition-colors duration-200',
+              'block text-base font-semibold mb-2 transition-colors duration-200',
               isFocused ? 'text-blue-600' : 'text-gray-700'
             )}
           >
@@ -163,7 +163,7 @@ export function PublicFormField({
               onCheckedChange={(checked) => onChange(checked)}
               className="sr-only"
             />
-            <span className="text-sm text-gray-700">
+            <span className="text-base text-gray-700">
               {fieldLabel}
               {field.required ? <span className="text-red-400 ml-1">*</span> : null}
             </span>

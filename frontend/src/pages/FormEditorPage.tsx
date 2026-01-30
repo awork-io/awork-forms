@@ -89,11 +89,14 @@ export function FormEditorPage() {
   const [aworkCustomFields, setAworkCustomFields] = useState<AworkCustomFieldDefinition[]>([]);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isFieldDialogOpen, setIsFieldDialogOpen] = useState(false);
+  const [translationsEnabled, setTranslationsEnabled] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 8,
+        delay: 100,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -360,59 +363,61 @@ export function FormEditorPage() {
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          {/* Center - Form Canvas */}
-          <div className="flex-1 overflow-auto bg-muted/30">
-            <div className="max-w-2xl mx-auto p-6">
-              <FormEditorMetaPanel
-                formName={formName}
-                formDescription={formDescription}
-                isActive={isActive}
-                onFormNameChange={(event) => setFormName(event.target.value)}
-                onFormDescriptionChange={(event) => setFormDescription(event.target.value)}
-                onActiveChange={setIsActive}
-                nameTranslations={nameTranslations}
-                descriptionTranslations={descriptionTranslations}
-                onNameTranslationChange={(language, value) =>
-                  setNameTranslations((prev) => ({ ...prev, [language]: value }))
-                }
-                onDescriptionTranslationChange={(language, value) =>
-                  setDescriptionTranslations((prev) => ({ ...prev, [language]: value }))
-                }
-                defaultTranslationLanguage={defaultTranslationLanguage}
-              />
+        {/* Center - Form Canvas */}
+        <div className="flex-1 overflow-auto bg-muted/30">
+          <div className="max-w-2xl mx-auto p-6 pb-12">
+            <FormEditorMetaPanel
+              formName={formName}
+              formDescription={formDescription}
+              isActive={isActive}
+              onFormNameChange={(event) => setFormName(event.target.value)}
+              onFormDescriptionChange={(event) => setFormDescription(event.target.value)}
+              onActiveChange={setIsActive}
+              nameTranslations={nameTranslations}
+              descriptionTranslations={descriptionTranslations}
+              onNameTranslationChange={(language, value) =>
+                setNameTranslations((prev) => ({ ...prev, [language]: value }))
+              }
+              onDescriptionTranslationChange={(language, value) =>
+                setDescriptionTranslations((prev) => ({ ...prev, [language]: value }))
+              }
+              defaultTranslationLanguage={defaultTranslationLanguage}
+              translationsEnabled={translationsEnabled}
+              onTranslationsEnabledChange={setTranslationsEnabled}
+            />
 
-              {/* Form Styling */}
-              {form && (
-                <div className="mb-6">
-                  <StyleEditor
-                    formId={form.id}
-                    formName={formName}
-                    formDescription={formDescription}
-                    styling={styling}
-                    onChange={setStyling}
-                    fields={fields}
-                  />
-                </div>
-              )}
-
-              {/* awork Integration Settings */}
+            {/* Form Styling */}
+            {form && (
               <div className="mb-6">
-                <AworkIntegrationSettings
-                  formFields={fields}
-                  config={aworkConfig}
-                  onChange={setAworkConfig}
-                  onCustomFieldsChange={setAworkCustomFields}
+                <StyleEditor
+                  formId={form.id}
+                  formName={formName}
+                  formDescription={formDescription}
+                  styling={styling}
+                  onChange={setStyling}
+                  fields={fields}
                 />
               </div>
+            )}
 
-              <Separator className="my-6" />
+            {/* awork Integration Settings */}
+            <div className="mb-6">
+              <AworkIntegrationSettings
+                formFields={fields}
+                config={aworkConfig}
+                onChange={setAworkConfig}
+                onCustomFieldsChange={setAworkCustomFields}
+              />
+            </div>
 
+            <Separator className="my-6" />
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
               {/* Form Fields */}
               <div className="space-y-4">
                 <h2 className="text-base font-semibold">{t('formEditor.formFields')}</h2>
@@ -428,27 +433,27 @@ export function FormEditorPage() {
                   projectMappingByFieldId={projectMappingByFieldId}
                 />
               </div>
-            </div>
-          </div>
 
-          {/* Drag Overlay */}
-          <DragOverlay>
-            {activeId && (
-              <FieldCard
-                field={fields.find((f) => f.id === activeId)!}
-                isSelected={false}
-                isDragging
-              />
-            )}
-            {draggedFieldType && (
-              <div className="bg-background border rounded-lg shadow-lg p-4 w-64 opacity-90">
-                <p className="font-medium">
-                  {getFieldTypeLabel(draggedFieldType, t)}
-                </p>
-              </div>
-            )}
-          </DragOverlay>
-        </DndContext>
+              {/* Drag Overlay */}
+              <DragOverlay>
+                {activeId && (
+                  <FieldCard
+                    field={fields.find((f) => f.id === activeId)!}
+                    isSelected={false}
+                    isDragging
+                  />
+                )}
+                {draggedFieldType && (
+                  <div className="bg-background border rounded-lg shadow-lg p-4 w-64 opacity-90">
+                    <p className="font-medium">
+                      {getFieldTypeLabel(draggedFieldType, t)}
+                    </p>
+                  </div>
+                )}
+              </DragOverlay>
+            </DndContext>
+          </div>
+        </div>
       </div>
 
       {/* Share Form Dialog */}
@@ -472,6 +477,7 @@ export function FormEditorPage() {
         aworkConfig={aworkConfig}
         onAworkConfigChange={setAworkConfig}
         aworkCustomFields={aworkCustomFields}
+        translationsEnabled={translationsEnabled}
       />
     </div>
   );
@@ -492,10 +498,11 @@ function normalizeTranslations(
   const fallbackValue = fallback.trim();
   const cleaned = Object.entries(translations).reduce<Record<string, string>>(
     (acc, [language, value]) => {
+      // Allow spaces during editing, only check if empty
+      if (!value || value.length === 0) return acc;
       const trimmed = value.trim();
-      if (!trimmed) return acc;
       if (fallbackValue && trimmed === fallbackValue) return acc;
-      acc[language] = trimmed;
+      acc[language] = value; // Keep original value with spaces
       return acc;
     },
     {}

@@ -100,7 +100,9 @@
     "createForm": "Create a Form",
     "createFormDesc": "Build a new form with custom fields",
     "viewForms": "View Forms",
-    "viewFormsDesc": "Manage your existing forms"
+    "viewFormsDesc": "Manage your existing forms",
+    "viewSubmissions": "View Submissions",
+    "viewSubmissionsDesc": "View all form submissions"
   },
   "formsPage": {
     "title": "Forms",

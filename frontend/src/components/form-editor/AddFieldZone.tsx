@@ -38,7 +38,7 @@ export function AddFieldZone({ onAddField, isFirst }: AddFieldZoneProps) {
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border-2 border-dashed
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-[12px] border-2 border-dashed
               border-gray-200 hover:border-primary/40 hover:bg-primary/5
               text-gray-400 hover:text-primary
               transition-all duration-200"
@@ -72,7 +72,7 @@ function FieldTypeButton({ fieldType, onClick }: FieldTypeButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 p-2 rounded-md hover:bg-accent
+      className="flex items-center gap-2 p-2 rounded-[8px] hover:bg-accent
         text-left transition-colors"
     >
       <div className="w-7 h-7 rounded bg-primary/10 flex items-center justify-center shrink-0">

@@ -18,6 +18,8 @@ interface FormEditorMetaPanelProps {
   onNameTranslationChange: (language: string, value: string) => void;
   onDescriptionTranslationChange: (language: string, value: string) => void;
   defaultTranslationLanguage: string;
+  translationsEnabled?: boolean;
+  onTranslationsEnabledChange?: (value: boolean) => void;
 }
 
 export function FormEditorMetaPanel({
@@ -32,6 +34,8 @@ export function FormEditorMetaPanel({
   onNameTranslationChange,
   onDescriptionTranslationChange,
   defaultTranslationLanguage,
+  translationsEnabled = false,
+  onTranslationsEnabledChange,
 }: FormEditorMetaPanelProps) {
   const { t } = useTranslation();
   const translationLanguages = [
@@ -75,11 +79,15 @@ export function FormEditorMetaPanel({
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base">{t('formEditor.translations.title')}</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">{t('formEditor.translations.title')}</CardTitle>
+            <Switch checked={translationsEnabled} onCheckedChange={onTranslationsEnabledChange} />
+          </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">{t('formEditor.translations.description')}</p>
-          <Tabs defaultValue={defaultTranslationLanguage} className="w-full">
+        {translationsEnabled && (
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t('formEditor.translations.description')}</p>
+            <Tabs defaultValue={defaultTranslationLanguage} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               {translationLanguages.map((language) => (
                 <TabsTrigger key={language.code} value={language.code} className="text-xs">
@@ -109,6 +117,7 @@ export function FormEditorMetaPanel({
             ))}
           </Tabs>
         </CardContent>
+        )}
       </Card>
     </>
   );

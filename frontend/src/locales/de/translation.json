@@ -100,7 +100,9 @@
     "createForm": "Formular erstellen",
     "createFormDesc": "Neues Formular mit benutzerdefinierten Feldern erstellen",
     "viewForms": "Formulare anzeigen",
-    "viewFormsDesc": "Deine bestehenden Formulare verwalten"
+    "viewFormsDesc": "Deine bestehenden Formulare verwalten",
+    "viewSubmissions": "Einsendungen anzeigen",
+    "viewSubmissionsDesc": "Alle Formular-Einsendungen ansehen"
   },
   "formsPage": {
     "title": "Formulare",

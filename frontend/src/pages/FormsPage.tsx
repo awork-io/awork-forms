@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -40,6 +40,7 @@ import { formatDateForLocale } from '@/lib/date-format';
 export function FormsPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const [forms, setForms] = useState<Form[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +69,13 @@ export function FormsPage() {
   useEffect(() => {
     fetchForms();
     trackScreenSeen(1); // Forms list screen
+    
+    // Check if we should open create dialog (e.g., from dashboard)
+    if (searchParams.get('action') === 'create') {
+      setIsCreateDialogOpen(true);
+      // Remove the query param so it doesn't reopen on refresh
+      setSearchParams({}, { replace: true });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -146,7 +154,7 @@ export function FormsPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-6 lg:p-8 pb-12">
       <PageHeader
         title={t('formsPage.title')}
         subtitle={t('formsPage.subtitle')}
@@ -157,8 +165,6 @@ export function FormsPage() {
           </Button>
         )}
         className="mb-8"
-        titleClassName="text-3xl font-bold tracking-tight"
-        subtitleClassName="mt-1 text-lg"
       />
 
       {forms.length === 0 ? (

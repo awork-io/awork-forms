@@ -10,7 +10,7 @@ export function SettingsPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-6 lg:p-8 pb-12">
       <PageHeader
         title={t('settings.title')}
         subtitle={t('settings.subtitle')}
@@ -65,7 +65,7 @@ export function SettingsPage() {
         <Card className="bg-white/80 backdrop-blur-sm">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <AworkLogo className="h-4" />
+              <AworkLogo className="h-6" />
               <CardTitle>{t('settings.formsTitle')}</CardTitle>
             </div>
             <CardDescription>{t('settings.formsDesc')}</CardDescription>

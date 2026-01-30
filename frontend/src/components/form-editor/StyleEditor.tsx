@@ -156,18 +156,19 @@ export function StyleEditor({
                 {t('styleEditor.primaryColorHelp')}
               </p>
               <div className="flex items-center gap-2">
-                <div
-                  className="w-10 h-10 rounded-md border cursor-pointer"
-                  style={{ backgroundColor: primaryColor }}
-                  onClick={() => document.getElementById('primary-color-input')?.click()}
-                />
-                <Input
-                  id="primary-color-input"
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => handleColorChange('primaryColor', e.target.value)}
-                  className="w-0 h-0 p-0 border-0 opacity-0 absolute"
-                />
+                <div className="relative w-10 h-10 rounded-md border overflow-hidden shrink-0">
+                  <input
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e) => handleColorChange('primaryColor', e.target.value)}
+                    className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer"
+                    style={{ 
+                      backgroundColor: primaryColor,
+                      WebkitAppearance: 'none',
+                      appearance: 'none'
+                    }}
+                  />
+                </div>
                 <Input
                   id="primary-color"
                   type="text"
@@ -192,18 +193,19 @@ export function StyleEditor({
                 {t('styleEditor.backgroundColorHelp')}
               </p>
               <div className="flex items-center gap-2">
-                <div
-                  className="w-10 h-10 rounded-md border cursor-pointer"
-                  style={{ backgroundColor: backgroundColor }}
-                  onClick={() => document.getElementById('background-color-input')?.click()}
-                />
-                <Input
-                  id="background-color-input"
-                  type="color"
-                  value={backgroundColor}
-                  onChange={(e) => handleColorChange('backgroundColor', e.target.value)}
-                  className="w-0 h-0 p-0 border-0 opacity-0 absolute"
-                />
+                <div className="relative w-10 h-10 rounded-md border overflow-hidden shrink-0">
+                  <input
+                    type="color"
+                    value={backgroundColor}
+                    onChange={(e) => handleColorChange('backgroundColor', e.target.value)}
+                    className="absolute inset-0 w-full h-full p-0 border-0 cursor-pointer"
+                    style={{ 
+                      backgroundColor: backgroundColor,
+                      WebkitAppearance: 'none',
+                      appearance: 'none'
+                    }}
+                  />
+                </div>
                 <Input
                   id="background-color"
                   type="text"

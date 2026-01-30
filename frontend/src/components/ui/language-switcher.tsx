@@ -38,7 +38,7 @@ export function LanguageSwitcher({
       <DropdownMenuTrigger
         className={cn(
           'inline-flex items-center gap-1.5 outline-none transition-all duration-200',
-          variant === 'default' && 'px-2.5 py-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground',
+          variant === 'default' && 'px-2.5 py-1.5 rounded-[12px] hover:bg-accent text-muted-foreground hover:text-foreground',
           variant === 'minimal' && 'p-1 rounded hover:bg-black/5 text-muted-foreground hover:text-foreground',
           variant === 'pill' && 'px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-sm border border-gray-200/50 hover:shadow-md hover:bg-white text-gray-600 hover:text-gray-900',
           className
@@ -50,7 +50,7 @@ export function LanguageSwitcher({
           triggerContent
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[140px]">
+      <DropdownMenuContent align="end" className="min-w-[140px] rounded-[12px]">
         {LANGUAGES.map((lang) => (
           <DropdownMenuItem
             key={lang.code}

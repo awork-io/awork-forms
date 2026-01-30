@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ interface FieldConfigDialogProps {
   aworkConfig: AworkIntegrationConfig;
   onAworkConfigChange: Dispatch<SetStateAction<AworkIntegrationConfig>>;
   aworkCustomFields: AworkCustomFieldDefinition[];
+  translationsEnabled?: boolean;
 }
 
 export function FieldConfigDialog({
@@ -47,6 +49,7 @@ export function FieldConfigDialog({
   aworkConfig,
   onAworkConfigChange,
   aworkCustomFields,
+  translationsEnabled: globalTranslationsEnabled = false,
 }: FieldConfigDialogProps) {
   const { t } = useTranslation();
   if (!field) return null;
@@ -119,7 +122,7 @@ export function FieldConfigDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[480px] max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings2 className="w-5 h-5" />
@@ -130,7 +133,7 @@ export function FieldConfigDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="flex-1 overflow-y-auto py-4 space-y-6">
           {/* Label */}
           <InputField
             label={t('fieldConfigDialog.label')}
@@ -154,7 +157,12 @@ export function FieldConfigDialog({
 
           <Separator />
 
-          <FieldTranslationsEditor field={field} onUpdate={handleUpdate} />
+          {globalTranslationsEnabled && (
+            <>
+              <Separator />
+              <FieldTranslationsEditor field={field} onUpdate={handleUpdate} />
+            </>
+          )}
 
           {(showTaskMapping || showProjectMapping) && (
             <>
@@ -278,7 +286,7 @@ export function FieldConfigDialog({
           )}
         </div>
 
-        <DialogFooter className="flex justify-between sm:justify-between">
+        <DialogFooter className="flex justify-between sm:justify-between pt-4 border-t">
           <Button
             variant="destructive"
             onClick={handleDelete}
@@ -386,6 +394,7 @@ interface FieldTranslationsEditorProps {
 function FieldTranslationsEditor({ field, onUpdate }: FieldTranslationsEditorProps) {
   const { t, i18n } = useTranslation();
   const defaultLanguage = getSupportedLanguage(i18n.resolvedLanguage || i18n.language);
+  const [translationsEnabled, setTranslationsEnabled] = useState(!!field.translations && Object.keys(field.translations).length > 0);
   const languages = [
     { code: 'de', label: t('language.german') },
     { code: 'en', label: t('language.english') },
@@ -415,83 +424,77 @@ function FieldTranslationsEditor({ field, onUpdate }: FieldTranslationsEditorPro
 
   return (
     <div className="space-y-3">
-      <div>
-        <Label className="text-base">{t('fieldConfigDialog.translationsTitle')}</Label>
-        <p className="text-sm text-muted-foreground">
-          {t('fieldConfigDialog.translationsDescription')}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <Label className="text-base">{t('fieldConfigDialog.translationsTitle')}</Label>
+          <p className="text-sm text-muted-foreground">
+            {t('fieldConfigDialog.translationsDescription')}
+          </p>
+        </div>
+        <Switch checked={translationsEnabled} onCheckedChange={setTranslationsEnabled} />
       </div>
-      <Tabs defaultValue={defaultLanguage}>
-        <TabsList className="grid w-full grid-cols-2">
-          {languages.map((language) => (
-            <TabsTrigger key={language.code} value={language.code} className="text-xs">
-              {language.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        {languages.map((language) => {
-          const translation = field.translations?.[language.code];
-          return (
-            <TabsContent key={language.code} value={language.code} className="space-y-3 mt-4">
-              <div className="space-y-2">
-                <Label>{t('fieldConfigDialog.translationLabel')}</Label>
-                <Input
-                  value={translation?.label || ''}
-                  onChange={(e) => updateTranslation(language.code, { label: e.target.value })}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  placeholder={field.label}
-                />
-                <p className="text-xs text-muted-foreground">
-                  {t('fieldConfigDialog.translationOptional')}
-                </p>
-              </div>
-              {field.type !== 'checkbox' && (
+      {translationsEnabled && (
+        <Tabs defaultValue={defaultLanguage}>
+          <TabsList className="grid w-full grid-cols-2">
+            {languages.map((language) => (
+              <TabsTrigger key={language.code} value={language.code} className="text-xs">
+                {language.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {languages.map((language) => {
+            const translation = field.translations?.[language.code];
+            return (
+              <TabsContent key={language.code} value={language.code} className="space-y-3 mt-4">
                 <div className="space-y-2">
-                  <Label>{t('fieldConfigDialog.translationPlaceholder')}</Label>
+                  <Label>{t('fieldConfigDialog.translationLabel')}</Label>
                   <Input
-                    value={translation?.placeholder || ''}
-                    onChange={(e) => updateTranslation(language.code, { placeholder: e.target.value })}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    placeholder={field.placeholder || t('fieldConfigDialog.placeholderOptional')}
+                    value={translation?.label || ''}
+                    onChange={(e) => updateTranslation(language.code, { label: e.target.value })}
+                    placeholder={field.label}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    {t('fieldConfigDialog.translationOptional')}
+                  </p>
                 </div>
-              )}
-              {field.type === 'select' && (field.options?.length || 0) > 0 && (
-                <div className="space-y-2">
-                  <Label>{t('fieldConfigDialog.optionTranslations')}</Label>
+                {field.type !== 'checkbox' && (
                   <div className="space-y-2">
-                    {(field.options || []).map((option) => (
-                      <div key={option.value} className="grid grid-cols-2 gap-2 items-center">
-                        <span className="text-sm text-muted-foreground truncate">
-                          {option.label}
-                        </span>
-                        <Input
-                          value={translation?.options?.[option.value] || ''}
-                          onChange={(e) =>
-                            updateOptionTranslation(language.code, option.value, e.target.value)
-                          }
-                          onKeyDown={(e) => e.stopPropagation()}
-                          placeholder={t('fieldConfigDialog.optionTranslationPlaceholder')}
-                        />
-                      </div>
-                    ))}
+                    <Label>{t('fieldConfigDialog.translationPlaceholder')}</Label>
+                    <Input
+                      value={translation?.placeholder || ''}
+                      onChange={(e) => updateTranslation(language.code, { placeholder: e.target.value })}
+                      placeholder={field.placeholder || t('fieldConfigDialog.placeholderOptional')}
+                    />
                   </div>
-                </div>
-              )}
-            </TabsContent>
-          );
-        })}
-      </Tabs>
+                )}
+                {field.type === 'select' && (field.options?.length || 0) > 0 && (
+                  <div className="space-y-2">
+                    <Label>{t('fieldConfigDialog.optionTranslations')}</Label>
+                    <div className="space-y-2">
+                      {(field.options || []).map((option) => (
+                        <div key={option.value} className="grid grid-cols-2 gap-2 items-center">
+                          <span className="text-sm text-muted-foreground truncate">
+                            {option.label}
+                          </span>
+                          <Input
+                            value={translation?.options?.[option.value] || ''}
+                            onChange={(e) =>
+                              updateOptionTranslation(language.code, option.value, e.target.value)
+                            }
+                            placeholder={t('fieldConfigDialog.optionTranslationPlaceholder')}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+            );
+          })}
+        </Tabs>
+      )}
     </div>
   );
-}
-
-function getSupportedLanguage(language?: string) {
-  if (!language) return 'en';
-  if (language.toLowerCase().startsWith('de')) {
-    return 'de';
-  }
-  return 'en';
 }
 
 function normalizeTranslations(
@@ -500,17 +503,18 @@ function normalizeTranslations(
   const cleaned = Object.entries(translations).reduce<Record<string, FieldTranslation>>(
     (acc, [language, value]) => {
       const next: FieldTranslation = {};
-      if (value.label?.trim()) {
-        next.label = value.label.trim();
+      // Only check if label has content (allowing spaces), but don't trim during editing
+      if (value.label && value.label.length > 0) {
+        next.label = value.label;
       }
-      if (value.placeholder?.trim()) {
-        next.placeholder = value.placeholder.trim();
+      if (value.placeholder && value.placeholder.length > 0) {
+        next.placeholder = value.placeholder;
       }
       if (value.options) {
         const cleanedOptions = Object.entries(value.options)
-          .filter(([, optionValue]) => optionValue.trim())
+          .filter(([, optionValue]) => optionValue.length > 0)
           .reduce<Record<string, string>>((optionAcc, [optionKey, optionValue]) => {
-            optionAcc[optionKey] = optionValue.trim();
+            optionAcc[optionKey] = optionValue;
             return optionAcc;
           }, {});
         if (Object.keys(cleanedOptions).length > 0) {
@@ -527,4 +531,12 @@ function normalizeTranslations(
   );
 
   return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+}
+
+function getSupportedLanguage(language?: string) {
+  if (!language) return 'en';
+  if (language.toLowerCase().startsWith('de')) {
+    return 'de';
+  }
+  return 'en';
 }

@@ -126,7 +126,7 @@ export function SubmissionsPage() {
       : t('submissions.emptyDescAll');
 
   return (
-    <div className="p-6">
+    <div className="p-6 lg:p-8 pb-12">
       {formId ? (
         <Button
           variant="ghost"
@@ -167,7 +167,7 @@ export function SubmissionsPage() {
             ) : null}
           </div>
         )}
-        className="mb-6"
+        className="mb-8"
       />
 
       {filteredSubmissions.length === 0 ? (
