@@ -115,23 +115,35 @@ export function AworkIntegrationSettings({
     }
   }, [t]);
 
-  // Fetch task-related data (statuses, lists, types of work, users, custom fields)
+  // Fetch task custom field definitions (workspace-wide, not project-specific)
+  const fetchTaskCustomFields = useCallback(async () => {
+    try {
+      const customFieldsData = await api.getAworkTaskCustomFields();
+      onCustomFieldsChange?.(customFieldsData.filter(f => !f.isArchived));
+    } catch (err) {
+      const error = err as Error;
+      if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
+        setAworkError(t('aworkIntegration.errors.sessionExpired'));
+      }
+      onCustomFieldsChange?.([]);
+    }
+  }, [onCustomFieldsChange, t]);
+
+  // Fetch task-related data (statuses, lists, types of work, users)
   const fetchTaskData = useCallback(async (projectId: string) => {
     setIsLoadingTaskData(true);
     setAworkError(null);
     try {
-      const [statusesData, listsData, typesData, usersData, customFieldsData] = await Promise.all([
+      const [statusesData, listsData, typesData, usersData] = await Promise.all([
         api.getAworkTaskStatuses(projectId),
         api.getAworkTaskLists(projectId),
         api.getAworkTypesOfWork(),
         api.getAworkUsers(),
-        api.getAworkCustomFields(projectId),
       ]);
       setTaskStatuses(statusesData);
       setTaskLists(listsData);
       setTypesOfWork(typesData.filter((type) => !type.isArchived));
       setUsers(usersData.filter(u => !u.isArchived && !u.isExternal));
-      onCustomFieldsChange?.(customFieldsData.filter(f => !f.isArchived));
     } catch (err) {
       const error = err as Error;
       if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
@@ -139,21 +151,23 @@ export function AworkIntegrationSettings({
       } else {
         setAworkError(t('aworkIntegration.errors.loadTaskData'));
       }
-      onCustomFieldsChange?.([]);
     } finally {
       setIsLoadingTaskData(false);
     }
-  }, [onCustomFieldsChange, t]);
+  }, [t]);
 
   // Load awork data when action type requires it
   useEffect(() => {
     if (config.actionType === 'task' || config.actionType === 'both') {
       fetchProjects();
+      fetchTaskCustomFields();
+    } else {
+      onCustomFieldsChange?.([]);
     }
     if (config.actionType === 'project' || config.actionType === 'both') {
       fetchProjectTypes();
     }
-  }, [config.actionType, fetchProjects, fetchProjectTypes]);
+  }, [config.actionType, fetchProjects, fetchProjectTypes, fetchTaskCustomFields, onCustomFieldsChange]);
 
   // Load task-specific data when project is selected
   useEffect(() => {
@@ -165,9 +179,8 @@ export function AworkIntegrationSettings({
       setTaskLists([]);
       setTypesOfWork([]);
       setUsers([]);
-      onCustomFieldsChange?.([]);
     }
-  }, [config.projectId, config.actionType, fetchTaskData, onCustomFieldsChange]);
+  }, [config.projectId, config.actionType, fetchTaskData]);
 
   const handleActionTypeChange = (value: string) => {
     const actionType = value === 'none' ? null : (value as ActionType);

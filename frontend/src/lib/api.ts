@@ -347,6 +347,10 @@ class ApiClient {
     return this.request(`/api/awork/projects/${projectId}/customfields`);
   }
 
+  async getAworkTaskCustomFields(): Promise<AworkCustomFieldDefinition[]> {
+    return this.request('/api/awork/customfields/tasks');
+  }
+
   // Logo upload endpoints
   async uploadLogo(formId: number, file: File): Promise<{ logoUrl: string }> {
     const url = `${API_BASE_URL}/api/forms/${formId}/logo`;
