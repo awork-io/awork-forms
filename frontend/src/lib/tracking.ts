@@ -1,5 +1,3 @@
-import { api } from './api';
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export interface TrackingContext {
@@ -16,10 +14,6 @@ export async function trackEvent(
   pageContext?: TrackingContext
 ): Promise<boolean> {
   try {
-    // Try sessionStorage first, then fall back to api client
-    const token = sessionStorage.getItem('auth_token') || api.getToken();
-    if (!token) return false;
-
     const currentPage = pageContext || {
       path: window.location.pathname,
       title: document.title,
@@ -41,7 +35,6 @@ export async function trackEvent(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
       },
       credentials: 'include',
       body: JSON.stringify(payload),
