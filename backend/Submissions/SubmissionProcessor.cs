@@ -140,6 +140,18 @@ public class SubmissionProcessor
             await db.SaveChangesAsync();
 
             result.Status = "completed";
+
+            // Track submission created event
+            _ = _aworkService.TrackEvent(userId.Value, "Forms User Action", new Dictionary<string, object>
+            {
+                { "action", "submission_created" },
+                { "tool", "awork-forms" },
+                { "formId", form.Id },
+                { "submissionId", submissionId },
+                { "actionType", form.ActionType ?? "none" },
+                { "createdTask", createdTaskId != null },
+                { "createdProject", createdProjectId != null }
+            });
         }
         catch (UnauthorizedAccessException ex)
         {

@@ -215,6 +215,37 @@ public class AworkApiService
         }
     }
 
+    public async Task<bool> TrackEvent(Guid userId, string eventName, Dictionary<string, object> data)
+    {
+        try
+        {
+            var payload = new
+            {
+                eventName,
+                data,
+                context = new
+                {
+                    userAgent = "awork-forms-backend/1.0",
+                    locale = "en",
+                    page = new
+                    {
+                        path = "/backend",
+                        title = "awork Forms Backend",
+                        url = "",
+                        referrer = ""
+                    }
+                }
+            };
+            await MakeAworkPostRequest<object>(userId, "track", payload);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to track event {eventName}: {ex.Message}");
+            return false;
+        }
+    }
+
     private static string GetMimeType(string fileName)
     {
         var ext = Path.GetExtension(fileName).ToLowerInvariant();
