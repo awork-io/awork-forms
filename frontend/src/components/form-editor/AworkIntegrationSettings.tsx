@@ -310,7 +310,11 @@ export function AworkIntegrationSettings({
               </div>
 
               {/* Project Selector */}
-              <FormFieldWrapper label={t('aworkIntegration.task.addToProject')}>
+              <FormFieldWrapper
+                label={t('aworkIntegration.task.addToProject')}
+                required
+                error={!config.projectId && !isLoadingProjects ? t('aworkIntegration.task.projectRequired') : undefined}
+              >
                 {isLoadingProjects ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" />

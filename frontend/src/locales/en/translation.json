@@ -165,6 +165,7 @@
     "toast": {
       "loadError": "Failed to load form",
       "nameRequired": "Form name is required",
+      "projectRequired": "Please select a project for task creation",
       "saveSuccessTitle": "Saved",
       "saveSuccessDesc": "Form saved successfully",
       "saveError": "Failed to save form"
@@ -361,6 +362,7 @@
       "searchProjects": "Search projects...",
       "noProjectsFound": "No projects found.",
       "loadProjects": "Load Projects",
+      "projectRequired": "Please select a project",
       "taskList": "Task list",
       "loadingTaskLists": "Loading task lists...",
       "selectTaskList": "Select a task list",

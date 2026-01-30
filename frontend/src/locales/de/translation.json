@@ -165,6 +165,7 @@
     "toast": {
       "loadError": "Formular konnte nicht geladen werden",
       "nameRequired": "Ein Formularname ist erforderlich",
+      "projectRequired": "Bitte wähle ein Projekt für die Aufgabenerstellung aus",
       "saveSuccessTitle": "Gespeichert",
       "saveSuccessDesc": "Formular erfolgreich gespeichert",
       "saveError": "Formular konnte nicht gespeichert werden"
@@ -361,6 +362,7 @@
       "searchProjects": "Projekte suchen...",
       "noProjectsFound": "Keine Projekte gefunden.",
       "loadProjects": "Projekte laden",
+      "projectRequired": "Bitte wähle ein Projekt aus",
       "taskList": "Aufgabenliste",
       "loadingTaskLists": "Aufgabenlisten werden geladen...",
       "selectTaskList": "Aufgabenliste auswählen",

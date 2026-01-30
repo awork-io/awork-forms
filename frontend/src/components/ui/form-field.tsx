@@ -9,13 +9,19 @@ interface FormFieldProps {
   id?: string
   className?: string
   children: React.ReactNode
+  required?: boolean
+  error?: string
 }
 
-function FormField({ label, id, className, children }: FormFieldProps) {
+function FormField({ label, id, className, children, required, error }: FormFieldProps) {
   return (
     <div className={cn("space-y-2", className)}>
-      <Label htmlFor={id} className="pl-2">{label}</Label>
+      <Label htmlFor={id} className="pl-2">
+        {label}
+        {required && <span className="text-destructive ml-1">*</span>}
+      </Label>
       {children}
+      {error && <p className="text-sm text-destructive pl-2">{error}</p>}
     </div>
   )
 }

@@ -173,6 +173,17 @@ export function FormEditorPage() {
       return;
     }
 
+    // Validate project is selected when action type requires it
+    const needsProject = aworkConfig.actionType === 'task' || aworkConfig.actionType === 'both';
+    if (needsProject && !aworkConfig.projectId) {
+      toast({
+        title: t('common.error'),
+        description: t('formEditor.toast.projectRequired'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const aworkData = serializeAworkConfig(aworkConfig);
