@@ -22,7 +22,8 @@ public class MeEndpoint : IEndpoint
                 AvatarUrl = user.AvatarUrl,
                 WorkspaceId = user.AworkWorkspaceId,
                 WorkspaceName = user.WorkspaceName,
-                WorkspaceUrl = user.WorkspaceUrl
+                WorkspaceUrl = user.WorkspaceUrl,
+                HasRefreshToken = !string.IsNullOrEmpty(user.RefreshToken)
             });
         }).RequireAuth();
     }

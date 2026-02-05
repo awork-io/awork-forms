@@ -20,8 +20,10 @@ public class AuthService
     private const string AworkDcrUrl = "https://api.awork.com/api/v1/clientapplications/register";
 
     private const string DcrClientName = "awork Forms";
-    private const string DcrScope = "full_access";
+    private const string DcrScope = "offline_access full_access";
     private const string DcrApplicationType = "native";
+    // Increment this to force DCR re-registration (e.g., after awork backend fixes)
+    private const int DcrVersion = 3;
 
     private static string? _dcrClientId;
 
@@ -130,7 +132,8 @@ public class AuthService
                     AvatarUrl = user.AvatarUrl,
                     WorkspaceId = user.AworkWorkspaceId,
                     WorkspaceName = user.WorkspaceName,
-                    WorkspaceUrl = user.WorkspaceUrl
+                    WorkspaceUrl = user.WorkspaceUrl,
+                    HasRefreshToken = !string.IsNullOrEmpty(user.RefreshToken)
                 }
             };
         }
@@ -163,9 +166,12 @@ public class AuthService
         await using var db = await _dbFactory.CreateDbContextAsync();
         var clientIdSetting = await db.Settings.FirstOrDefaultAsync(s => s.Key == "dcr_client_id");
         var redirectUriSetting = await db.Settings.FirstOrDefaultAsync(s => s.Key == "dcr_redirect_uri");
+        var scopeSetting = await db.Settings.FirstOrDefaultAsync(s => s.Key == "dcr_scope");
+        var versionSetting = await db.Settings.FirstOrDefaultAsync(s => s.Key == "dcr_version");
 
-        // Re-register if redirect URI changed
-        if (clientIdSetting != null && redirectUriSetting?.Value == _redirectUri)
+        // Re-register if redirect URI, scope, or version changed
+        var currentVersion = int.TryParse(versionSetting?.Value, out var v) ? v : 0;
+        if (clientIdSetting != null && redirectUriSetting?.Value == _redirectUri && scopeSetting?.Value == DcrScope && currentVersion == DcrVersion)
         {
             _dcrClientId = clientIdSetting.Value;
             return _dcrClientId;
@@ -186,6 +192,16 @@ public class AuthService
         else
             db.Settings.Add(new Setting { Key = "dcr_redirect_uri", Value = _redirectUri });
 
+        if (scopeSetting != null)
+            scopeSetting.Value = DcrScope;
+        else
+            db.Settings.Add(new Setting { Key = "dcr_scope", Value = DcrScope });
+
+        if (versionSetting != null)
+            versionSetting.Value = DcrVersion.ToString();
+        else
+            db.Settings.Add(new Setting { Key = "dcr_version", Value = DcrVersion.ToString() });
+
         await db.SaveChangesAsync();
 
         return _dcrClientId;
@@ -199,15 +215,21 @@ public class AuthService
             redirect_uris = new[] { _redirectUri },
             scope = DcrScope,
             application_type = DcrApplicationType,
-            token_endpoint_auth_method = "none"
+            token_endpoint_auth_method = "none",
+            grant_types = new[] { "authorization_code", "refresh_token" }
         };
 
-        var content = new StringContent(JsonSerializer.Serialize(dcrRequest), Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync(AworkDcrUrl, content);
-        response.EnsureSuccessStatusCode();
+        var requestJson = JsonSerializer.Serialize(dcrRequest);
+        Console.WriteLine($"[DCR] Registering client with request: {requestJson}");
 
-        var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<DcrResponse>(json) ?? throw new Exception("Failed to parse DCR response");
+        var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync(AworkDcrUrl, content);
+
+        var responseJson = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"[DCR] Response status: {response.StatusCode}, body: {responseJson}");
+
+        response.EnsureSuccessStatusCode();
+        return JsonSerializer.Deserialize<DcrResponse>(responseJson) ?? throw new Exception("Failed to parse DCR response");
     }
 
     private async Task<TokenResult> ExchangeCodeForTokens(string code, string codeVerifier, string clientId)
@@ -223,11 +245,14 @@ public class AuthService
 
         var response = await _httpClient.PostAsync(AworkTokenUrl, new FormUrlEncodedContent(tokenRequest));
         var json = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"[TOKEN] Response: {json}");
 
         if (!response.IsSuccessStatusCode)
             return new TokenResult { Success = false, Error = $"Token exchange failed: {json}" };
 
         var tokenResponse = JsonSerializer.Deserialize<AuthTokenResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        Console.WriteLine($"[TOKEN] Parsed - AccessToken: {(string.IsNullOrEmpty(tokenResponse?.AccessToken) ? "NULL" : "present")}, RefreshToken: {(string.IsNullOrEmpty(tokenResponse?.RefreshToken) ? "NULL" : "present")}");
+
         if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.AccessToken))
             return new TokenResult { Success = false, Error = "Invalid token response" };
 

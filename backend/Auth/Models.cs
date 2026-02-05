@@ -46,6 +46,7 @@ public class UserDto
     public Guid WorkspaceId { get; set; }
     public string? WorkspaceName { get; set; }
     public string? WorkspaceUrl { get; set; }
+    public bool HasRefreshToken { get; set; }
 }
 
 public class AuthTokenResponse

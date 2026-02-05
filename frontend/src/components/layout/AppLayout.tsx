@@ -6,6 +6,7 @@ import { AworkLogo } from '@/components/ui/awork-logo';
 import { LayoutDashboard, FileText, Inbox, Settings, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { ReauthBanner } from '@/components/layout/ReauthBanner';
 
 interface NavItem {
   labelKey: string;
@@ -116,6 +117,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main className="flex-1 flex flex-col min-w-0">
+        {/* Re-auth banner when no refresh token */}
+        {user && !user.hasRefreshToken && <ReauthBanner />}
         {/* Page content */}
         <div className="flex-1 overflow-auto">
           {children}

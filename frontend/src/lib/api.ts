@@ -8,6 +8,7 @@ export interface User {
   workspaceId: string;
   workspaceName?: string;
   workspaceUrl?: string;
+  hasRefreshToken: boolean;
 }
 
 export interface AuthResponse {

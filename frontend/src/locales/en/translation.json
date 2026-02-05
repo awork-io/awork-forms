@@ -87,6 +87,11 @@
     "denied": "Authentication was denied: {{error}}",
     "missingParams": "Invalid callback - missing code or state parameter"
   },
+  "auth": {
+    "sessionLimited": "Session refresh unavailable",
+    "sessionLimitedDesc": "Your session cannot be automatically renewed. Please re-authenticate to avoid interruptions.",
+    "reauthenticate": "Re-authenticate"
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome to awork Forms",
@@ -513,6 +518,8 @@
     "logoAlt": "Logo",
     "submit": "Submit",
     "submitting": "Submitting...",
-    "poweredByPrefix": "Powered by"
+    "poweredByPrefix": "Powered by",
+    "submitAnother": "Submit Another Response",
+    "closeTab": "Close this tab"
   }
 }
