@@ -124,4 +124,14 @@ public class FormsEndpointsTests
         Assert.Equal(created.ActionType, duplicated.ActionType);
         Assert.Equal(created.AworkTaskTag, duplicated.AworkTaskTag);
     }
+
+    [Fact]
+    public async Task DuplicateForm_WithoutAuth_ReturnsUnauthorizedInsteadOfMethodNotAllowed()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.PostAsync("/api/forms/999/duplicate", null);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }

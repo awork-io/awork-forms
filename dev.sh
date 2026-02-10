@@ -12,6 +12,16 @@ echo ""
 echo "Stopping any existing dev servers..."
 pkill -f "dotnet watch run" 2>/dev/null || true
 pkill -f "npm run dev" 2>/dev/null || true
+pkill -f "/backend/bin/" 2>/dev/null || true
+
+# Also stop any stale listeners on the known dev ports (e.g. old dotnet run instances)
+for port in 5100 5173; do
+    PIDS=$(lsof -ti tcp:"$port" -sTCP:LISTEN 2>/dev/null || true)
+    if [ -n "$PIDS" ]; then
+        echo "Stopping processes on port $port: $PIDS"
+        kill $PIDS 2>/dev/null || true
+    fi
+done
 sleep 1
 
 # Load .env if present
