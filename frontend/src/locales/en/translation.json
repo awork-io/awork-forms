@@ -119,6 +119,7 @@
     "actionsLabel": "Actions",
     "viewSubmissions": "View Submissions",
     "viewPublicForm": "View Public Form",
+    "duplicate": "Duplicate",
     "updated": "Updated {{date}}",
     "dialog": {
       "title": "Create New Form",

@@ -254,7 +254,7 @@ export function FormsPage() {
                         disabled={duplicatingFormId === form.id}
                       >
                         <Copy className="w-4 h-4 mr-2" />
-                        {t('fieldCard.duplicate')}
+                        {t('formsPage.duplicate')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setShareForm(form)}>
                         <Share2 className="w-4 h-4 mr-2" />

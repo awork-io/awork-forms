@@ -2,6 +2,7 @@ using System.Text.Json;
 using Backend.Awork;
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Backend.Submissions;
 
@@ -9,11 +10,16 @@ public class SubmissionProcessor
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly AworkApiService _aworkService;
+    private readonly ILogger<SubmissionProcessor> _logger;
 
-    public SubmissionProcessor(IDbContextFactory<AppDbContext> dbFactory, AworkApiService aworkService)
+    public SubmissionProcessor(
+        IDbContextFactory<AppDbContext> dbFactory,
+        AworkApiService aworkService,
+        ILogger<SubmissionProcessor> logger)
     {
         _dbFactory = dbFactory;
         _aworkService = aworkService;
+        _logger = logger;
     }
 
     public async Task<SubmissionProcessResult> ProcessSubmission(int submissionId)
@@ -231,7 +237,7 @@ public class SubmissionProcessor
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error attaching file from field {field.Id}: {ex.Message}");
+                _logger.LogWarning(ex, "Error attaching file from field {FieldId}", field.Id);
             }
         }
     }
@@ -281,19 +287,24 @@ public class SubmissionProcessor
 
         foreach (var mapping in mappings)
         {
-            var value = GetMappedValue(formData, formFields, mapping.FormFieldId);
-            if (string.IsNullOrEmpty(value)) continue;
+            var rawValue = GetMappedValue(formData, formFields, mapping.FormFieldId);
+            if (string.IsNullOrEmpty(rawValue)) continue;
+            var displayValue = GetMappedValue(formData, formFields, mapping.FormFieldId, mapSelectToLabel: true);
 
             switch (mapping.AworkField)
             {
-                case "name": request.Name = value; break;
-                case "description": request.Description = value; break;
+                case "name":
+                    request.Name = displayValue ?? rawValue;
+                    break;
+                case "description":
+                    request.Description = displayValue ?? rawValue;
+                    break;
                 case "startDate":
-                    if (TryParseDate(value, out var startDate))
+                    if (TryParseDate(rawValue, out var startDate))
                         request.StartDate = startDate;
                     break;
                 case "dueDate":
-                    if (TryParseDate(value, out var dueDate))
+                    if (TryParseDate(rawValue, out var dueDate))
                         request.DueDate = dueDate;
                     break;
             }
@@ -321,24 +332,33 @@ public class SubmissionProcessor
 
         foreach (var mapping in mappings)
         {
-            var value = GetMappedValue(formData, formFields, mapping.FormFieldId);
-            if (string.IsNullOrEmpty(value)) continue;
+            var rawValue = GetMappedValue(formData, formFields, mapping.FormFieldId);
+            if (string.IsNullOrEmpty(rawValue)) continue;
+            var displayValue = GetMappedValue(formData, formFields, mapping.FormFieldId, mapSelectToLabel: true);
 
             switch (mapping.AworkField)
             {
-                case "name": request.Name = value; break;
-                case "description": request.Description = value; break;
+                case "name":
+                    request.Name = displayValue ?? rawValue;
+                    break;
+                case "description":
+                    request.Description = displayValue ?? rawValue;
+                    break;
                 case "dueOn":
-                    if (TryParseDate(value, out var dueOn))
+                    if (TryParseDate(rawValue, out var dueOn))
                         request.DueOn = dueOn;
                     break;
                 case "startOn":
-                    if (TryParseDate(value, out var startOn))
+                    if (TryParseDate(rawValue, out var startOn))
                         request.StartOn = startOn;
                     break;
                 case "plannedDuration":
-                    if (double.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var hours))
+                    if (double.TryParse(rawValue, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var hours))
                         request.PlannedDuration = (int)(hours * 3600);
+                    break;
+                case "typeOfWork":
+                case "tags":
+                    // Handled via dedicated processing paths.
                     break;
             }
         }
@@ -349,7 +369,11 @@ public class SubmissionProcessor
         return request;
     }
 
-    private static string? GetMappedValue(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, string fieldId)
+    private static string? GetMappedValue(
+        Dictionary<string, object?> formData,
+        List<FormFieldInfo> formFields,
+        string fieldId,
+        bool mapSelectToLabel = false)
     {
         if (!formData.TryGetValue(fieldId, out var value) || value == null) return null;
 
@@ -371,6 +395,9 @@ public class SubmissionProcessor
         }
 
         if (string.IsNullOrEmpty(mappedValue))
+            return mappedValue;
+
+        if (!mapSelectToLabel)
             return mappedValue;
 
         var formField = formFields.FirstOrDefault(f => f.Id == fieldId);
@@ -530,7 +557,7 @@ public class SubmissionProcessor
         if (mappedTypeOfWork == null)
             return fallbackTypeOfWorkId;
 
-        var typeOfWorkName = GetMappedValue(formData, formFields, mappedTypeOfWork.FormFieldId)?.Trim();
+        var typeOfWorkName = GetMappedValue(formData, formFields, mappedTypeOfWork.FormFieldId, mapSelectToLabel: true)?.Trim();
         if (string.IsNullOrWhiteSpace(typeOfWorkName))
             return fallbackTypeOfWorkId;
 
@@ -545,13 +572,30 @@ public class SubmissionProcessor
         try
         {
             var createdType = await _aworkService.CreateTypeOfWork(userId, typeOfWorkName);
-            return createdType?.Id ?? fallbackTypeOfWorkId;
+            if (createdType?.Id != null)
+                return createdType.Id;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to create type of work '{typeOfWorkName}': {ex.Message}");
-            return fallbackTypeOfWorkId;
+            _logger.LogWarning(ex, "Failed to create type of work '{TypeOfWorkName}'", typeOfWorkName);
         }
+
+        // Handles concurrent creation/race or eventual consistency.
+        try
+        {
+            var refreshedTypes = await _aworkService.GetTypesOfWork(userId);
+            var refreshedMatch = refreshedTypes.FirstOrDefault(t =>
+                !t.IsArchived &&
+                string.Equals(t.Name.Trim(), typeOfWorkName, StringComparison.OrdinalIgnoreCase));
+            if (refreshedMatch != null)
+                return refreshedMatch.Id;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to refresh type-of-work list after create attempt");
+        }
+
+        return fallbackTypeOfWorkId;
     }
 
     private static List<string> GetTagsFromMappings(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings)
@@ -560,7 +604,7 @@ public class SubmissionProcessor
 
         foreach (var mapping in mappings.Where(m => m.AworkField == "tags"))
         {
-            var value = GetMappedValue(formData, formFields, mapping.FormFieldId);
+            var value = GetMappedValue(formData, formFields, mapping.FormFieldId, mapSelectToLabel: true);
             if (!string.IsNullOrEmpty(value))
             {
                 // Split by comma if multiple tags

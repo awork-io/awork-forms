@@ -119,6 +119,7 @@
     "actionsLabel": "Aktionen",
     "viewSubmissions": "Einreichungen ansehen",
     "viewPublicForm": "Öffentliches Formular ansehen",
+    "duplicate": "Duplizieren",
     "updated": "Aktualisiert {{date}}",
     "dialog": {
       "title": "Neues Formular erstellen",

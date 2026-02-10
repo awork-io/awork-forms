@@ -98,11 +98,12 @@ public class FormsService
 
         var now = DateTime.UtcNow;
         var publicId = Guid.NewGuid();
+        var duplicateName = GenerateDuplicateName(db, workspaceId.Value, source.Name);
         var duplicated = new Form
         {
             PublicId = publicId,
             WorkspaceId = source.WorkspaceId,
-            Name = $"{source.Name} Copy",
+            Name = duplicateName,
             Description = source.Description,
             NameTranslationsJson = source.NameTranslationsJson,
             DescriptionTranslationsJson = source.DescriptionTranslationsJson,
@@ -131,6 +132,26 @@ public class FormsService
         db.SaveChanges();
 
         return MapToDetailDto(duplicated);
+    }
+
+    private static string GenerateDuplicateName(AppDbContext db, Guid workspaceId, string sourceName)
+    {
+        var baseName = $"{sourceName} Copy";
+        var existingNames = db.Forms
+            .Where(f => f.WorkspaceId == workspaceId)
+            .Select(f => f.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (!existingNames.Contains(baseName))
+            return baseName;
+
+        var counter = 2;
+        while (existingNames.Contains($"{baseName} {counter}"))
+        {
+            counter++;
+        }
+
+        return $"{baseName} {counter}";
     }
 
     public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId)

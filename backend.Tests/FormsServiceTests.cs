@@ -323,6 +323,20 @@ public class FormsServiceTests : IDisposable
         Assert.Equal("image/png", duplicatedEntity.LogoContentType);
         Assert.Equal($"/api/f/{duplicated.PublicId}/logo", duplicatedEntity.LogoUrl);
     }
+
+    [Fact]
+    public void DuplicateForm_WhenMultipleCopiesExist_AppendsIncrementingCounter()
+    {
+        var created = _formsService.CreateForm(new CreateFormDto { Name = "Original" }, _testUserId);
+
+        var duplicate1 = _formsService.DuplicateForm(created.Id, _testUserId);
+        var duplicate2 = _formsService.DuplicateForm(created.Id, _testUserId);
+        var duplicate3 = _formsService.DuplicateForm(created.Id, _testUserId);
+
+        Assert.Equal("Original Copy", duplicate1!.Name);
+        Assert.Equal("Original Copy 2", duplicate2!.Name);
+        Assert.Equal("Original Copy 3", duplicate3!.Name);
+    }
 }
 
 internal class TestDbContextFactory : IDbContextFactory<AppDbContext>

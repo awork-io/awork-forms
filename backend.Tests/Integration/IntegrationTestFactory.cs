@@ -35,6 +35,8 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
     public static readonly Guid AworkTaskListId = Guid.Parse("55555555-5555-5555-5555-555555555555");
     public static readonly Guid AworkTypeOfWorkId = Guid.Parse("66666666-6666-6666-6666-666666666666");
     public static readonly Guid AworkCustomFieldId = Guid.Parse("77777777-7777-7777-7777-777777777777");
+    public static readonly Guid AworkSelectCustomFieldId = Guid.Parse("7f7f7f7f-7f7f-7f7f-7f7f-7f7f7f7f7f7f");
+    public static readonly Guid AworkSelectOptionId = Guid.Parse("8f8f8f8f-8f8f-8f8f-8f8f-8f8f8f8f8f8f");
     public static readonly Guid AworkUserId = Guid.Parse("88888888-8888-8888-8888-888888888888");
     public static readonly Guid AworkCreatedProjectId = Guid.Parse("99999999-9999-9999-9999-999999999999");
     public static readonly Guid AworkCreatedTaskId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
@@ -189,9 +191,22 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
             response = new
             {
                 status = 200,
-                jsonBody = new[]
+                jsonBody = new object[]
                 {
-                    new { id = AworkCustomFieldId, name = "Severity", type = "text", entity = "task", isRequired = false, isArchived = false }
+                    new { id = AworkCustomFieldId, name = "Severity", type = "text", entity = "task", isRequired = false, isArchived = false },
+                    new
+                    {
+                        id = AworkSelectCustomFieldId,
+                        name = "Category",
+                        type = "select",
+                        entity = "task",
+                        isRequired = false,
+                        isArchived = false,
+                        selectionOptions = new[]
+                        {
+                            new { id = AworkSelectOptionId, value = "option2", order = 1 }
+                        }
+                    }
                 }
             }
         });
@@ -242,6 +257,18 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
         await RegisterAworkMappingAsync(client, new
         {
             request = new { method = "POST", urlPath = $"/api/v1/tasks/{AworkCreatedTaskId}/setassignees" },
+            response = new { status = 200, jsonBody = new { ok = true } }
+        });
+
+        await RegisterAworkMappingAsync(client, new
+        {
+            request = new { method = "POST", urlPathPattern = "/api/v1/projects/.+/linkcustomfielddefinition" },
+            response = new { status = 200, jsonBody = new { ok = true } }
+        });
+
+        await RegisterAworkMappingAsync(client, new
+        {
+            request = new { method = "POST", urlPath = $"/api/v1/tasks/{AworkCreatedTaskId}/setcustomfields" },
             response = new { status = 200, jsonBody = new { ok = true } }
         });
 

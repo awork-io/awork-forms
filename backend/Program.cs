@@ -113,7 +113,8 @@ builder.Services.AddSingleton(sp => new AworkApiService(
 
 builder.Services.AddSingleton(sp => new SubmissionProcessor(
     sp.GetRequiredService<IDbContextFactory<AppDbContext>>(),
-    sp.GetRequiredService<AworkApiService>()
+    sp.GetRequiredService<AworkApiService>(),
+    sp.GetRequiredService<ILogger<SubmissionProcessor>>()
 ));
 
 var app = builder.Build();
