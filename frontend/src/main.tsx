@@ -6,10 +6,14 @@ import App from './App.tsx'
 import { initFrontendSentry } from './lib/sentry'
 
 void i18n
-initFrontendSentry()
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+async function bootstrap() {
+  await initFrontendSentry()
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  )
+}
+
+void bootstrap()
