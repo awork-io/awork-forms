@@ -116,6 +116,7 @@ public class FormsEndpointsTests
 
         var duplicated = await duplicateResponse.Content.ReadFromJsonAsync<FormDetailDto>();
         Assert.NotNull(duplicated);
+        Assert.Equal($"/api/forms/{duplicated!.Id}", duplicateResponse.Headers.Location?.ToString());
         Assert.NotEqual(created.Id, duplicated!.Id);
         Assert.NotEqual(created.PublicId, duplicated.PublicId);
         Assert.Equal("Original Form Copy", duplicated.Name);
@@ -123,6 +124,18 @@ public class FormsEndpointsTests
         Assert.Equal(created.FieldsJson, duplicated.FieldsJson);
         Assert.Equal(created.ActionType, duplicated.ActionType);
         Assert.Equal(created.AworkTaskTag, duplicated.AworkTaskTag);
+
+        var fetchedDuplicated = await client.GetAsync($"/api/forms/{duplicated.Id}");
+        Assert.Equal(HttpStatusCode.OK, fetchedDuplicated.StatusCode);
+        var fetchedDuplicatedBody = await fetchedDuplicated.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(fetchedDuplicatedBody);
+        Assert.Equal(duplicated.Id, fetchedDuplicatedBody!.Id);
+        Assert.Equal(duplicated.PublicId, fetchedDuplicatedBody.PublicId);
+
+        var formsList = await client.GetFromJsonAsync<List<FormListDto>>("/api/forms");
+        Assert.NotNull(formsList);
+        Assert.Contains(formsList!, form => form.Id == created.Id);
+        Assert.Contains(formsList!, form => form.Id == duplicated.Id && form.Name == duplicated.Name);
     }
 
     [Fact]
