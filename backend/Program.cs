@@ -23,7 +23,6 @@ if (sentrySettings.IsEnabled)
         options.Release = sentrySettings.Release;
         options.SendDefaultPii = sentrySettings.SendDefaultPii;
         options.TracesSampleRate = 1.0;
-        options.Debug = true;
     });
 }
 
