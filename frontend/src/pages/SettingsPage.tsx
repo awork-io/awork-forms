@@ -4,10 +4,19 @@ import { AworkLogo } from '@/components/ui/awork-logo';
 import { User, Building2, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/layout/PageHeader';
+import * as Sentry from '@sentry/react';
+import { api } from '@/lib/api';
 
 export function SettingsPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
+
+  const handleSentryTest = () => {
+    // Trigger frontend exception
+    Sentry.captureException(new Error('Sentry test exception from frontend'));
+    // Trigger backend exception
+    api.triggerSentryTest().catch(() => { /* expected to fail with 500 */ });
+  };
 
   return (
     <div className="p-6 lg:p-8 pb-12">
@@ -77,10 +86,14 @@ export function SettingsPage() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">{t('settings.status')}</span>
-              <span className="text-sm font-medium text-green-900 bg-green-50 border border-green-100 px-2.5 py-1 rounded-full flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleSentryTest}
+                className="text-sm font-medium text-green-900 bg-green-50 border border-green-100 px-2.5 py-1 rounded-full flex items-center gap-1.5 cursor-pointer hover:bg-green-100 transition-colors"
+              >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 {t('settings.connected')}
-              </span>
+              </button>
             </div>
           </CardContent>
         </Card>

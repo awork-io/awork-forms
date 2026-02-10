@@ -286,6 +286,11 @@ class ApiClient {
     return this.request('/api/health');
   }
 
+  // Debug
+  async triggerSentryTest(): Promise<void> {
+    await this.request('/api/debug/sentry-test', { method: 'POST' });
+  }
+
   // Forms endpoints
   async getForms(): Promise<Form[]> {
     return this.request('/api/forms');

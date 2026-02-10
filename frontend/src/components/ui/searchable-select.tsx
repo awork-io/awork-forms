@@ -104,13 +104,13 @@ export function SearchableSelect({
                 tabIndex={0}
                 onClick={(e) => {
                   e.stopPropagation()
-                  onClear ? onClear() : onValueChange("none")
+                  if (onClear) { onClear() } else { onValueChange("none") }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.stopPropagation()
                     e.preventDefault()
-                    onClear ? onClear() : onValueChange("none")
+                    if (onClear) { onClear() } else { onValueChange("none") }
                   }
                 }}
                 className="p-0.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
