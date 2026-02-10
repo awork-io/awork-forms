@@ -39,6 +39,7 @@ describe('frontend sentry config', () => {
       dsn: 'https://key@o0.ingest.sentry.io/1',
       environment: 'staging',
       release: 'awork-forms@1.2.3',
+      tracesSampleRate: 1.0,
     });
   });
 
@@ -76,6 +77,7 @@ describe('frontend sentry config', () => {
       dsn: 'https://runtime@o0.ingest.sentry.io/1',
       environment: 'runtime-env',
       release: 'runtime-release',
+      tracesSampleRate: 1.0,
     });
   });
 });
