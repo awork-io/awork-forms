@@ -99,6 +99,13 @@ Open [http://localhost:5173](http://localhost:5173) and you're ready to go!
 | `DATABASE_URL` | No | SQLite | PostgreSQL connection string |
 | `BASE_URL` | No | `http://localhost:5100` | Public URL for OAuth redirects |
 | `VITE_API_URL` | No | `http://localhost:5100` | API URL for frontend |
+| `SENTRY_DSN` | No | – | Backend Sentry DSN for server-side error tracking |
+| `SENTRY_ENVIRONMENT` | No | ASP.NET environment | Backend Sentry environment |
+| `SENTRY_RELEASE` | No | – | Backend Sentry release identifier |
+| `SENTRY_SEND_DEFAULT_PII` | No | `false` | Backend Sentry PII forwarding toggle |
+| `VITE_SENTRY_DSN` | No | – | Frontend Sentry DSN for browser error tracking |
+| `VITE_SENTRY_ENVIRONMENT` | No | Vite mode | Frontend Sentry environment |
+| `VITE_SENTRY_RELEASE` | No | – | Frontend Sentry release identifier |
 
 ---
 
