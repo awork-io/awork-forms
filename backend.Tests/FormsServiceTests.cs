@@ -248,6 +248,159 @@ public class FormsServiceTests : IDisposable
         Assert.NotNull(result);
         Assert.False(result.IsActive);
     }
+
+    [Fact]
+    public void DuplicateForm_CreatesNewIdsAndCopiesConfiguration()
+    {
+        var createDto = new CreateFormDto
+        {
+            Name = "Original",
+            Description = "Original desc",
+            NameTranslations = new Dictionary<string, string> { ["de"] = "Original DE" },
+            DescriptionTranslations = new Dictionary<string, string> { ["de"] = "Beschreibung DE" },
+            FieldsJson = "[{\"id\":\"field-1\",\"type\":\"select\",\"label\":\"Kategorie\",\"options\":[{\"label\":\"Support\",\"value\":\"option1\"}]}]",
+            ActionType = "task",
+            AworkProjectId = Guid.NewGuid(),
+            AworkProjectTypeId = Guid.NewGuid(),
+            AworkTaskListId = Guid.NewGuid(),
+            AworkTaskStatusId = Guid.NewGuid(),
+            AworkTypeOfWorkId = Guid.NewGuid(),
+            AworkAssigneeId = Guid.NewGuid(),
+            AworkTaskIsPriority = true,
+            AworkTaskTag = "support",
+            FieldMappingsJson = "{\"taskFieldMappings\":[{\"formFieldId\":\"field-1\",\"aworkField\":\"tags\"}]}",
+            PrimaryColor = "#006dfa",
+            BackgroundColor = "#f8fafc",
+            IsActive = true
+        };
+
+        var created = _formsService.CreateForm(createDto, _testUserId);
+        var duplicated = _formsService.DuplicateForm(created.Id, _testUserId);
+
+        Assert.NotNull(duplicated);
+        Assert.NotEqual(created.Id, duplicated!.Id);
+        Assert.NotEqual(created.PublicId, duplicated.PublicId);
+        Assert.Equal("Original Copy", duplicated.Name);
+        Assert.Equal(created.Description, duplicated.Description);
+        Assert.Equal(created.NameTranslations!["de"], duplicated.NameTranslations!["de"]);
+        Assert.Equal(created.DescriptionTranslations!["de"], duplicated.DescriptionTranslations!["de"]);
+        Assert.Equal(created.FieldsJson, duplicated.FieldsJson);
+        Assert.Equal(created.ActionType, duplicated.ActionType);
+        Assert.Equal(created.AworkProjectId, duplicated.AworkProjectId);
+        Assert.Equal(created.AworkProjectTypeId, duplicated.AworkProjectTypeId);
+        Assert.Equal(created.AworkTaskListId, duplicated.AworkTaskListId);
+        Assert.Equal(created.AworkTaskStatusId, duplicated.AworkTaskStatusId);
+        Assert.Equal(created.AworkTypeOfWorkId, duplicated.AworkTypeOfWorkId);
+        Assert.Equal(created.AworkAssigneeId, duplicated.AworkAssigneeId);
+        Assert.Equal(created.AworkTaskIsPriority, duplicated.AworkTaskIsPriority);
+        Assert.Equal(created.AworkTaskTag, duplicated.AworkTaskTag);
+        Assert.Equal(created.FieldMappingsJson, duplicated.FieldMappingsJson);
+        Assert.Equal(created.PrimaryColor, duplicated.PrimaryColor);
+        Assert.Equal(created.BackgroundColor, duplicated.BackgroundColor);
+        Assert.Equal(created.IsActive, duplicated.IsActive);
+    }
+
+    [Fact]
+    public void DuplicateForm_CopiesLogoDataAndUsesNewPublicLogoUrl()
+    {
+        var created = _formsService.CreateForm(new CreateFormDto { Name = "Logo Source" }, _testUserId);
+
+        using (var db = _dbFactory.CreateDbContext())
+        {
+            var dbForm = db.Forms.First(f => f.Id == created.Id);
+            dbForm.LogoData = [1, 2, 3, 4];
+            dbForm.LogoContentType = "image/png";
+            dbForm.LogoUrl = $"/api/f/{created.PublicId}/logo";
+            db.SaveChanges();
+        }
+
+        var duplicated = _formsService.DuplicateForm(created.Id, _testUserId);
+        Assert.NotNull(duplicated);
+
+        using var verifyDb = _dbFactory.CreateDbContext();
+        var duplicatedEntity = verifyDb.Forms.First(f => f.Id == duplicated!.Id);
+        Assert.Equal([1, 2, 3, 4], duplicatedEntity.LogoData);
+        Assert.Equal("image/png", duplicatedEntity.LogoContentType);
+        Assert.Equal($"/api/f/{duplicated.PublicId}/logo", duplicatedEntity.LogoUrl);
+    }
+
+    [Fact]
+    public void DuplicateForm_WhenMultipleCopiesExist_AppendsIncrementingCounter()
+    {
+        var created = _formsService.CreateForm(new CreateFormDto { Name = "Original" }, _testUserId);
+
+        var duplicate1 = _formsService.DuplicateForm(created.Id, _testUserId);
+        var duplicate2 = _formsService.DuplicateForm(created.Id, _testUserId);
+        var duplicate3 = _formsService.DuplicateForm(created.Id, _testUserId);
+
+        Assert.Equal("Original Copy", duplicate1!.Name);
+        Assert.Equal("Original Copy 2", duplicate2!.Name);
+        Assert.Equal("Original Copy 3", duplicate3!.Name);
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_NoTaskAction_ReturnsNull()
+    {
+        Assert.Null(FormsService.ValidateTypeOfWork(null, null, null, null));
+        Assert.Null(FormsService.ValidateTypeOfWork("project", null, null, null));
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_TaskActionWithDefaultTypeOfWork_ReturnsNull()
+    {
+        Assert.Null(FormsService.ValidateTypeOfWork("task", Guid.NewGuid(), null, null));
+        Assert.Null(FormsService.ValidateTypeOfWork("both", Guid.NewGuid(), null, null));
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_TaskActionWithNoTypeOfWork_ReturnsError()
+    {
+        var error = FormsService.ValidateTypeOfWork("task", null, null, null);
+        Assert.NotNull(error);
+        Assert.Contains("Type of work is required", error);
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_TaskActionWithRequiredFieldMapping_ReturnsNull()
+    {
+        var mappings = "{\"taskFieldMappings\":[{\"formFieldId\":\"field-1\",\"aworkField\":\"typeOfWork\"}]}";
+        var fields = "[{\"id\":\"field-1\",\"type\":\"select\",\"label\":\"Type\",\"required\":true}]";
+
+        Assert.Null(FormsService.ValidateTypeOfWork("task", null, mappings, fields));
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_TaskActionWithNonRequiredFieldMapping_ReturnsError()
+    {
+        var mappings = "{\"taskFieldMappings\":[{\"formFieldId\":\"field-1\",\"aworkField\":\"typeOfWork\"}]}";
+        var fields = "[{\"id\":\"field-1\",\"type\":\"select\",\"label\":\"Type\",\"required\":false}]";
+
+        var error = FormsService.ValidateTypeOfWork("task", null, mappings, fields);
+        Assert.NotNull(error);
+        Assert.Contains("must be marked as required", error);
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_TaskActionWithMappingButMissingField_ReturnsError()
+    {
+        var mappings = "{\"taskFieldMappings\":[{\"formFieldId\":\"field-1\",\"aworkField\":\"typeOfWork\"}]}";
+        var fields = "[{\"id\":\"field-2\",\"type\":\"text\",\"label\":\"Other\",\"required\":true}]";
+
+        var error = FormsService.ValidateTypeOfWork("task", null, mappings, fields);
+        Assert.NotNull(error);
+        Assert.Contains("does not exist", error);
+    }
+
+    [Fact]
+    public void UpdateForm_SetTaskActionWithoutTypeOfWork_ThrowsValidation()
+    {
+        // Create a form without task action
+        var created = _formsService.CreateForm(new CreateFormDto { Name = "Test" }, _testUserId);
+
+        // Try to set actionType=task without providing a typeOfWorkId
+        Assert.Throws<ValidationException>(() =>
+            _formsService.UpdateForm(created.Id, new UpdateFormDto { ActionType = "task" }, _testUserId));
+    }
 }
 
 internal class TestDbContextFactory : IDbContextFactory<AppDbContext>

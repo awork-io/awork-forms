@@ -79,6 +79,18 @@ public class AworkApiService
         return result ?? [];
     }
 
+    public async Task<AworkTypeOfWork?> CreateTypeOfWork(Guid userId, string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        var request = new AworkCreateTypeOfWorkRequest
+        {
+            Name = name.Trim()
+        };
+        return await MakeAworkPostRequest<AworkTypeOfWork>(userId, "typeofwork", request);
+    }
+
     public async Task<List<AworkCustomFieldDefinition>> GetProjectCustomFields(Guid userId, Guid projectId)
     {
         var result = await MakeAworkRequest<List<AworkCustomFieldDefinition>>(userId, $"projects/{projectId}/customfielddefinitions");

@@ -14,6 +14,10 @@ public class CreateFormEndpoint : IEndpoint
             if (string.IsNullOrWhiteSpace(dto.Name))
                 return Results.BadRequest(new { error = "Form name is required" });
 
+            var typeOfWorkError = FormsService.ValidateTypeOfWork(dto.ActionType, dto.AworkTypeOfWorkId, dto.FieldMappingsJson, dto.FieldsJson);
+            if (typeOfWorkError != null)
+                return Results.BadRequest(new { error = typeOfWorkError });
+
             var form = formsService.CreateForm(dto, userId.Value);
             return Results.Created($"/api/forms/{form.Id}", form);
         }).RequireAuth();

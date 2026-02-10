@@ -119,6 +119,7 @@
     "actionsLabel": "Aktionen",
     "viewSubmissions": "Einreichungen ansehen",
     "viewPublicForm": "Öffentliches Formular ansehen",
+    "duplicate": "Duplizieren",
     "updated": "Aktualisiert {{date}}",
     "dialog": {
       "title": "Neues Formular erstellen",
@@ -141,6 +142,8 @@
       "nameRequired": "Ein Formularname ist erforderlich",
       "createSuccess": "Formular erfolgreich erstellt",
       "createError": "Formular konnte nicht erstellt werden",
+      "duplicateSuccess": "Formular erfolgreich dupliziert",
+      "duplicateError": "Formular konnte nicht dupliziert werden",
       "deleteSuccess": "Formular erfolgreich gelöscht",
       "deleteError": "Formular konnte nicht gelöscht werden"
     }
@@ -171,6 +174,8 @@
       "loadError": "Formular konnte nicht geladen werden",
       "nameRequired": "Ein Formularname ist erforderlich",
       "projectRequired": "Bitte wähle ein Projekt für die Aufgabenerstellung aus",
+      "typeOfWorkRequired": "Tätigkeit ist erforderlich. Wähle eine Standardtätigkeit oder ordne ein Pflichtfeld zu.",
+      "typeOfWorkFieldMustBeRequired": "Das Formularfeld, das der Tätigkeit zugeordnet ist, muss als Pflichtfeld markiert sein.",
       "saveSuccessTitle": "Gespeichert",
       "saveSuccessDesc": "Formular erfolgreich gespeichert",
       "saveError": "Formular konnte nicht gespeichert werden"
@@ -386,6 +391,7 @@
       "searchTypesOfWork": "Tätigkeiten suchen...",
       "noTypesOfWorkFound": "Keine Tätigkeiten gefunden.",
       "noTypeOfWork": "Keine Tätigkeit",
+      "typeOfWorkHelp": "Pflichtfeld. Kann auch über eine Feldzuordnung gesetzt werden.",
       "assignTo": "Zuweisen an",
       "loadingUsers": "Benutzer werden geladen...",
       "selectAssignee": "Zuständigen auswählen",
@@ -417,6 +423,7 @@
       "dueOn": "Fälligkeitsdatum",
       "startOn": "Startdatum",
       "plannedDuration": "Geplante Dauer (Stunden)",
+      "typeOfWork": "Tätigkeit",
       "tags": "Tags (durch Kommas getrennt)"
     },
     "projectFields": {

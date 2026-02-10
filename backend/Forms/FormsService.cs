@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Forms;
 
+public class ValidationException(string message) : Exception(message);
+
 public class FormsService
 {
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
@@ -87,6 +89,73 @@ public class FormsService
         return MapToDetailDto(form);
     }
 
+    public FormDetailDto? DuplicateForm(int formId, Guid userId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var workspaceId = GetWorkspaceId(db, userId);
+        if (workspaceId == null) return null;
+
+        var source = db.Forms.FirstOrDefault(f => f.Id == formId && f.WorkspaceId == workspaceId);
+        if (source == null) return null;
+
+        var now = DateTime.UtcNow;
+        var publicId = Guid.NewGuid();
+        var duplicateName = GenerateDuplicateName(db, workspaceId.Value, source.Name);
+        var duplicated = new Form
+        {
+            PublicId = publicId,
+            WorkspaceId = source.WorkspaceId,
+            Name = duplicateName,
+            Description = source.Description,
+            NameTranslationsJson = source.NameTranslationsJson,
+            DescriptionTranslationsJson = source.DescriptionTranslationsJson,
+            FieldsJson = source.FieldsJson,
+            ActionType = source.ActionType,
+            AworkProjectId = source.AworkProjectId,
+            AworkProjectTypeId = source.AworkProjectTypeId,
+            AworkTaskListId = source.AworkTaskListId,
+            AworkTaskStatusId = source.AworkTaskStatusId,
+            AworkTypeOfWorkId = source.AworkTypeOfWorkId,
+            AworkAssigneeId = source.AworkAssigneeId,
+            AworkTaskIsPriority = source.AworkTaskIsPriority,
+            AworkTaskTag = source.AworkTaskTag,
+            FieldMappingsJson = source.FieldMappingsJson,
+            PrimaryColor = source.PrimaryColor,
+            BackgroundColor = source.BackgroundColor,
+            LogoData = source.LogoData,
+            LogoContentType = source.LogoContentType,
+            LogoUrl = source.LogoData != null ? $"/api/f/{publicId}/logo" : null,
+            IsActive = source.IsActive,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.Forms.Add(duplicated);
+        db.SaveChanges();
+
+        return MapToDetailDto(duplicated);
+    }
+
+    private static string GenerateDuplicateName(AppDbContext db, Guid workspaceId, string sourceName)
+    {
+        var baseName = $"{sourceName} Copy";
+        var existingNames = db.Forms
+            .Where(f => f.WorkspaceId == workspaceId)
+            .Select(f => f.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (!existingNames.Contains(baseName))
+            return baseName;
+
+        var counter = 2;
+        while (existingNames.Contains($"{baseName} {counter}"))
+        {
+            counter++;
+        }
+
+        return $"{baseName} {counter}";
+    }
+
     public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId)
     {
         using var db = _dbFactory.CreateDbContext();
@@ -114,6 +183,10 @@ public class FormsService
         if (dto.BackgroundColor != null) form.BackgroundColor = dto.BackgroundColor;
         if (dto.LogoUrl != null) form.LogoUrl = dto.LogoUrl == "" ? null : dto.LogoUrl;
         if (dto.IsActive != null) form.IsActive = dto.IsActive.Value;
+
+        var typeOfWorkError = ValidateTypeOfWork(form.ActionType, form.AworkTypeOfWorkId, form.FieldMappingsJson, form.FieldsJson);
+        if (typeOfWorkError != null)
+            throw new ValidationException(typeOfWorkError);
 
         form.UpdatedAt = DateTime.UtcNow;
         db.SaveChanges();
@@ -304,5 +377,67 @@ public class FormsService
 
         if (workspaceId == null || workspaceId == Guid.Empty) return null;
         return workspaceId;
+    }
+
+    /// <summary>
+    /// Validates that a form with task action type has a type of work configured
+    /// either as a default or via a required field mapping.
+    /// Returns null if valid, or an error message string if invalid.
+    /// </summary>
+    public static string? ValidateTypeOfWork(string? actionType, Guid? typeOfWorkId, string? fieldMappingsJson, string? fieldsJson)
+    {
+        if (actionType != "task" && actionType != "both")
+            return null;
+
+        if (typeOfWorkId != null)
+            return null;
+
+        // Check if there's a typeOfWork field mapping
+        if (string.IsNullOrEmpty(fieldMappingsJson))
+            return "Type of work is required when creating tasks. Set a default or map a form field to it.";
+
+        try
+        {
+            using var mappingsDoc = JsonDocument.Parse(fieldMappingsJson);
+            var root = mappingsDoc.RootElement;
+            if (!root.TryGetProperty("taskFieldMappings", out var taskMappings) || taskMappings.ValueKind != JsonValueKind.Array)
+                return "Type of work is required when creating tasks. Set a default or map a form field to it.";
+
+            string? typeOfWorkFieldId = null;
+            foreach (var mapping in taskMappings.EnumerateArray())
+            {
+                if (mapping.TryGetProperty("aworkField", out var aworkField) &&
+                    string.Equals(aworkField.GetString(), "typeOfWork", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (mapping.TryGetProperty("formFieldId", out var fieldId))
+                        typeOfWorkFieldId = fieldId.GetString();
+                    break;
+                }
+            }
+
+            if (typeOfWorkFieldId == null)
+                return "Type of work is required when creating tasks. Set a default or map a form field to it.";
+
+            // Verify the mapped field is required
+            if (string.IsNullOrEmpty(fieldsJson))
+                return "The form field mapped to type of work must be marked as required.";
+
+            using var fieldsDoc = JsonDocument.Parse(fieldsJson);
+            foreach (var field in fieldsDoc.RootElement.EnumerateArray())
+            {
+                if (field.TryGetProperty("id", out var id) && id.GetString() == typeOfWorkFieldId)
+                {
+                    if (field.TryGetProperty("required", out var required) && required.GetBoolean())
+                        return null; // Valid: mapped field is required
+                    return "The form field mapped to type of work must be marked as required.";
+                }
+            }
+
+            return "The form field mapped to type of work references a field that does not exist.";
+        }
+        catch
+        {
+            return "Type of work is required when creating tasks. Set a default or map a form field to it.";
+        }
     }
 }

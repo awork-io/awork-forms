@@ -401,7 +401,11 @@ export function AworkIntegrationSettings({
 
               {/* Type of Work Selector */}
               {config.projectId && (
-                <FormFieldWrapper label={t('aworkIntegration.task.typeOfWork')}>
+                <FormFieldWrapper
+                  label={t('aworkIntegration.task.typeOfWork')}
+                  required
+                  description={t('aworkIntegration.task.typeOfWorkHelp')}
+                >
                   {isLoadingTaskData ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />

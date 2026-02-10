@@ -26,3 +26,9 @@ awork Forms. React SPA + .NET Minimal API. Forms -> submissions -> awork tasks/p
 ## Notes
 - Public forms at /f/:publicId
 - Auth: awork OAuth 2.0 + PKCE
+- awork API docs source: `https://github.com/awork-io/developer-docs`
+- OpenAPI v1 spec used for endpoint checks: `fern/apis/v1/openapi/openapi.json`
+- Sentry docs source (backend/frontend setup): `https://docs.sentry.io/platforms/dotnet/guides/aspnetcore/` and `https://docs.sentry.io/platforms/javascript/guides/react/`
+- Quick check example:
+  `curl -s https://raw.githubusercontent.com/awork-io/developer-docs/main/fern/apis/v1/openapi/openapi.json > /tmp/awork-openapi.json`
+  then `jq '.paths["/typeofwork"]' /tmp/awork-openapi.json`

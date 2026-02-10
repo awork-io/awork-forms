@@ -4,12 +4,26 @@ using Backend.Awork;
 using Backend.Data;
 using Backend.Endpoints;
 using Backend.Forms;
+using Backend.Observability;
 using Backend.Submissions;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Sentry;
 
 var builder = WebApplication.CreateBuilder(args);
+var sentrySettings = SentrySettings.FromConfiguration(builder.Configuration, builder.Environment);
+
+if (sentrySettings.IsEnabled)
+{
+    builder.WebHost.UseSentry(options =>
+    {
+        options.Dsn = sentrySettings.Dsn;
+        options.Environment = sentrySettings.Environment;
+        options.Release = sentrySettings.Release;
+        options.SendDefaultPii = sentrySettings.SendDefaultPii;
+    });
+}
 
 var enableCors = builder.Environment.IsDevelopment() ||
     string.Equals(builder.Configuration["Cors:Enabled"] ?? Environment.GetEnvironmentVariable("CORS_ENABLED"), "true", StringComparison.OrdinalIgnoreCase);
@@ -113,7 +127,8 @@ builder.Services.AddSingleton(sp => new AworkApiService(
 
 builder.Services.AddSingleton(sp => new SubmissionProcessor(
     sp.GetRequiredService<IDbContextFactory<AppDbContext>>(),
-    sp.GetRequiredService<AworkApiService>()
+    sp.GetRequiredService<AworkApiService>(),
+    sp.GetRequiredService<ILogger<SubmissionProcessor>>()
 ));
 
 var app = builder.Build();

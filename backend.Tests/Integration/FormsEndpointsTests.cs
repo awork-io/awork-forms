@@ -28,6 +28,7 @@ public class FormsEndpointsTests
             Description = "tag test",
             FieldsJson = "[]",
             ActionType = "task",
+            AworkTypeOfWorkId = Guid.NewGuid(),
             AworkTaskTag = "initial-tag"
         };
 
@@ -89,5 +90,116 @@ public class FormsEndpointsTests
         Assert.NotNull(fetched);
         Assert.Equal("Lokal", fetched!.NameTranslations!["de"]);
         Assert.Contains("field-1", fetched.FieldsJson);
+    }
+
+    [Fact]
+    public async Task DuplicateForm_CreatesIndependentCopyWithNewIds()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var client = _factory.CreateAuthenticatedClient(token);
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Original Form",
+            Description = "Original desc",
+            FieldsJson = "[{\"id\":\"f1\",\"type\":\"text\",\"label\":\"Name\"}]",
+            ActionType = "task",
+            AworkTypeOfWorkId = Guid.NewGuid(),
+            AworkTaskTag = "test-tag"
+        };
+
+        var createResponse = await client.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        var duplicateResponse = await client.PostAsync($"/api/forms/{created!.Id}/duplicate", null);
+        Assert.Equal(HttpStatusCode.Created, duplicateResponse.StatusCode);
+
+        var duplicated = await duplicateResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(duplicated);
+        Assert.Equal($"/api/forms/{duplicated!.Id}", duplicateResponse.Headers.Location?.ToString());
+        Assert.NotEqual(created.Id, duplicated!.Id);
+        Assert.NotEqual(created.PublicId, duplicated.PublicId);
+        Assert.Equal("Original Form Copy", duplicated.Name);
+        Assert.Equal(created.Description, duplicated.Description);
+        Assert.Equal(created.FieldsJson, duplicated.FieldsJson);
+        Assert.Equal(created.ActionType, duplicated.ActionType);
+        Assert.Equal(created.AworkTaskTag, duplicated.AworkTaskTag);
+
+        var fetchedDuplicated = await client.GetAsync($"/api/forms/{duplicated.Id}");
+        Assert.Equal(HttpStatusCode.OK, fetchedDuplicated.StatusCode);
+        var fetchedDuplicatedBody = await fetchedDuplicated.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(fetchedDuplicatedBody);
+        Assert.Equal(duplicated.Id, fetchedDuplicatedBody!.Id);
+        Assert.Equal(duplicated.PublicId, fetchedDuplicatedBody.PublicId);
+
+        var formsList = await client.GetFromJsonAsync<List<FormListDto>>("/api/forms");
+        Assert.NotNull(formsList);
+        Assert.Contains(formsList!, form => form.Id == created.Id);
+        Assert.Contains(formsList!, form => form.Id == duplicated.Id && form.Name == duplicated.Name);
+    }
+
+    [Fact]
+    public async Task DuplicateForm_WithoutAuth_ReturnsUnauthorizedInsteadOfMethodNotAllowed()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.PostAsync("/api/forms/999/duplicate", null);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateForm_TaskActionWithoutTypeOfWork_ReturnsBadRequest()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var client = _factory.CreateAuthenticatedClient(token);
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Missing TypeOfWork",
+            ActionType = "task",
+            FieldsJson = "[]"
+        };
+
+        var response = await client.PostAsJsonAsync("/api/forms", createDto);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateForm_TaskActionWithRequiredFieldMapping_Succeeds()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var client = _factory.CreateAuthenticatedClient(token);
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Mapped TypeOfWork",
+            ActionType = "task",
+            FieldsJson = "[{\"id\":\"f1\",\"type\":\"select\",\"label\":\"Type\",\"required\":true}]",
+            FieldMappingsJson = "{\"taskFieldMappings\":[{\"formFieldId\":\"f1\",\"aworkField\":\"typeOfWork\"}]}"
+        };
+
+        var response = await client.PostAsJsonAsync("/api/forms", createDto);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateForm_TaskActionWithNonRequiredFieldMapping_ReturnsBadRequest()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var client = _factory.CreateAuthenticatedClient(token);
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Non-Required TypeOfWork",
+            ActionType = "task",
+            FieldsJson = "[{\"id\":\"f1\",\"type\":\"select\",\"label\":\"Type\",\"required\":false}]",
+            FieldMappingsJson = "{\"taskFieldMappings\":[{\"formFieldId\":\"f1\",\"aworkField\":\"typeOfWork\"}]}"
+        };
+
+        var response = await client.PostAsJsonAsync("/api/forms", createDto);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }

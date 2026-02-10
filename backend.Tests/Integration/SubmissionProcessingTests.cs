@@ -95,4 +95,225 @@ public class SubmissionProcessingTests
         Assert.Equal(IntegrationTestFactory.AworkCreatedProjectId, payload.AworkProjectId.Value);
         Assert.Equal(IntegrationTestFactory.AworkCreatedTaskId, payload.AworkTaskId.Value);
     }
+
+    [Fact]
+    public async Task SubmitForm_SelectMapping_UsesPrimaryOptionLabelForTags()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new[]
+        {
+            new
+            {
+                id = "field-tags",
+                type = "select",
+                label = "Kategorie",
+                options = new[]
+                {
+                    new { label = "Produkt", value = "option1" },
+                    new { label = "Support", value = "option2" }
+                }
+            }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = new[]
+            {
+                new { formFieldId = "field-tags", aworkField = "tags" }
+            },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Tag Mapping Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var submitDto = new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-tags"] = "option2"
+            }
+        };
+
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", submitDto);
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var addTagsBodies = await GetAworkRequestBodiesAsync("/api/v1/tasks/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/addtags");
+        Assert.Contains(addTagsBodies, body => body.Contains("\"name\":\"Support\""));
+        Assert.DoesNotContain(addTagsBodies, body => body.Contains("\"name\":\"option2\""));
+    }
+
+    [Fact]
+    public async Task SubmitForm_TypeOfWorkMapping_CreatesWhenMissing_UsingPrimaryLabel()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new[]
+        {
+            new
+            {
+                id = "field-type",
+                type = "select",
+                label = "Tätigkeit",
+                required = true,
+                options = new[]
+                {
+                    new { label = "Bugfix", value = "option1" },
+                    new { label = "Entwicklung", value = "option2" }
+                }
+            }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = new[]
+            {
+                new { formFieldId = "field-type", aworkField = "typeOfWork" }
+            },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createDto = new CreateFormDto
+        {
+            Name = "TypeOfWork Mapping Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var submitDto = new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-type"] = "option2"
+            }
+        };
+
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", submitDto);
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var createTypeBodies = await GetAworkRequestBodiesAsync("/api/v1/typeofwork", "POST");
+        Assert.Contains(createTypeBodies, body => body.Contains("\"name\":\"Entwicklung\""));
+
+        var taskBodies = await GetAworkRequestBodiesAsync("/api/v1/tasks", "POST");
+        Assert.Contains(taskBodies, body => body.Contains($"\"typeOfWorkId\":\"{IntegrationTestFactory.AworkCreatedTypeOfWorkId}\""));
+    }
+
+    [Fact]
+    public async Task SubmitForm_CustomSelectMapping_UsesRawOptionValueForSelectionResolution()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new[]
+        {
+            new
+            {
+                id = "field-category",
+                type = "select",
+                label = "Kategorie",
+                options = new[]
+                {
+                    new { label = "Support", value = "option2" }
+                }
+            }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = new[]
+            {
+                new { formFieldId = "field-category", aworkField = $"custom:{IntegrationTestFactory.AworkSelectCustomFieldId}" }
+            },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Custom Select Mapping Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var submitDto = new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-category"] = "option2"
+            }
+        };
+
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", submitDto);
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var customFieldBodies = await GetAworkRequestBodiesAsync($"/api/v1/tasks/{IntegrationTestFactory.AworkCreatedTaskId}/setcustomfields", "POST");
+        Assert.Contains(customFieldBodies, body =>
+            body.Contains($"\"customFieldDefinitionId\":\"{IntegrationTestFactory.AworkSelectCustomFieldId}\"") &&
+            body.Contains($"\"selectionOptionIdValue\":\"{IntegrationTestFactory.AworkSelectOptionId}\""));
+    }
+
+    private async Task<List<string>> GetAworkRequestBodiesAsync(string path, string method = "POST")
+    {
+        using var client = new HttpClient { BaseAddress = new Uri(_factory.AworkAdminBaseUrl) };
+        var response = await client.GetAsync("/__admin/requests");
+        response.EnsureSuccessStatusCode();
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        if (!document.RootElement.TryGetProperty("requests", out var requestsElement) || requestsElement.ValueKind != JsonValueKind.Array)
+            return [];
+
+        var bodies = new List<string>();
+        foreach (var requestEntry in requestsElement.EnumerateArray())
+        {
+            if (!requestEntry.TryGetProperty("request", out var request))
+                continue;
+
+            var requestUrl = request.TryGetProperty("url", out var urlElement) ? urlElement.GetString() : null;
+            var requestMethod = request.TryGetProperty("method", out var methodElement) ? methodElement.GetString() : null;
+            if (!string.Equals(requestMethod, method, StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (!string.Equals(requestUrl, path, StringComparison.Ordinal))
+                continue;
+
+            var body = request.TryGetProperty("body", out var bodyElement) ? bodyElement.GetString() : null;
+            bodies.Add(body ?? string.Empty);
+        }
+
+        return bodies;
+    }
 }

@@ -25,6 +25,7 @@ export const AWORK_TASK_FIELDS: AworkFieldOption[] = [
   { value: 'dueOn', labelKey: 'aworkIntegration.taskFields.dueOn', fallbackLabel: 'Due Date' },
   { value: 'startOn', labelKey: 'aworkIntegration.taskFields.startOn', fallbackLabel: 'Start Date' },
   { value: 'plannedDuration', labelKey: 'aworkIntegration.taskFields.plannedDuration', fallbackLabel: 'Planned Duration (hours)' },
+  { value: 'typeOfWork', labelKey: 'aworkIntegration.taskFields.typeOfWork', fallbackLabel: 'Type of work' },
   { value: 'tags', labelKey: 'aworkIntegration.taskFields.tags', fallbackLabel: 'Tags (comma-separated)' },
 ];
 

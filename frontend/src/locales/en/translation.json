@@ -119,6 +119,7 @@
     "actionsLabel": "Actions",
     "viewSubmissions": "View Submissions",
     "viewPublicForm": "View Public Form",
+    "duplicate": "Duplicate",
     "updated": "Updated {{date}}",
     "dialog": {
       "title": "Create New Form",
@@ -141,6 +142,8 @@
       "nameRequired": "Form name is required",
       "createSuccess": "Form created successfully",
       "createError": "Failed to create form",
+      "duplicateSuccess": "Form duplicated successfully",
+      "duplicateError": "Failed to duplicate form",
       "deleteSuccess": "Form deleted successfully",
       "deleteError": "Failed to delete form"
     }
@@ -171,6 +174,8 @@
       "loadError": "Failed to load form",
       "nameRequired": "Form name is required",
       "projectRequired": "Please select a project for task creation",
+      "typeOfWorkRequired": "Type of work is required. Set a default or map a required form field to it.",
+      "typeOfWorkFieldMustBeRequired": "The form field mapped to type of work must be marked as required.",
       "saveSuccessTitle": "Saved",
       "saveSuccessDesc": "Form saved successfully",
       "saveError": "Failed to save form"
@@ -386,6 +391,7 @@
       "searchTypesOfWork": "Search types of work...",
       "noTypesOfWorkFound": "No types of work found.",
       "noTypeOfWork": "No type of work",
+      "typeOfWorkHelp": "Required. Can also be set via field mapping.",
       "assignTo": "Assign to",
       "loadingUsers": "Loading users...",
       "selectAssignee": "Select assignee",
@@ -417,6 +423,7 @@
       "dueOn": "Due Date",
       "startOn": "Start Date",
       "plannedDuration": "Planned Duration (hours)",
+      "typeOfWork": "Type of work",
       "tags": "Tags (comma-separated)"
     },
     "projectFields": {
