@@ -355,18 +355,16 @@ export function AworkIntegrationSettings({
                     </div>
                   ) : (
                     <SearchableSelect
-                      options={[
-                        { value: 'none', label: t('aworkIntegration.task.defaultTaskList') },
-                        ...taskLists.map((list) => ({
-                          value: list.id,
-                          label: list.name,
-                        })),
-                      ]}
-                      value={config.taskListId || 'none'}
+                      options={taskLists.map((list) => ({
+                        value: list.id,
+                        label: list.name,
+                      }))}
+                      value={config.taskListId}
                       onValueChange={handleTaskListChange}
                       placeholder={t('aworkIntegration.task.selectTaskList')}
                       searchPlaceholder={t('aworkIntegration.task.searchTaskLists')}
                       emptyText={t('aworkIntegration.task.noTaskListsFound')}
+                      clearable
                     />
                   )}
                 </FormFieldWrapper>
@@ -382,18 +380,16 @@ export function AworkIntegrationSettings({
                     </div>
                   ) : (
                     <SearchableSelect
-                      options={[
-                        { value: 'none', label: t('aworkIntegration.task.defaultStatus') },
-                        ...taskStatuses.map((status) => ({
-                          value: status.id,
-                          label: status.name,
-                        })),
-                      ]}
-                      value={config.taskStatusId || 'none'}
+                      options={taskStatuses.map((status) => ({
+                        value: status.id,
+                        label: status.name,
+                      }))}
+                      value={config.taskStatusId}
                       onValueChange={handleTaskStatusChange}
                       placeholder={t('aworkIntegration.task.selectStatus')}
                       searchPlaceholder={t('aworkIntegration.task.searchStatuses')}
                       emptyText={t('aworkIntegration.task.noStatusesFound')}
+                      clearable
                     />
                   )}
                 </FormFieldWrapper>
@@ -413,18 +409,16 @@ export function AworkIntegrationSettings({
                     </div>
                   ) : (
                     <SearchableSelect
-                      options={[
-                        { value: 'none', label: t('aworkIntegration.task.noTypeOfWork') },
-                        ...typesOfWork.map((type) => ({
-                          value: type.id,
-                          label: type.name,
-                        })),
-                      ]}
-                      value={config.typeOfWorkId || 'none'}
+                      options={typesOfWork.map((type) => ({
+                        value: type.id,
+                        label: type.name,
+                      }))}
+                      value={config.typeOfWorkId}
                       onValueChange={handleTypeOfWorkChange}
                       placeholder={t('aworkIntegration.task.selectTypeOfWork')}
                       searchPlaceholder={t('aworkIntegration.task.searchTypesOfWork')}
                       emptyText={t('aworkIntegration.task.noTypesOfWorkFound')}
+                      clearable
                     />
                   )}
                 </FormFieldWrapper>
@@ -440,29 +434,27 @@ export function AworkIntegrationSettings({
                     </div>
                   ) : (
                     <SearchableSelect
-                      options={[
-                        { value: 'none', label: t('aworkIntegration.task.unassigned') },
-                        ...users.map((user) => ({
-                          value: user.id,
-                          label: getUserDisplayName(user),
-                          icon: user.profileImage ? (
-                            <img 
-                              src={user.profileImage} 
-                              alt="" 
-                              className="w-7 h-7 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-medium">
-                              {(user.firstName?.[0] || user.email?.[0] || '?').toUpperCase()}
-                            </div>
-                          ),
-                        })),
-                      ]}
-                      value={config.assigneeId || 'none'}
+                      options={users.map((user) => ({
+                        value: user.id,
+                        label: getUserDisplayName(user),
+                        icon: user.profileImage ? (
+                          <img
+                            src={user.profileImage}
+                            alt=""
+                            className="w-7 h-7 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-medium">
+                            {(user.firstName?.[0] || user.email?.[0] || '?').toUpperCase()}
+                          </div>
+                        ),
+                      }))}
+                      value={config.assigneeId}
                       onValueChange={handleAssigneeChange}
                       placeholder={t('aworkIntegration.task.selectAssignee')}
                       searchPlaceholder={t('aworkIntegration.task.searchUsers')}
                       emptyText={t('aworkIntegration.task.noUsersFound')}
+                      clearable
                     />
                   )}
                 </FormFieldWrapper>
@@ -536,18 +528,16 @@ export function AworkIntegrationSettings({
                   </div>
                 ) : (
                   <SearchableSelect
-                    options={[
-                      { value: 'none', label: t('aworkIntegration.project.selectProjectTypePlaceholder') },
-                      ...projectTypes.map((pt) => ({
-                        value: pt.id,
-                        label: pt.name,
-                      })),
-                    ]}
-                    value={config.projectTypeId || 'none'}
+                    options={projectTypes.map((pt) => ({
+                      value: pt.id,
+                      label: pt.name,
+                    }))}
+                    value={config.projectTypeId}
                     onValueChange={handleProjectTypeChange}
                     placeholder={t('aworkIntegration.project.selectProjectType')}
                     searchPlaceholder={t('aworkIntegration.project.searchProjectTypes')}
                     emptyText={t('aworkIntegration.project.noProjectTypesFound')}
+                    clearable
                   />
                 )}
                 {projectTypes.length === 0 && !isLoadingProjectTypes && !aworkError && (

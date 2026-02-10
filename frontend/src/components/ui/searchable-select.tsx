@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Check, ChevronDown, Search } from "lucide-react"
+import { Check, ChevronDown, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Popover,
@@ -23,6 +23,8 @@ interface SearchableSelectProps {
   emptyText?: string
   disabled?: boolean
   className?: string
+  clearable?: boolean
+  onClear?: () => void
 }
 
 export function SearchableSelect({
@@ -34,6 +36,8 @@ export function SearchableSelect({
   emptyText = "No results found.",
   disabled = false,
   className,
+  clearable = false,
+  onClear,
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
@@ -44,15 +48,11 @@ export function SearchableSelect({
   const selectedOption = options.find((option) => option.value === value)
 
   const filteredOptions = React.useMemo(() => {
-    // Keep "none" option pinned at top, sort the rest alphabetically
-    const noneOption = options.find((o) => o.value === "none")
-    const rest = options.filter((o) => o.value !== "none").sort((a, b) => a.label.localeCompare(b.label))
-    const sorted = noneOption ? [noneOption, ...rest] : rest
+    const sorted = [...options].sort((a, b) => a.label.localeCompare(b.label))
     if (!search) return sorted
     const lower = search.toLowerCase()
     return sorted.filter(
       (opt) =>
-        opt.value === "none" ||
         opt.label.toLowerCase().includes(lower) ||
         opt.secondaryLabel?.toLowerCase().includes(lower)
     )
@@ -67,6 +67,8 @@ export function SearchableSelect({
       setTimeout(() => inputRef.current?.focus(), 0)
     }
   }, [open])
+
+  const showClear = clearable && selectedOption && !disabled
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -95,12 +97,34 @@ export function SearchableSelect({
               {selectedOption ? selectedOption.label : placeholder}
             </span>
           </div>
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200",
-              open && "rotate-180"
+          <div className="flex items-center gap-1 shrink-0">
+            {showClear && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onClear ? onClear() : onValueChange("none")
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    onClear ? onClear() : onValueChange("none")
+                  }
+                }}
+                className="p-0.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+              </span>
             )}
-          />
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 text-gray-400 transition-transform duration-200",
+                open && "rotate-180"
+              )}
+            />
+          </div>
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -136,7 +160,7 @@ export function SearchableSelect({
                   key={option.value}
                   type="button"
                   onClick={() => {
-                    onValueChange(option.value === value ? "none" : option.value)
+                    onValueChange(option.value)
                     setOpen(false)
                   }}
                   className={cn(
