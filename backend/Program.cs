@@ -22,6 +22,7 @@ if (sentrySettings.IsEnabled)
         options.Environment = sentrySettings.Environment;
         options.Release = sentrySettings.Release;
         options.SendDefaultPii = sentrySettings.SendDefaultPii;
+        options.TracesSampleRate = 1.0;
     });
 }
 

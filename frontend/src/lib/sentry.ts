@@ -57,5 +57,6 @@ export async function initFrontendSentry(env: FrontendSentryEnv = import.meta.en
     dsn: config.dsn,
     environment: config.environment,
     release: config.release,
+    tracesSampleRate: 1.0,
   });
 }
