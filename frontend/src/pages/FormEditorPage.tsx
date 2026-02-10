@@ -174,14 +174,38 @@ export function FormEditorPage() {
     }
 
     // Validate project is selected when action type requires it
-    const needsProject = aworkConfig.actionType === 'task' || aworkConfig.actionType === 'both';
-    if (needsProject && !aworkConfig.projectId) {
+    const needsTask = aworkConfig.actionType === 'task' || aworkConfig.actionType === 'both';
+    if (needsTask && !aworkConfig.projectId) {
       toast({
         title: t('common.error'),
         description: t('formEditor.toast.projectRequired'),
         variant: 'destructive',
       });
       return;
+    }
+
+    // Validate type of work is configured when creating tasks
+    if (needsTask && !aworkConfig.typeOfWorkId) {
+      const typeOfWorkMapping = aworkConfig.taskFieldMappings.find(
+        (m) => m.aworkField === 'typeOfWork'
+      );
+      if (!typeOfWorkMapping) {
+        toast({
+          title: t('common.error'),
+          description: t('formEditor.toast.typeOfWorkRequired'),
+          variant: 'destructive',
+        });
+        return;
+      }
+      const mappedField = fields.find((f) => f.id === typeOfWorkMapping.formFieldId);
+      if (!mappedField?.required) {
+        toast({
+          title: t('common.error'),
+          description: t('formEditor.toast.typeOfWorkFieldMustBeRequired'),
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     setIsSaving(true);

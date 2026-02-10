@@ -11,10 +11,16 @@ public class UpdateFormEndpoint : IEndpoint
             var userId = context.GetCurrentUserId();
             if (userId == null) return Results.Unauthorized();
 
-            var form = formsService.UpdateForm(id, dto, userId.Value);
-            if (form == null) return Results.NotFound(new { error = "Form not found" });
-
-            return Results.Ok(form);
+            try
+            {
+                var form = formsService.UpdateForm(id, dto, userId.Value);
+                if (form == null) return Results.NotFound(new { error = "Form not found" });
+                return Results.Ok(form);
+            }
+            catch (ValidationException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
         }).RequireAuth();
     }
 }

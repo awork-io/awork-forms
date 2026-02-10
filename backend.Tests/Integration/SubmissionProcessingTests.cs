@@ -133,6 +133,7 @@ public class SubmissionProcessingTests
             FieldMappingsJson = JsonSerializer.Serialize(mappings),
             ActionType = "task",
             AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
             IsActive = true
         };
 
@@ -171,6 +172,7 @@ public class SubmissionProcessingTests
                 id = "field-type",
                 type = "select",
                 label = "Tätigkeit",
+                required = true,
                 options = new[]
                 {
                     new { label = "Bugfix", value = "option1" },
@@ -258,6 +260,7 @@ public class SubmissionProcessingTests
             FieldMappingsJson = JsonSerializer.Serialize(mappings),
             ActionType = "task",
             AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
             IsActive = true
         };
 

@@ -337,6 +337,70 @@ public class FormsServiceTests : IDisposable
         Assert.Equal("Original Copy 2", duplicate2!.Name);
         Assert.Equal("Original Copy 3", duplicate3!.Name);
     }
+
+    [Fact]
+    public void ValidateTypeOfWork_NoTaskAction_ReturnsNull()
+    {
+        Assert.Null(FormsService.ValidateTypeOfWork(null, null, null, null));
+        Assert.Null(FormsService.ValidateTypeOfWork("project", null, null, null));
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_TaskActionWithDefaultTypeOfWork_ReturnsNull()
+    {
+        Assert.Null(FormsService.ValidateTypeOfWork("task", Guid.NewGuid(), null, null));
+        Assert.Null(FormsService.ValidateTypeOfWork("both", Guid.NewGuid(), null, null));
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_TaskActionWithNoTypeOfWork_ReturnsError()
+    {
+        var error = FormsService.ValidateTypeOfWork("task", null, null, null);
+        Assert.NotNull(error);
+        Assert.Contains("Type of work is required", error);
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_TaskActionWithRequiredFieldMapping_ReturnsNull()
+    {
+        var mappings = "{\"taskFieldMappings\":[{\"formFieldId\":\"field-1\",\"aworkField\":\"typeOfWork\"}]}";
+        var fields = "[{\"id\":\"field-1\",\"type\":\"select\",\"label\":\"Type\",\"required\":true}]";
+
+        Assert.Null(FormsService.ValidateTypeOfWork("task", null, mappings, fields));
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_TaskActionWithNonRequiredFieldMapping_ReturnsError()
+    {
+        var mappings = "{\"taskFieldMappings\":[{\"formFieldId\":\"field-1\",\"aworkField\":\"typeOfWork\"}]}";
+        var fields = "[{\"id\":\"field-1\",\"type\":\"select\",\"label\":\"Type\",\"required\":false}]";
+
+        var error = FormsService.ValidateTypeOfWork("task", null, mappings, fields);
+        Assert.NotNull(error);
+        Assert.Contains("must be marked as required", error);
+    }
+
+    [Fact]
+    public void ValidateTypeOfWork_TaskActionWithMappingButMissingField_ReturnsError()
+    {
+        var mappings = "{\"taskFieldMappings\":[{\"formFieldId\":\"field-1\",\"aworkField\":\"typeOfWork\"}]}";
+        var fields = "[{\"id\":\"field-2\",\"type\":\"text\",\"label\":\"Other\",\"required\":true}]";
+
+        var error = FormsService.ValidateTypeOfWork("task", null, mappings, fields);
+        Assert.NotNull(error);
+        Assert.Contains("does not exist", error);
+    }
+
+    [Fact]
+    public void UpdateForm_SetTaskActionWithoutTypeOfWork_ThrowsValidation()
+    {
+        // Create a form without task action
+        var created = _formsService.CreateForm(new CreateFormDto { Name = "Test" }, _testUserId);
+
+        // Try to set actionType=task without providing a typeOfWorkId
+        Assert.Throws<ValidationException>(() =>
+            _formsService.UpdateForm(created.Id, new UpdateFormDto { ActionType = "task" }, _testUserId));
+    }
 }
 
 internal class TestDbContextFactory : IDbContextFactory<AppDbContext>

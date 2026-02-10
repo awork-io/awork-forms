@@ -28,6 +28,7 @@ public class FormsEndpointsTests
             Description = "tag test",
             FieldsJson = "[]",
             ActionType = "task",
+            AworkTypeOfWorkId = Guid.NewGuid(),
             AworkTaskTag = "initial-tag"
         };
 
@@ -103,6 +104,7 @@ public class FormsEndpointsTests
             Description = "Original desc",
             FieldsJson = "[{\"id\":\"f1\",\"type\":\"text\",\"label\":\"Name\"}]",
             ActionType = "task",
+            AworkTypeOfWorkId = Guid.NewGuid(),
             AworkTaskTag = "test-tag"
         };
 
@@ -146,5 +148,58 @@ public class FormsEndpointsTests
         var response = await client.PostAsync("/api/forms/999/duplicate", null);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateForm_TaskActionWithoutTypeOfWork_ReturnsBadRequest()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var client = _factory.CreateAuthenticatedClient(token);
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Missing TypeOfWork",
+            ActionType = "task",
+            FieldsJson = "[]"
+        };
+
+        var response = await client.PostAsJsonAsync("/api/forms", createDto);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateForm_TaskActionWithRequiredFieldMapping_Succeeds()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var client = _factory.CreateAuthenticatedClient(token);
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Mapped TypeOfWork",
+            ActionType = "task",
+            FieldsJson = "[{\"id\":\"f1\",\"type\":\"select\",\"label\":\"Type\",\"required\":true}]",
+            FieldMappingsJson = "{\"taskFieldMappings\":[{\"formFieldId\":\"f1\",\"aworkField\":\"typeOfWork\"}]}"
+        };
+
+        var response = await client.PostAsJsonAsync("/api/forms", createDto);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateForm_TaskActionWithNonRequiredFieldMapping_ReturnsBadRequest()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var client = _factory.CreateAuthenticatedClient(token);
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Non-Required TypeOfWork",
+            ActionType = "task",
+            FieldsJson = "[{\"id\":\"f1\",\"type\":\"select\",\"label\":\"Type\",\"required\":false}]",
+            FieldMappingsJson = "{\"taskFieldMappings\":[{\"formFieldId\":\"f1\",\"aworkField\":\"typeOfWork\"}]}"
+        };
+
+        var response = await client.PostAsJsonAsync("/api/forms", createDto);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }
