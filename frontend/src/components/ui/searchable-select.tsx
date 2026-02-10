@@ -44,11 +44,15 @@ export function SearchableSelect({
   const selectedOption = options.find((option) => option.value === value)
 
   const filteredOptions = React.useMemo(() => {
-    const sorted = [...options].sort((a, b) => a.label.localeCompare(b.label))
+    // Keep "none" option pinned at top, sort the rest alphabetically
+    const noneOption = options.find((o) => o.value === "none")
+    const rest = options.filter((o) => o.value !== "none").sort((a, b) => a.label.localeCompare(b.label))
+    const sorted = noneOption ? [noneOption, ...rest] : rest
     if (!search) return sorted
     const lower = search.toLowerCase()
     return sorted.filter(
       (opt) =>
+        opt.value === "none" ||
         opt.label.toLowerCase().includes(lower) ||
         opt.secondaryLabel?.toLowerCase().includes(lower)
     )
