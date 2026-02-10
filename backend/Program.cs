@@ -165,8 +165,8 @@ app.Use(async (context, next) =>
             "frame-ancestors 'none'; " +
             "img-src 'self' data: https:; " +
             "script-src 'self'; " +
-            "style-src 'self' 'unsafe-inline'; " +
-            "connect-src 'self' https://api.awork.com;";
+            "style-src 'self' 'unsafe-inline' https://use.typekit.net; " +
+            "connect-src 'self' https://api.awork.com https://*.ingest.us.sentry.io;";
     }
 
     await next();
