@@ -38,9 +38,10 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
     public static readonly Guid AworkUserId = Guid.Parse("88888888-8888-8888-8888-888888888888");
     public static readonly Guid AworkCreatedProjectId = Guid.Parse("99999999-9999-9999-9999-999999999999");
     public static readonly Guid AworkCreatedTaskId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    public static readonly Guid AworkCreatedTypeOfWorkId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
     public string AworkApiBaseUrl { get; private set; } = string.Empty;
-    private string AworkAdminBaseUrl { get; set; } = string.Empty;
+    public string AworkAdminBaseUrl { get; private set; } = string.Empty;
     private bool _aworkStubsConfigured;
 
     public async Task InitializeAsync()
@@ -225,6 +226,16 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
             {
                 status = 200,
                 jsonBody = new { id = AworkCreatedTaskId, name = "Created Task" }
+            }
+        });
+
+        await RegisterAworkMappingAsync(client, new
+        {
+            request = new { method = "POST", urlPath = "/api/v1/typeofwork" },
+            response = new
+            {
+                status = 200,
+                jsonBody = new { id = AworkCreatedTypeOfWorkId, name = "Created Type Of Work", isArchived = false }
             }
         });
 

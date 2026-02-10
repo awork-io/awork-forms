@@ -141,6 +141,8 @@
       "nameRequired": "Ein Formularname ist erforderlich",
       "createSuccess": "Formular erfolgreich erstellt",
       "createError": "Formular konnte nicht erstellt werden",
+      "duplicateSuccess": "Formular erfolgreich dupliziert",
+      "duplicateError": "Formular konnte nicht dupliziert werden",
       "deleteSuccess": "Formular erfolgreich gelöscht",
       "deleteError": "Formular konnte nicht gelöscht werden"
     }
@@ -417,6 +419,7 @@
       "dueOn": "Fälligkeitsdatum",
       "startOn": "Startdatum",
       "plannedDuration": "Geplante Dauer (Stunden)",
+      "typeOfWork": "Tätigkeit",
       "tags": "Tags (durch Kommas getrennt)"
     },
     "projectFields": {

@@ -90,4 +90,38 @@ public class FormsEndpointsTests
         Assert.Equal("Lokal", fetched!.NameTranslations!["de"]);
         Assert.Contains("field-1", fetched.FieldsJson);
     }
+
+    [Fact]
+    public async Task DuplicateForm_CreatesIndependentCopyWithNewIds()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var client = _factory.CreateAuthenticatedClient(token);
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Original Form",
+            Description = "Original desc",
+            FieldsJson = "[{\"id\":\"f1\",\"type\":\"text\",\"label\":\"Name\"}]",
+            ActionType = "task",
+            AworkTaskTag = "test-tag"
+        };
+
+        var createResponse = await client.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        var duplicateResponse = await client.PostAsync($"/api/forms/{created!.Id}/duplicate", null);
+        Assert.Equal(HttpStatusCode.Created, duplicateResponse.StatusCode);
+
+        var duplicated = await duplicateResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(duplicated);
+        Assert.NotEqual(created.Id, duplicated!.Id);
+        Assert.NotEqual(created.PublicId, duplicated.PublicId);
+        Assert.Equal("Original Form Copy", duplicated.Name);
+        Assert.Equal(created.Description, duplicated.Description);
+        Assert.Equal(created.FieldsJson, duplicated.FieldsJson);
+        Assert.Equal(created.ActionType, duplicated.ActionType);
+        Assert.Equal(created.AworkTaskTag, duplicated.AworkTaskTag);
+    }
 }

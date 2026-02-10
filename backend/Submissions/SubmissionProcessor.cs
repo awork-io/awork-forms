@@ -94,8 +94,15 @@ public class SubmissionProcessor
                     var customFieldDefinitions = await _aworkService.GetProjectCustomFields(userId.Value, targetProjectId.Value);
                     var customFieldDefinitionMap = customFieldDefinitions.ToDictionary(c => c.Id, c => c);
 
+                    var resolvedTypeOfWorkId = await ResolveTypeOfWorkIdAsync(
+                        userId.Value,
+                        formData,
+                        formFields,
+                        fieldMappings.TaskFieldMappings,
+                        form.AworkTypeOfWorkId);
+
                     var taskRequest = BuildTaskRequest(formData, formFields, fieldMappings.TaskFieldMappings,
-                        targetProjectId.Value, form.AworkTaskStatusId, form.AworkTypeOfWorkId, form.AworkTaskListId,
+                        targetProjectId.Value, form.AworkTaskStatusId, resolvedTypeOfWorkId, form.AworkTaskListId,
                         form.AworkTaskIsPriority ?? false);
 
                     var task = await _aworkService.CreateTask(userId.Value, targetProjectId.Value, taskRequest);
@@ -346,9 +353,10 @@ public class SubmissionProcessor
     {
         if (!formData.TryGetValue(fieldId, out var value) || value == null) return null;
 
+        string? mappedValue;
         if (value is JsonElement jsonElement)
         {
-            return jsonElement.ValueKind switch
+            mappedValue = jsonElement.ValueKind switch
             {
                 JsonValueKind.String => jsonElement.GetString(),
                 JsonValueKind.Number => jsonElement.GetRawText(),
@@ -357,11 +365,22 @@ public class SubmissionProcessor
                 _ => jsonElement.GetRawText()
             };
         }
+        else
+        {
+            mappedValue = value.ToString();
+        }
 
-        return value.ToString();
+        if (string.IsNullOrEmpty(mappedValue))
+            return mappedValue;
+
+        var formField = formFields.FirstOrDefault(f => f.Id == fieldId);
+        if (formField?.Type != "select" || formField.Options == null || formField.Options.Count == 0)
+            return mappedValue;
+
+        // For select fields we map the stable option value back to the primary label.
+        var matchedOption = formField.Options.FirstOrDefault(o => o.Value == mappedValue);
+        return !string.IsNullOrWhiteSpace(matchedOption?.Label) ? matchedOption.Label : mappedValue;
     }
-
-    private static readonly string[] StandardFields = ["name", "description", "dueDate", "startDate", "plannedDuration", "tags"];
 
     private static List<FieldMapping> GetCustomFieldMappings(List<FieldMapping> mappings)
     {
@@ -498,6 +517,43 @@ public class SubmissionProcessor
             .FirstOrDefaultAsync();
     }
 
+    private async Task<Guid?> ResolveTypeOfWorkIdAsync(
+        Guid userId,
+        Dictionary<string, object?> formData,
+        List<FormFieldInfo> formFields,
+        List<FieldMapping> mappings,
+        Guid? fallbackTypeOfWorkId)
+    {
+        var mappedTypeOfWork = mappings.FirstOrDefault(m =>
+            string.Equals(m.AworkField, "typeOfWork", StringComparison.OrdinalIgnoreCase));
+
+        if (mappedTypeOfWork == null)
+            return fallbackTypeOfWorkId;
+
+        var typeOfWorkName = GetMappedValue(formData, formFields, mappedTypeOfWork.FormFieldId)?.Trim();
+        if (string.IsNullOrWhiteSpace(typeOfWorkName))
+            return fallbackTypeOfWorkId;
+
+        var existingTypes = await _aworkService.GetTypesOfWork(userId);
+        var existingMatch = existingTypes.FirstOrDefault(t =>
+            !t.IsArchived &&
+            string.Equals(t.Name.Trim(), typeOfWorkName, StringComparison.OrdinalIgnoreCase));
+
+        if (existingMatch != null)
+            return existingMatch.Id;
+
+        try
+        {
+            var createdType = await _aworkService.CreateTypeOfWork(userId, typeOfWorkName);
+            return createdType?.Id ?? fallbackTypeOfWorkId;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to create type of work '{typeOfWorkName}': {ex.Message}");
+            return fallbackTypeOfWorkId;
+        }
+    }
+
     private static List<string> GetTagsFromMappings(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings)
     {
         var tags = new List<string>();
@@ -521,6 +577,13 @@ internal class FormFieldInfo
     public string Id { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
+    public List<FormFieldOptionInfo>? Options { get; set; }
+}
+
+internal class FormFieldOptionInfo
+{
+    public string Label { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
 }
 
 internal class FieldMappingsData

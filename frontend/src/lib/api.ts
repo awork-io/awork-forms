@@ -315,6 +315,12 @@ class ApiClient {
     });
   }
 
+  async duplicateForm(id: number): Promise<FormDetail> {
+    return this.request(`/api/forms/${id}/duplicate`, {
+      method: 'POST',
+    });
+  }
+
   // awork API proxy endpoints
   async getAworkProjects(): Promise<AworkProject[]> {
     return this.request('/api/awork/projects');

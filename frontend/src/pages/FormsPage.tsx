@@ -30,7 +30,7 @@ import { InputField } from '@/components/ui/form-field';
 import { api, type Form } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
-import { Plus, MoreVertical, Pencil, ClipboardList, Eye, Share2, Trash2, FileText, Layers, Inbox } from 'lucide-react';
+import { Plus, MoreVertical, Pencil, ClipboardList, Eye, Share2, Trash2, FileText, Layers, Inbox, Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { trackEvent, trackScreenSeen } from '@/lib/tracking';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -49,6 +49,7 @@ export function FormsPage() {
   const [newFormName, setNewFormName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [duplicatingFormId, setDuplicatingFormId] = useState<number | null>(null);
   const [shareForm, setShareForm] = useState<Form | null>(null);
 
   const fetchForms = async () => {
@@ -132,6 +133,33 @@ export function FormsPage() {
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleDuplicateForm = async (form: Form) => {
+    setDuplicatingFormId(form.id);
+    try {
+      const duplicated = await api.duplicateForm(form.id);
+      trackEvent('Forms User Action', {
+        action: 'form_duplicated',
+        tool: 'awork-forms',
+        formId: form.id,
+        duplicatedFormId: duplicated.id,
+      });
+      toast({
+        title: t('common.success'),
+        description: t('formsPage.toast.duplicateSuccess'),
+      });
+      await fetchForms();
+      navigate(`/forms/${duplicated.id}/edit`);
+    } catch {
+      toast({
+        title: t('common.error'),
+        description: t('formsPage.toast.duplicateError'),
+        variant: 'destructive',
+      });
+    } finally {
+      setDuplicatingFormId(null);
     }
   };
 
@@ -220,6 +248,13 @@ export function FormsPage() {
                       <DropdownMenuItem onClick={() => window.open(`/f/${form.publicId}`, '_blank')}>
                         <Eye className="w-4 h-4 mr-2" />
                         {t('formsPage.viewPublicForm')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDuplicateForm(form)}
+                        disabled={duplicatingFormId === form.id}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        {t('fieldCard.duplicate')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setShareForm(form)}>
                         <Share2 className="w-4 h-4 mr-2" />

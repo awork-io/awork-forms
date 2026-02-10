@@ -87,6 +87,52 @@ public class FormsService
         return MapToDetailDto(form);
     }
 
+    public FormDetailDto? DuplicateForm(int formId, Guid userId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var workspaceId = GetWorkspaceId(db, userId);
+        if (workspaceId == null) return null;
+
+        var source = db.Forms.FirstOrDefault(f => f.Id == formId && f.WorkspaceId == workspaceId);
+        if (source == null) return null;
+
+        var now = DateTime.UtcNow;
+        var publicId = Guid.NewGuid();
+        var duplicated = new Form
+        {
+            PublicId = publicId,
+            WorkspaceId = source.WorkspaceId,
+            Name = $"{source.Name} Copy",
+            Description = source.Description,
+            NameTranslationsJson = source.NameTranslationsJson,
+            DescriptionTranslationsJson = source.DescriptionTranslationsJson,
+            FieldsJson = source.FieldsJson,
+            ActionType = source.ActionType,
+            AworkProjectId = source.AworkProjectId,
+            AworkProjectTypeId = source.AworkProjectTypeId,
+            AworkTaskListId = source.AworkTaskListId,
+            AworkTaskStatusId = source.AworkTaskStatusId,
+            AworkTypeOfWorkId = source.AworkTypeOfWorkId,
+            AworkAssigneeId = source.AworkAssigneeId,
+            AworkTaskIsPriority = source.AworkTaskIsPriority,
+            AworkTaskTag = source.AworkTaskTag,
+            FieldMappingsJson = source.FieldMappingsJson,
+            PrimaryColor = source.PrimaryColor,
+            BackgroundColor = source.BackgroundColor,
+            LogoData = source.LogoData,
+            LogoContentType = source.LogoContentType,
+            LogoUrl = source.LogoData != null ? $"/api/f/{publicId}/logo" : null,
+            IsActive = source.IsActive,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.Forms.Add(duplicated);
+        db.SaveChanges();
+
+        return MapToDetailDto(duplicated);
+    }
+
     public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId)
     {
         using var db = _dbFactory.CreateDbContext();

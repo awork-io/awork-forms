@@ -66,6 +66,13 @@ public class AworkTypeOfWork
     public bool IsArchived { get; set; }
 }
 
+public class AworkCreateTypeOfWorkRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+}
+
 public class AworkTokenResponse
 {
     public string AccessToken { get; set; } = string.Empty;

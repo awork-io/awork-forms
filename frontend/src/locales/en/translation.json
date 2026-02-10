@@ -141,6 +141,8 @@
       "nameRequired": "Form name is required",
       "createSuccess": "Form created successfully",
       "createError": "Failed to create form",
+      "duplicateSuccess": "Form duplicated successfully",
+      "duplicateError": "Failed to duplicate form",
       "deleteSuccess": "Form deleted successfully",
       "deleteError": "Failed to delete form"
     }
@@ -417,6 +419,7 @@
       "dueOn": "Due Date",
       "startOn": "Start Date",
       "plannedDuration": "Planned Duration (hours)",
+      "typeOfWork": "Type of work",
       "tags": "Tags (comma-separated)"
     },
     "projectFields": {
