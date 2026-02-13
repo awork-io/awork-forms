@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { api, type User } from '@/lib/api';
+import { setSentryUser } from '@/lib/sentry';
 import { trackEvent } from '@/lib/tracking';
 
 interface AuthContextType {
@@ -16,6 +17,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setSentryUser(user);
+  }, [user]);
 
   // Check if user is already authenticated on mount
   useEffect(() => {

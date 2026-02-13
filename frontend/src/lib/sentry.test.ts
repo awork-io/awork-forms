@@ -1,14 +1,16 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-const { sentryInitMock } = vi.hoisted(() => ({
+const { sentryInitMock, sentrySetUserMock } = vi.hoisted(() => ({
   sentryInitMock: vi.fn(),
+  sentrySetUserMock: vi.fn(),
 }));
 
 vi.mock('@sentry/react', () => ({
   init: sentryInitMock,
+  setUser: sentrySetUserMock,
 }));
 
-import { getFrontendSentryConfig, initFrontendSentry } from './sentry';
+import { getFrontendSentryConfig, initFrontendSentry, setSentryUser } from './sentry';
 
 describe('frontend sentry config', () => {
   beforeEach(() => {
@@ -79,5 +81,15 @@ describe('frontend sentry config', () => {
       release: 'runtime-release',
       tracesSampleRate: 1.0,
     });
+  });
+
+  it('sets sentry user with id, email, and workspace_id', () => {
+    setSentryUser({ id: 'u1', email: 'a@b.com', workspaceId: 'ws1' });
+    expect(sentrySetUserMock).toHaveBeenCalledWith({ id: 'u1', email: 'a@b.com', workspace_id: 'ws1' });
+  });
+
+  it('clears sentry user when null', () => {
+    setSentryUser(null);
+    expect(sentrySetUserMock).toHaveBeenCalledWith(null);
   });
 });

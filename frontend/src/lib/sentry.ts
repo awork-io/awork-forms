@@ -48,6 +48,14 @@ export function getFrontendSentryConfig(
   };
 }
 
+export function setSentryUser(user: { id: string; email: string; workspaceId: string } | null): void {
+  if (user) {
+    Sentry.setUser({ id: user.id, email: user.email, workspace_id: user.workspaceId });
+  } else {
+    Sentry.setUser(null);
+  }
+}
+
 export async function initFrontendSentry(env: FrontendSentryEnv = import.meta.env): Promise<void> {
   const runtimeConfig = await fetchRuntimeSentryConfig();
   const config = getFrontendSentryConfig(env, runtimeConfig);

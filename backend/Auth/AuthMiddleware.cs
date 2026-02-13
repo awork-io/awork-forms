@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Sentry;
 
 namespace Backend.Auth;
 
@@ -30,6 +31,23 @@ public static class AuthMiddleware
                 if (principal != null)
                 {
                     context.User = principal;
+
+                    SentrySdk.ConfigureScope(scope =>
+                    {
+                        var userId = JwtService.GetUserId(principal);
+                        var aworkUserId = JwtService.GetAworkUserId(principal);
+                        var workspaceId = JwtService.GetWorkspaceId(principal);
+
+                        scope.User = new Sentry.SentryUser
+                        {
+                            Id = userId?.ToString(),
+                            Other = new Dictionary<string, string>
+                            {
+                                ["awork_user_id"] = aworkUserId?.ToString() ?? "",
+                                ["workspace_id"] = workspaceId?.ToString() ?? ""
+                            }
+                        };
+                    });
                 }
             }
 
