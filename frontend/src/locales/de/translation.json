@@ -453,8 +453,14 @@
     "copyFormLink": "Formular-Link kopieren",
     "copyToastTitle": "Kopiert",
     "copyToastDesc": "Formular-Link wurde kopiert",
+    "retry": "Erneut senden",
     "toast": {
-      "loadError": "Einreichungen konnten nicht geladen werden"
+      "loadError": "Einreichungen konnten nicht geladen werden",
+      "retrySuccessTitle": "Einreichung erneut gesendet",
+      "retrySuccessDesc": "Die fehlgeschlagene Einreichung wurde erfolgreich verarbeitet.",
+      "retryFailedTitle": "Erneutes Senden fehlgeschlagen",
+      "retryFailedDesc": "Die Einreichung konnte nicht verarbeitet werden.",
+      "retryError": "Einreichung konnte nicht erneut gesendet werden"
     },
     "table": {
       "form": "Formular",

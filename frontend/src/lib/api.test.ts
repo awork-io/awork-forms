@@ -162,5 +162,39 @@ describe('ApiClient', () => {
       await expect(api.getForms()).rejects.toThrow('Unauthorized');
       expect(api.getToken()).toBeNull();
     });
+
+    it('should retry a failed submission', async () => {
+      api.setToken('my-token');
+      const mockResponse = {
+        id: 42,
+        formId: 1,
+        formName: 'Test Form',
+        dataJson: '{"field":"value"}',
+        status: 'completed',
+        aworkTaskId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+        createdAt: '2026-03-06T10:00:00Z',
+        updatedAt: '2026-03-06T10:01:00Z',
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await api.retrySubmission(42);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/submissions/42/retry',
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer my-token',
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
+      expect(result).toEqual(mockResponse);
+    });
   });
 });

@@ -408,6 +408,12 @@ class ApiClient {
     return this.request(`/api/forms/${formId}/submissions`);
   }
 
+  async retrySubmission(submissionId: number): Promise<Submission> {
+    return this.request(`/api/submissions/${submissionId}/retry`, {
+      method: 'POST',
+    });
+  }
+
   // Public form endpoints (no auth required)
   async getPublicForm(publicId: string): Promise<PublicForm> {
     const url = `${API_BASE_URL}/api/f/${publicId}`;
