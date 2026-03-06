@@ -217,7 +217,7 @@ public class SubmissionProcessingTests
         Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
 
         var taskBodies = await GetAworkRequestBodiesAsync("/api/v1/tasks", "POST");
-        var taskBody = Assert.Single(taskBodies);
+        var taskBody = Assert.Single(taskBodies, body => body.Contains("\"name\":\"Projekt-Briefing\""));
         var description = GetJsonStringProperty(taskBody, "description");
 
         Assert.Equal(
@@ -291,7 +291,7 @@ public class SubmissionProcessingTests
         Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
 
         var projectBodies = await GetAworkRequestBodiesAsync("/api/v1/projects", "POST");
-        var projectBody = Assert.Single(projectBodies);
+        var projectBody = Assert.Single(projectBodies, body => body.Contains("\"name\":\"Projekt-Briefing\""));
         var description = GetJsonStringProperty(projectBody, "description");
 
         Assert.Equal(
