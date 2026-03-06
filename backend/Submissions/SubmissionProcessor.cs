@@ -474,15 +474,16 @@ public class SubmissionProcessor
 
         foreach (var mapping in customFieldMappings)
         {
-            var value = GetMappedValue(formData, formFields, mapping.FormFieldId);
-            if (string.IsNullOrEmpty(value)) continue;
-
             var customFieldId = GetCustomFieldId(mapping.AworkField);
             if (customFieldId == null) continue;
             if (!customFieldDefinitions.TryGetValue(customFieldId.Value, out var definition))
                 continue;
 
-            var customFieldValue = BuildCustomFieldValue(definition, value);
+            var rawValue = GetMappedValue(formData, formFields, mapping.FormFieldId);
+            if (string.IsNullOrEmpty(rawValue)) continue;
+
+            var displayValue = GetMappedValue(formData, formFields, mapping.FormFieldId, mapSelectToLabel: true);
+            var customFieldValue = BuildCustomFieldValue(definition, rawValue, displayValue);
             if (customFieldValue == null) continue;
             customFieldValue.CustomFieldDefinitionId = customFieldId.Value;
             result.Add(customFieldValue);
@@ -491,42 +492,42 @@ public class SubmissionProcessor
         return result;
     }
 
-    private static CustomFieldValue? BuildCustomFieldValue(AworkCustomFieldDefinition definition, string value)
+    private static CustomFieldValue? BuildCustomFieldValue(AworkCustomFieldDefinition definition, string rawValue, string? displayValue)
     {
         var type = definition.Type?.Trim().ToLowerInvariant();
         switch (type)
         {
             case "text":
             case "link":
-                return new CustomFieldValue { TextValue = value };
+                return new CustomFieldValue { TextValue = displayValue ?? rawValue };
             case "number":
-                if (TryParseNumber(value, out var number))
+                if (TryParseNumber(rawValue, out var number))
                     return new CustomFieldValue { NumberValue = number };
                 return null;
             case "date":
             case "datetime":
-                if (TryParseDate(value, out var date))
+                if (TryParseDate(rawValue, out var date))
                     return new CustomFieldValue { DateValue = date };
                 return null;
             case "select":
             case "coloredselect":
-                if (TryResolveSelectionOptionId(definition, value, out var selectionId))
+                if (TryResolveSelectionOptionId(definition, rawValue, out var selectionId))
                     return new CustomFieldValue { SelectionOptionIdValue = selectionId };
                 return null;
             case "boolean":
-                if (TryParseBoolean(value, out var booleanValue))
+                if (TryParseBoolean(rawValue, out var booleanValue))
                     return new CustomFieldValue { BooleanValue = booleanValue };
                 return null;
             case "user":
-                if (Guid.TryParse(value, out var userId))
+                if (Guid.TryParse(rawValue, out var userId))
                     return new CustomFieldValue { UserIdValue = userId };
                 return null;
             case "client":
-                if (Guid.TryParse(value, out var clientId))
+                if (Guid.TryParse(rawValue, out var clientId))
                     return new CustomFieldValue { ClientIdValue = clientId };
                 return null;
             default:
-                return new CustomFieldValue { TextValue = value };
+                return new CustomFieldValue { TextValue = displayValue ?? rawValue };
         }
     }
 

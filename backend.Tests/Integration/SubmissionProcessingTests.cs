@@ -436,6 +436,71 @@ public class SubmissionProcessingTests
             body.Contains($"\"selectionOptionIdValue\":\"{IntegrationTestFactory.AworkSelectOptionId}\""));
     }
 
+    [Fact]
+    public async Task SubmitForm_SelectMappedToCustomTextField_UsesPrimaryOptionLabel()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new[]
+        {
+            new
+            {
+                id = "field-category",
+                type = "select",
+                label = "Kategorie",
+                options = new[]
+                {
+                    new { label = "SAK", value = "option1" },
+                    new { label = "CUT", value = "option2" }
+                }
+            }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = new[]
+            {
+                new { formFieldId = "field-category", aworkField = $"custom:{IntegrationTestFactory.AworkCustomFieldId}" }
+            },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Custom Text Mapping Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var submitDto = new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-category"] = "option1"
+            }
+        };
+
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", submitDto);
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var customFieldBodies = await GetAworkRequestBodiesAsync($"/api/v1/tasks/{IntegrationTestFactory.AworkCreatedTaskId}/setcustomfields", "POST");
+        Assert.Contains(customFieldBodies, body =>
+            body.Contains($"\"customFieldDefinitionId\":\"{IntegrationTestFactory.AworkCustomFieldId}\"") &&
+            body.Contains("\"textValue\":\"SAK\"") &&
+            !body.Contains("\"textValue\":\"option1\""));
+    }
+
     private async Task<List<string>> GetAworkRequestBodiesAsync(string path, string method = "POST")
     {
         using var client = new HttpClient { BaseAddress = new Uri(_factory.AworkAdminBaseUrl) };
