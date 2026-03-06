@@ -284,6 +284,10 @@ public class SubmissionProcessor
     private static AworkCreateProjectRequest BuildProjectRequest(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings, Guid? projectTypeId)
     {
         var request = new AworkCreateProjectRequest { ProjectTypeId = projectTypeId };
+        var descriptionMappings = mappings
+            .Where(m => string.Equals(m.AworkField, "description", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        var hasMultipleDescriptionMappings = descriptionMappings.Count > 1;
 
         foreach (var mapping in mappings)
         {
@@ -297,7 +301,8 @@ public class SubmissionProcessor
                     request.Name = displayValue ?? rawValue;
                     break;
                 case "description":
-                    request.Description = displayValue ?? rawValue;
+                    if (!hasMultipleDescriptionMappings)
+                        request.Description = displayValue ?? rawValue;
                     break;
                 case "startDate":
                     if (TryParseDate(rawValue, out var startDate))
@@ -309,6 +314,9 @@ public class SubmissionProcessor
                     break;
             }
         }
+
+        if (hasMultipleDescriptionMappings)
+            request.Description = BuildFormattedDescription(formData, formFields, descriptionMappings);
 
         if (string.IsNullOrEmpty(request.Name))
             request.Name = $"Form Submission {DateTime.UtcNow:yyyy-MM-dd HH:mm}";
@@ -330,6 +338,11 @@ public class SubmissionProcessor
         if (taskListId != null)
             request.Lists = [new AworkTaskListAssignment { Id = taskListId.Value }];
 
+        var descriptionMappings = mappings
+            .Where(m => string.Equals(m.AworkField, "description", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        var hasMultipleDescriptionMappings = descriptionMappings.Count > 1;
+
         foreach (var mapping in mappings)
         {
             var rawValue = GetMappedValue(formData, formFields, mapping.FormFieldId);
@@ -342,7 +355,8 @@ public class SubmissionProcessor
                     request.Name = displayValue ?? rawValue;
                     break;
                 case "description":
-                    request.Description = displayValue ?? rawValue;
+                    if (!hasMultipleDescriptionMappings)
+                        request.Description = displayValue ?? rawValue;
                     break;
                 case "dueOn":
                     if (TryParseDate(rawValue, out var dueOn))
@@ -363,10 +377,33 @@ public class SubmissionProcessor
             }
         }
 
+        if (hasMultipleDescriptionMappings)
+            request.Description = BuildFormattedDescription(formData, formFields, descriptionMappings);
+
         if (string.IsNullOrEmpty(request.Name))
             request.Name = $"Form Submission {DateTime.UtcNow:yyyy-MM-dd HH:mm}";
 
         return request;
+    }
+
+    private static string? BuildFormattedDescription(
+        Dictionary<string, object?> formData,
+        List<FormFieldInfo> formFields,
+        List<FieldMapping> descriptionMappings)
+    {
+        var sections = new List<string>();
+
+        foreach (var mapping in descriptionMappings)
+        {
+            var value = GetMappedValue(formData, formFields, mapping.FormFieldId, mapSelectToLabel: true)?.Trim();
+            if (string.IsNullOrWhiteSpace(value))
+                continue;
+
+            var label = formFields.FirstOrDefault(f => f.Id == mapping.FormFieldId)?.Label?.Trim();
+            sections.Add(string.IsNullOrWhiteSpace(label) ? value : $"**{label}**\n{value}");
+        }
+
+        return sections.Count > 0 ? string.Join("\n\n", sections) : null;
     }
 
     private static string? GetMappedValue(

@@ -160,6 +160,155 @@ public class SubmissionProcessingTests
     }
 
     [Fact]
+    public async Task SubmitForm_MultipleDescriptionMappings_AppendsStructuredSections()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new[]
+        {
+            new { id = "field-name", type = "text", label = "Name" },
+            new { id = "field-goals", type = "textarea", label = "Ziele" },
+            new { id = "field-audience", type = "textarea", label = "Zielgruppe" },
+            new { id = "field-usp", type = "textarea", label = "USP" }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = new[]
+            {
+                new { formFieldId = "field-name", aworkField = "name" },
+                new { formFieldId = "field-goals", aworkField = "description" },
+                new { formFieldId = "field-audience", aworkField = "description" },
+                new { formFieldId = "field-usp", aworkField = "description" }
+            },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Structured Description Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var submitDto = new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-name"] = "Projekt-Briefing",
+                ["field-goals"] = "Mehr Leads generieren",
+                ["field-audience"] = "B2B Marketing Teams",
+                ["field-usp"] = "Schnellere Umsetzung"
+            }
+        };
+
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", submitDto);
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var taskBodies = await GetAworkRequestBodiesAsync("/api/v1/tasks", "POST");
+        var taskBody = Assert.Single(taskBodies);
+        var description = GetJsonStringProperty(taskBody, "description");
+
+        Assert.Equal(
+            """
+            **Ziele**
+            Mehr Leads generieren
+
+            **Zielgruppe**
+            B2B Marketing Teams
+
+            **USP**
+            Schnellere Umsetzung
+            """,
+            description);
+    }
+
+    [Fact]
+    public async Task SubmitForm_MultipleProjectDescriptionMappings_AppendsStructuredSections()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new[]
+        {
+            new { id = "field-name", type = "text", label = "Name" },
+            new { id = "field-goals", type = "textarea", label = "Ziele" },
+            new { id = "field-audience", type = "textarea", label = "Zielgruppe" },
+            new { id = "field-usp", type = "textarea", label = "USP" }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = Array.Empty<object>(),
+            projectFieldMappings = new[]
+            {
+                new { formFieldId = "field-name", aworkField = "name" },
+                new { formFieldId = "field-goals", aworkField = "description" },
+                new { formFieldId = "field-audience", aworkField = "description" },
+                new { formFieldId = "field-usp", aworkField = "description" }
+            }
+        };
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Structured Project Description Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "project",
+            AworkProjectTypeId = IntegrationTestFactory.AworkProjectTypeId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var submitDto = new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-name"] = "Projekt-Briefing",
+                ["field-goals"] = "Mehr Leads generieren",
+                ["field-audience"] = "B2B Marketing Teams",
+                ["field-usp"] = "Schnellere Umsetzung"
+            }
+        };
+
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", submitDto);
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var projectBodies = await GetAworkRequestBodiesAsync("/api/v1/projects", "POST");
+        var projectBody = Assert.Single(projectBodies);
+        var description = GetJsonStringProperty(projectBody, "description");
+
+        Assert.Equal(
+            """
+            **Ziele**
+            Mehr Leads generieren
+
+            **Zielgruppe**
+            B2B Marketing Teams
+
+            **USP**
+            Schnellere Umsetzung
+            """,
+            description);
+    }
+
+    [Fact]
     public async Task SubmitForm_TypeOfWorkMapping_CreatesWhenMissing_UsingPrimaryLabel()
     {
         var (_, token) = await _factory.SeedUserAsync();
@@ -315,5 +464,13 @@ public class SubmissionProcessingTests
         }
 
         return bodies;
+    }
+
+    private static string? GetJsonStringProperty(string json, string propertyName)
+    {
+        using var document = JsonDocument.Parse(json);
+        return document.RootElement.TryGetProperty(propertyName, out var property)
+            ? property.GetString()
+            : null;
     }
 }
