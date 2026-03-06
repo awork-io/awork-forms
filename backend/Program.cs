@@ -186,8 +186,32 @@ if (enableCors)
 app.UseRateLimiter();
 
 // Static files
+var frontendStaticFileOptions = new StaticFileOptions
+{
+    OnPrepareResponse = context =>
+    {
+        var path = context.Context.Request.Path.Value ?? string.Empty;
+
+        if (string.Equals(path, "/index.html", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+            context.Context.Response.Headers["Pragma"] = "no-cache";
+            context.Context.Response.Headers["Expires"] = "0";
+            return;
+        }
+
+        if (path.StartsWith("/assets/", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Context.Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+            return;
+        }
+
+        context.Context.Response.Headers["Cache-Control"] = "public, max-age=3600";
+    }
+};
+
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(frontendStaticFileOptions);
 
 var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
 Directory.CreateDirectory(uploadsPath);
@@ -204,6 +228,6 @@ app.UseJwtAuthentication(app.Services.GetRequiredService<JwtService>());
 app.MapEndpoints();
 
 // SPA fallback
-app.MapFallbackToFile("index.html");
+app.MapFallbackToFile("index.html", frontendStaticFileOptions);
 
 app.Run();
