@@ -1,7 +1,7 @@
 import type { Submission } from '@/lib/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, Info } from 'lucide-react';
+import { Eye, Info, Loader2, RotateCcw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { SubmissionStatusBadge } from '@/components/submissions/SubmissionStatusBadge';
@@ -12,6 +12,8 @@ interface SubmissionsTableProps {
   submissions: Submission[];
   formId?: string;
   onSelect: (submission: Submission) => void;
+  onRetry: (submission: Submission) => void;
+  retryingSubmissionId: number | null;
   formatDate: (dateString: string) => string;
   workspaceUrl?: string | null;
 }
@@ -20,6 +22,8 @@ export function SubmissionsTable({
   submissions,
   formId,
   onSelect,
+  onRetry,
+  retryingSubmissionId,
   formatDate,
   workspaceUrl,
 }: SubmissionsTableProps) {
@@ -36,7 +40,7 @@ export function SubmissionsTable({
           <TableHead className="font-semibold">{t('submissions.table.status')}</TableHead>
           <TableHead className="font-semibold">{t('submissions.table.awork')}</TableHead>
           <TableHead className="font-semibold">{t('submissions.table.submitted')}</TableHead>
-          <TableHead className="w-[80px]"></TableHead>
+          <TableHead className="w-[112px] text-right">{t('submissions.table.actions')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -84,18 +88,42 @@ export function SubmissionsTable({
                 {formatDate(submission.createdAt)}
               </span>
             </TableCell>
-            <TableCell>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelect(submission);
-                }}
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
+            <TableCell className="text-right">
+              <div className="flex items-center justify-end gap-1">
+                {submission.status === 'failed' ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRetry(submission);
+                    }}
+                    disabled={retryingSubmissionId === submission.id}
+                    title={t('submissions.retry')}
+                    aria-label={t('submissions.retry')}
+                  >
+                    {retryingSubmissionId === submission.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RotateCcw className="w-4 h-4" />
+                    )}
+                  </Button>
+                ) : null}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelect(submission);
+                  }}
+                  title={t('submissions.view')}
+                  aria-label={t('submissions.view')}
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}

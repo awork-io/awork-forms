@@ -14,6 +14,7 @@ import { EmptyStateCard } from '@/components/common/EmptyStateCard';
 import { SubmissionsTable } from '@/components/submissions/SubmissionsTable';
 import { SubmissionDetailDialog } from '@/components/submissions/SubmissionDetailDialog';
 import { formatDateForLocale } from '@/lib/date-format';
+import { getErrorMessage } from '@/lib/i18n-errors';
 
 export function SubmissionsPage() {
   const { t, i18n } = useTranslation();
@@ -28,6 +29,7 @@ export function SubmissionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [filterFormId, setFilterFormId] = useState<string>('all');
+  const [retryingSubmissionId, setRetryingSubmissionId] = useState<number | null>(null);
 
   const handleSelectSubmission = async (submission: Submission | null) => {
     setSelectedSubmission(submission);
@@ -40,6 +42,43 @@ export function SubmissionsPage() {
       }
     } else {
       setSelectedForm(null);
+    }
+  };
+
+  const updateSubmission = (updatedSubmission: Submission) => {
+    setSubmissions((current) => current.map((submission) =>
+      submission.id === updatedSubmission.id ? updatedSubmission : submission
+    ));
+    setSelectedSubmission((current) => current?.id === updatedSubmission.id ? updatedSubmission : current);
+  };
+
+  const handleRetrySubmission = async (submission: Submission) => {
+    setRetryingSubmissionId(submission.id);
+
+    try {
+      const updatedSubmission = await api.retrySubmission(submission.id);
+      updateSubmission(updatedSubmission);
+
+      if (updatedSubmission.status === 'completed') {
+        toast({
+          title: t('submissions.toast.retrySuccessTitle'),
+          description: t('submissions.toast.retrySuccessDesc'),
+        });
+      } else {
+        toast({
+          title: t('submissions.toast.retryFailedTitle'),
+          description: updatedSubmission.errorMessage || t('submissions.toast.retryFailedDesc'),
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t('common.error'),
+        description: getErrorMessage(error, t, 'submissions.toast.retryError'),
+        variant: 'destructive',
+      });
+    } finally {
+      setRetryingSubmissionId(null);
     }
   };
 
@@ -203,6 +242,8 @@ export function SubmissionsPage() {
             submissions={filteredSubmissions}
             formId={formId}
             onSelect={handleSelectSubmission}
+            onRetry={handleRetrySubmission}
+            retryingSubmissionId={retryingSubmissionId}
             formatDate={formatDate}
             workspaceUrl={user?.workspaceUrl}
           />

@@ -265,19 +265,7 @@ public class FormsService
             .Include(s => s.Form)
             .Where(s => s.Form.WorkspaceId == workspaceId)
             .OrderByDescending(s => s.CreatedAt)
-            .Select(s => new SubmissionListDto
-            {
-                Id = s.Id,
-                FormId = s.FormId,
-                FormName = s.Form.Name,
-                DataJson = s.DataJson,
-                Status = s.Status,
-                AworkProjectId = s.AworkProjectId,
-                AworkTaskId = s.AworkTaskId,
-                ErrorMessage = s.ErrorMessage,
-                CreatedAt = s.CreatedAt,
-                UpdatedAt = s.UpdatedAt
-            })
+            .Select(MapToSubmissionListDto())
             .ToList();
     }
 
@@ -290,20 +278,44 @@ public class FormsService
             .Include(s => s.Form)
             .Where(s => s.FormId == formId && s.Form.WorkspaceId == workspaceId)
             .OrderByDescending(s => s.CreatedAt)
-            .Select(s => new SubmissionListDto
-            {
-                Id = s.Id,
-                FormId = s.FormId,
-                FormName = s.Form.Name,
-                DataJson = s.DataJson,
-                Status = s.Status,
-                AworkProjectId = s.AworkProjectId,
-                AworkTaskId = s.AworkTaskId,
-                ErrorMessage = s.ErrorMessage,
-                CreatedAt = s.CreatedAt,
-                UpdatedAt = s.UpdatedAt
-            })
+            .Select(MapToSubmissionListDto())
             .ToList();
+    }
+
+    public SubmissionListDto? GetSubmissionById(int submissionId, Guid userId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var workspaceId = GetWorkspaceId(db, userId);
+        if (workspaceId == null) return null;
+
+        return db.Submissions
+            .Include(s => s.Form)
+            .Where(s => s.Id == submissionId && s.Form.WorkspaceId == workspaceId)
+            .Select(MapToSubmissionListDto())
+            .FirstOrDefault();
+    }
+
+    public bool PrepareFailedSubmissionRetry(int submissionId, Guid userId)
+    {
+        using var db = _dbFactory.CreateDbContext();
+        var workspaceId = GetWorkspaceId(db, userId);
+        if (workspaceId == null) return false;
+
+        var submission = db.Submissions
+            .Include(s => s.Form)
+            .FirstOrDefault(s => s.Id == submissionId && s.Form.WorkspaceId == workspaceId);
+
+        if (submission == null || !string.Equals(submission.Status, "failed", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        submission.Status = "pending";
+        submission.AworkProjectId = null;
+        submission.AworkTaskId = null;
+        submission.ErrorMessage = null;
+        submission.UpdatedAt = DateTime.UtcNow;
+        db.SaveChanges();
+
+        return true;
     }
 
     private static FormDetailDto MapToDetailDto(Form form) => new()
@@ -331,6 +343,20 @@ public class FormsService
         IsActive = form.IsActive,
         CreatedAt = form.CreatedAt,
         UpdatedAt = form.UpdatedAt
+    };
+
+    private static System.Linq.Expressions.Expression<Func<Submission, SubmissionListDto>> MapToSubmissionListDto() => s => new SubmissionListDto
+    {
+        Id = s.Id,
+        FormId = s.FormId,
+        FormName = s.Form.Name,
+        DataJson = s.DataJson,
+        Status = s.Status,
+        AworkProjectId = s.AworkProjectId,
+        AworkTaskId = s.AworkTaskId,
+        ErrorMessage = s.ErrorMessage,
+        CreatedAt = s.CreatedAt,
+        UpdatedAt = s.UpdatedAt
     };
 
     private static Dictionary<string, string>? DeserializeTranslations(string? json)

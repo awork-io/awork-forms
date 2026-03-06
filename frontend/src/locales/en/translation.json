@@ -453,8 +453,14 @@
     "copyFormLink": "Copy Form Link",
     "copyToastTitle": "Copied",
     "copyToastDesc": "Form link copied to clipboard",
+    "retry": "Retry",
     "toast": {
-      "loadError": "Failed to load submissions"
+      "loadError": "Failed to load submissions",
+      "retrySuccessTitle": "Submission retried",
+      "retrySuccessDesc": "The failed submission was processed successfully.",
+      "retryFailedTitle": "Retry failed",
+      "retryFailedDesc": "The submission could not be processed.",
+      "retryError": "Failed to retry submission"
     },
     "table": {
       "form": "Form",
