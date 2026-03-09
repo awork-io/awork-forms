@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using Backend.Awork;
 using Backend.Data;
@@ -400,10 +401,27 @@ public class SubmissionProcessor
                 continue;
 
             var label = formFields.FirstOrDefault(f => f.Id == mapping.FormFieldId)?.Label?.Trim();
-            sections.Add(string.IsNullOrWhiteSpace(label) ? value : $"**{label}**\n{value}");
+            if (!string.IsNullOrWhiteSpace(label))
+                sections.Add($"<p><strong>{WebUtility.HtmlEncode(label)}</strong></p>");
+
+            sections.AddRange(ConvertPlainTextToHtmlParagraphs(value));
         }
 
-        return sections.Count > 0 ? string.Join("\n\n", sections) : null;
+        return sections.Count > 0 ? string.Concat(sections) : null;
+    }
+
+    private static IEnumerable<string> ConvertPlainTextToHtmlParagraphs(string value)
+    {
+        var normalizedValue = value
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n');
+
+        foreach (var paragraph in normalizedValue.Split(["\n\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var encodedParagraph = WebUtility.HtmlEncode(paragraph).Replace("\n", "<br />", StringComparison.Ordinal);
+            if (!string.IsNullOrWhiteSpace(encodedParagraph))
+                yield return $"<p>{encodedParagraph}</p>";
+        }
     }
 
     private static string? GetMappedValue(
