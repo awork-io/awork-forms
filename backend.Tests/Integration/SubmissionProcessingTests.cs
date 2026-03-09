@@ -221,16 +221,7 @@ public class SubmissionProcessingTests
         var description = GetJsonStringProperty(taskBody, "description");
 
         Assert.Equal(
-            """
-            **Ziele**
-            Mehr Leads generieren
-
-            **Zielgruppe**
-            B2B Marketing Teams
-
-            **USP**
-            Schnellere Umsetzung
-            """,
+            "<p><strong>Ziele</strong></p><p>Mehr Leads generieren</p><p><strong>Zielgruppe</strong></p><p>B2B Marketing Teams</p><p><strong>USP</strong></p><p>Schnellere Umsetzung</p>",
             description);
     }
 
@@ -295,16 +286,7 @@ public class SubmissionProcessingTests
         var description = GetJsonStringProperty(projectBody, "description");
 
         Assert.Equal(
-            """
-            **Ziele**
-            Mehr Leads generieren
-
-            **Zielgruppe**
-            B2B Marketing Teams
-
-            **USP**
-            Schnellere Umsetzung
-            """,
+            "<p><strong>Ziele</strong></p><p>Mehr Leads generieren</p><p><strong>Zielgruppe</strong></p><p>B2B Marketing Teams</p><p><strong>USP</strong></p><p>Schnellere Umsetzung</p>",
             description);
     }
 
