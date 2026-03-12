@@ -60,6 +60,17 @@ export function PublicFormPage() {
     loadForm();
   }, [publicId, t]);
 
+  const parseAcceptedExtensions = (acceptedFileTypes?: string): Set<string> => {
+    if (!acceptedFileTypes) return new Set();
+    return new Set(
+      acceptedFileTypes
+        .split(',')
+        .map((entry) => entry.trim().toLowerCase())
+        .filter(Boolean)
+        .map((entry) => (entry.startsWith('.') ? entry : `.${entry}`))
+    );
+  };
+
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
@@ -82,6 +93,22 @@ export function PublicFormPage() {
           errors[field.id] = t('publicForm.emailError');
         }
       }
+
+      if (field.type === 'file' && value instanceof File) {
+        const maxFileSizeMb = field.maxFileSizeMB || 10;
+        if (value.size > maxFileSizeMb * 1024 * 1024) {
+          errors[field.id] = t('publicForm.fileUpload.maxSizeError', { maxSizeMb: maxFileSizeMb });
+          return;
+        }
+
+        const acceptedExtensions = parseAcceptedExtensions(field.acceptedFileTypes);
+        if (acceptedExtensions.size > 0) {
+          const fileExtension = `.${value.name.split('.').pop()?.toLowerCase() || ''}`;
+          if (!acceptedExtensions.has(fileExtension)) {
+            errors[field.id] = t('publicForm.fileUpload.invalidTypeError');
+          }
+        }
+      }
     });
 
     setValidationErrors(errors);
@@ -100,9 +127,11 @@ export function PublicFormPage() {
     try {
       const processedData: Record<string, unknown> = {};
 
-      for (const [fieldId, value] of Object.entries(formData)) {
+      for (const field of fields) {
+        const fieldId = field.id;
+        const value = formData[fieldId];
         if (value instanceof File) {
-          const uploadResult = await api.uploadPublicFile(publicId, value);
+          const uploadResult = await api.uploadPublicFile(publicId, value, fieldId);
           processedData[fieldId] = {
             fileName: uploadResult.fileName,
             fileUrl: uploadResult.fileUrl,

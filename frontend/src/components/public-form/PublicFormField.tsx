@@ -31,6 +31,14 @@ export function PublicFormField({
   const fieldLabel = fieldTranslation?.label || field.label;
   const fieldPlaceholder = fieldTranslation?.placeholder || field.placeholder;
   const hasError = Boolean(validationError);
+  const fileTypesHint = field.type === 'file'
+    ? (field.acceptedFileTypes
+      ? field.acceptedFileTypes.split(',').map((value) => value.trim()).filter(Boolean).join(', ')
+      : t('publicForm.fileUpload.anyType'))
+    : '';
+  const maxFileSizeHint = field.type === 'file'
+    ? t('publicForm.fileUpload.maxSizeHint', { maxSizeMb: field.maxFileSizeMB || 10 })
+    : '';
 
   const inputClasses = cn(
     'w-full px-3 py-3 text-base bg-white border-2 rounded-xl transition-all duration-300 outline-none',
@@ -206,6 +214,7 @@ export function PublicFormField({
               id={`file-${field.id}`}
               type="file"
               className="sr-only"
+              accept={field.acceptedFileTypes || undefined}
               onChange={(event) => {
                 const files = event.target.files;
                 if (files && files.length > 0) {
@@ -243,7 +252,7 @@ export function PublicFormField({
                   <span className="font-medium text-blue-600">{t('publicForm.fileUpload.clickToUpload')}</span>{' '}
                   {t('publicForm.fileUpload.dragAndDrop')}
                 </p>
-                <p className="text-xs text-gray-400">{t('publicForm.fileUpload.fileTypes')}</p>
+                <p className="text-xs text-gray-400">{fileTypesHint} {maxFileSizeHint}</p>
               </div>
             )}
           </div>

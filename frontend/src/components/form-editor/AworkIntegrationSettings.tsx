@@ -263,6 +263,16 @@ export function AworkIntegrationSettings({
     return user.email || t('aworkIntegration.unknownUser');
   };
 
+  const getProjectCompanyName = (project: AworkProject): string | null => {
+    return project.company?.name?.trim() || null;
+  };
+
+  const getProjectDisplayLabel = (project: AworkProject): string => {
+    const companyName = getProjectCompanyName(project);
+    if (!companyName) return project.name;
+    return `${project.name} · ${companyName}`;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -324,7 +334,8 @@ export function AworkIntegrationSettings({
                   <SearchableSelect
                     options={projects.map((project) => ({
                       value: project.id,
-                      label: project.name,
+                      label: getProjectDisplayLabel(project),
+                      secondaryLabel: project.projectKey || undefined,
                     }))}
                     value={config.projectId}
                     onValueChange={handleProjectChange}

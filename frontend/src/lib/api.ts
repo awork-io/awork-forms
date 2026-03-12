@@ -100,8 +100,14 @@ export interface AworkProject {
   id: string;
   name: string;
   description?: string;
+  projectKey?: string;
   projectTypeId?: string;
   projectStatusId?: string;
+  companyId?: string;
+  company?: {
+    id: string;
+    name?: string;
+  };
   startDate?: string;
   dueDate?: string;
   isBillableByDefault: boolean;
@@ -445,10 +451,17 @@ class ApiClient {
     return response.json();
   }
 
-  async uploadPublicFile(publicId: string, file: File): Promise<{ fileName: string; fileUrl: string; fileSize: number }> {
+  async uploadPublicFile(
+    publicId: string,
+    file: File,
+    fieldId?: string
+  ): Promise<{ fileName: string; fileUrl: string; fileSize: number }> {
     const url = `${API_BASE_URL}/api/f/${publicId}/upload`;
     const formData = new FormData();
     formData.append('file', file);
+    if (fieldId) {
+      formData.append('fieldId', fieldId);
+    }
 
     const response = await fetch(url, {
       method: 'POST',

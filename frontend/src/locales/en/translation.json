@@ -526,7 +526,11 @@
     "fileUpload": {
       "clickToUpload": "Click to upload",
       "dragAndDrop": "or drag and drop",
-      "fileTypes": "PNG, JPG, PDF up to 10MB"
+      "fileTypes": "PNG, JPG, PDF up to 10MB",
+      "anyType": "Any supported file type",
+      "maxSizeHint": "(max {{maxSizeMb}} MB)",
+      "invalidTypeError": "This file type is not allowed for this field.",
+      "maxSizeError": "The file is too large. Maximum allowed: {{maxSizeMb}} MB."
     },
     "logoAlt": "Logo",
     "submit": "Submit",
