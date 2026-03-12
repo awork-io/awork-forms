@@ -71,8 +71,8 @@
     "signOut": "Abmelden"
   },
   "login": {
-    "tagline": "Erstelle Formulare, die mit awork-Projekten und -Aufgaben verbunden sind",
-    "intro": "Melde dich mit deinem awork-Konto an, um loszulegen.",
+    "tagline": "Erstelle Formulare, die mit awork Projekten und Aufgaben verbunden sind",
+    "intro": "Melde dich mit deinem awork Konto an, um loszulegen.",
     "signIn": "Mit awork anmelden",
     "redirecting": "Weiterleitung...",
     "error": "Login konnte nicht gestartet werden. Bitte versuch es erneut."
