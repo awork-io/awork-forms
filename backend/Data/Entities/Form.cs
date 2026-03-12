@@ -5,6 +5,8 @@ public class Form
     public int Id { get; set; }
     public Guid PublicId { get; set; }
     public Guid WorkspaceId { get; set; }
+    public Guid? CreatedBy { get; set; }
+    public Guid? UpdatedBy { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? NameTranslationsJson { get; set; }
@@ -25,6 +27,7 @@ public class Form
     public string? LogoUrl { get; set; }
     public byte[]? LogoData { get; set; }
     public string? LogoContentType { get; set; }
+    public bool IsSharedWithWorkspace { get; set; } = true;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

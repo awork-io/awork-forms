@@ -43,11 +43,11 @@ public class SubmissionProcessor
             }
 
             var form = submission.Form;
-            var userId = await GetWorkspaceUserId(db, form.WorkspaceId);
+            var userId = await GetSubmissionUserId(db, form);
             if (userId == null)
             {
                 submission.Status = "failed";
-                submission.ErrorMessage = "No authenticated user available for this workspace";
+                submission.ErrorMessage = "No authenticated user available for the form owner";
                 submission.UpdatedAt = DateTime.UtcNow;
                 await db.SaveChangesAsync();
                 result.Status = "failed";
@@ -591,10 +591,20 @@ public class SubmissionProcessor
         return true;
     }
 
-    private static async Task<Guid?> GetWorkspaceUserId(AppDbContext db, Guid workspaceId)
+    private static async Task<Guid?> GetSubmissionUserId(AppDbContext db, Data.Entities.Form form)
     {
+        if (form.CreatedBy != null)
+        {
+            return await db.Users
+                .Where(u => u.Id == form.CreatedBy &&
+                    u.AworkWorkspaceId == form.WorkspaceId &&
+                    !string.IsNullOrEmpty(u.AccessToken))
+                .Select(u => (Guid?)u.Id)
+                .FirstOrDefaultAsync();
+        }
+
         return await db.Users
-            .Where(u => u.AworkWorkspaceId == workspaceId && !string.IsNullOrEmpty(u.AccessToken))
+            .Where(u => u.AworkWorkspaceId == form.WorkspaceId && !string.IsNullOrEmpty(u.AccessToken))
             .OrderByDescending(u => u.UpdatedAt)
             .Select(u => (Guid?)u.Id)
             .FirstOrDefaultAsync();

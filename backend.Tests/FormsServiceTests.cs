@@ -11,6 +11,7 @@ public class FormsServiceTests : IDisposable
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly FormsService _formsService;
     private readonly Guid _testUserId = Guid.NewGuid();
+    private readonly Guid _sameWorkspaceUserId = Guid.NewGuid();
     private readonly Guid _workspaceId = Guid.NewGuid();
     private readonly Guid _otherWorkspaceUserId = Guid.NewGuid();
     private readonly Guid _otherWorkspaceId = Guid.NewGuid();
@@ -31,6 +32,16 @@ public class FormsServiceTests : IDisposable
             Id = _testUserId,
             Email = "test@example.com",
             Name = "Test User",
+            AworkUserId = Guid.NewGuid(),
+            AworkWorkspaceId = _workspaceId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+        db.Users.Add(new User
+        {
+            Id = _sameWorkspaceUserId,
+            Email = "teammate@example.com",
+            Name = "Teammate User",
             AworkUserId = Guid.NewGuid(),
             AworkWorkspaceId = _workspaceId,
             CreatedAt = DateTime.UtcNow,
@@ -62,6 +73,9 @@ public class FormsServiceTests : IDisposable
         Assert.Equal("Test Form", result.Name);
         Assert.Equal("Test Description", result.Description);
         Assert.NotEqual(Guid.Empty, result.PublicId);
+        Assert.Equal(_testUserId, result.CreatedBy);
+        Assert.Equal(_testUserId, result.UpdatedBy);
+        Assert.True(result.IsSharedWithWorkspace);
         Assert.True(result.IsActive);
     }
 
@@ -121,10 +135,11 @@ public class FormsServiceTests : IDisposable
     public void UpdateForm_WithValidData_UpdatesForm()
     {
         var created = _formsService.CreateForm(new CreateFormDto { Name = "Original Name" }, _testUserId);
-        var result = _formsService.UpdateForm(created.Id, new UpdateFormDto { Name = "Updated Name" }, _testUserId);
+        var result = _formsService.UpdateForm(created.Id, new UpdateFormDto { Name = "Updated Name" }, _sameWorkspaceUserId);
 
         Assert.NotNull(result);
         Assert.Equal("Updated Name", result.Name);
+        Assert.Equal(_sameWorkspaceUserId, result.UpdatedBy);
     }
 
     [Fact]
@@ -297,7 +312,83 @@ public class FormsServiceTests : IDisposable
         Assert.Equal(created.FieldMappingsJson, duplicated.FieldMappingsJson);
         Assert.Equal(created.PrimaryColor, duplicated.PrimaryColor);
         Assert.Equal(created.BackgroundColor, duplicated.BackgroundColor);
+        Assert.Equal(created.IsSharedWithWorkspace, duplicated.IsSharedWithWorkspace);
+        Assert.Equal(_testUserId, duplicated.CreatedBy);
+        Assert.Equal(_testUserId, duplicated.UpdatedBy);
         Assert.Equal(created.IsActive, duplicated.IsActive);
+    }
+
+    [Fact]
+    public void GetFormsByUser_PrivateForm_IsHiddenFromTeammates()
+    {
+        var created = _formsService.CreateForm(new CreateFormDto
+        {
+            Name = "Private Form",
+            IsSharedWithWorkspace = false
+        }, _testUserId);
+
+        var ownerForms = _formsService.GetFormsByUser(_testUserId);
+        var teammateForms = _formsService.GetFormsByUser(_sameWorkspaceUserId);
+
+        Assert.Contains(ownerForms, form => form.Id == created.Id);
+        Assert.DoesNotContain(teammateForms, form => form.Id == created.Id);
+        Assert.Null(_formsService.GetFormById(created.Id, _sameWorkspaceUserId));
+    }
+
+    [Fact]
+    public void GetFormsByUser_SharedForm_IsVisibleToTeammates()
+    {
+        var created = _formsService.CreateForm(new CreateFormDto
+        {
+            Name = "Shared Form",
+            IsSharedWithWorkspace = true
+        }, _testUserId);
+
+        var teammateForms = _formsService.GetFormsByUser(_sameWorkspaceUserId);
+        var teammateForm = _formsService.GetFormById(created.Id, _sameWorkspaceUserId);
+
+        Assert.Contains(teammateForms, form => form.Id == created.Id);
+        Assert.NotNull(teammateForm);
+        Assert.Equal(_testUserId, teammateForm!.CreatedBy);
+    }
+
+    [Fact]
+    public void UpdateForm_PrivateForm_ByTeammate_ReturnsNull()
+    {
+        var created = _formsService.CreateForm(new CreateFormDto
+        {
+            Name = "Private Form",
+            IsSharedWithWorkspace = false
+        }, _testUserId);
+
+        var result = _formsService.UpdateForm(created.Id, new UpdateFormDto { Name = "Nope" }, _sameWorkspaceUserId);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetSubmissionsByUser_PrivateFormSubmissions_AreHiddenFromTeammates()
+    {
+        var privateForm = _formsService.CreateForm(new CreateFormDto
+        {
+            Name = "Private Form",
+            IsSharedWithWorkspace = false
+        }, _testUserId);
+        var sharedForm = _formsService.CreateForm(new CreateFormDto
+        {
+            Name = "Shared Form",
+            IsSharedWithWorkspace = true
+        }, _testUserId);
+
+        _formsService.CreateSubmission(privateForm.Id, "{\"private\":true}");
+        _formsService.CreateSubmission(sharedForm.Id, "{\"shared\":true}");
+
+        var ownerSubmissions = _formsService.GetSubmissionsByUser(_testUserId);
+        var teammateSubmissions = _formsService.GetSubmissionsByUser(_sameWorkspaceUserId);
+
+        Assert.Equal(2, ownerSubmissions.Count);
+        Assert.Single(teammateSubmissions);
+        Assert.Equal(sharedForm.Id, teammateSubmissions[0].FormId);
     }
 
     [Fact]

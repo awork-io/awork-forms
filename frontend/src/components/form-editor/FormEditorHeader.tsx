@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 interface FormEditorHeaderProps {
   formName: string;
+  isSharedWithWorkspace: boolean;
   isActive: boolean;
   fieldsCount: number;
   publicId?: string | null;
@@ -17,6 +18,7 @@ interface FormEditorHeaderProps {
 
 export function FormEditorHeader({
   formName,
+  isSharedWithWorkspace,
   isActive,
   fieldsCount,
   publicId,
@@ -36,6 +38,9 @@ export function FormEditorHeader({
         </Button>
         <h1 className="text-lg font-bold">{formName || t('formEditor.untitled')}</h1>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Badge variant="outline">
+            {isSharedWithWorkspace ? t('formsPage.sharedBadge') : t('formsPage.privateBadge')}
+          </Badge>
           <Badge
             variant={isActive ? 'default' : 'secondary'}
             className={isActive ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0' : ''}

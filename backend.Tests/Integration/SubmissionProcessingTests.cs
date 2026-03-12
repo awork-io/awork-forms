@@ -97,6 +97,71 @@ public class SubmissionProcessingTests
     }
 
     [Fact]
+    public async Task SubmitForm_UsesCreatorAccessToken_EvenAfterAnotherUserUpdatesForm()
+    {
+        var workspaceId = Guid.NewGuid();
+        var uniqueTaskName = $"Creator Token {Guid.NewGuid():N}";
+        var (owner, ownerToken) = await _factory.SeedUserAsync(workspaceId, "owner-access-token", "owner-submit@test.local", "Owner");
+        var (_, teammateToken) = await _factory.SeedUserAsync(workspaceId, "teammate-access-token", "teammate-submit@test.local", "Teammate");
+        using var ownerClient = _factory.CreateAuthenticatedClient(ownerToken);
+        using var teammateClient = _factory.CreateAuthenticatedClient(teammateToken);
+
+        var fields = new[]
+        {
+            new { id = "field-name", type = "text", label = "Name", required = true }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = new[]
+            {
+                new { formFieldId = "field-name", aworkField = "name" }
+            },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createResponse = await ownerClient.PostAsJsonAsync("/api/forms", new CreateFormDto
+        {
+            Name = "Owner Token Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsSharedWithWorkspace = true,
+            IsActive = true
+        });
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+        Assert.Equal(owner.Id, created!.CreatedBy);
+
+        var updateResponse = await teammateClient.PutAsJsonAsync($"/api/forms/{created.Id}", new UpdateFormDto
+        {
+            Description = "Updated by teammate"
+        });
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(updated);
+        Assert.Equal(owner.Id, updated!.CreatedBy);
+        Assert.NotEqual(owner.Id, updated.UpdatedBy);
+
+        using var publicClient = _factory.CreateClient();
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created.PublicId}/submit", new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-name"] = uniqueTaskName
+            }
+        });
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var requests = await GetAworkRequestsAsync("/api/v1/tasks", "POST");
+        var matchingRequest = Assert.Single(requests, request => request.Body.Contains(uniqueTaskName, StringComparison.Ordinal));
+        Assert.Equal("Bearer owner-access-token", matchingRequest.Authorization);
+    }
+
+    [Fact]
     public async Task SubmitForm_SelectMapping_UsesPrimaryOptionLabelForTags()
     {
         var (_, token) = await _factory.SeedUserAsync();
@@ -485,6 +550,12 @@ public class SubmissionProcessingTests
 
     private async Task<List<string>> GetAworkRequestBodiesAsync(string path, string method = "POST")
     {
+        var requests = await GetAworkRequestsAsync(path, method);
+        return requests.Select(request => request.Body).ToList();
+    }
+
+    private async Task<List<AworkRequestEntry>> GetAworkRequestsAsync(string path, string method = "POST")
+    {
         using var client = new HttpClient { BaseAddress = new Uri(_factory.AworkAdminBaseUrl) };
         var response = await client.GetAsync("/__admin/requests");
         response.EnsureSuccessStatusCode();
@@ -493,7 +564,7 @@ public class SubmissionProcessingTests
         if (!document.RootElement.TryGetProperty("requests", out var requestsElement) || requestsElement.ValueKind != JsonValueKind.Array)
             return [];
 
-        var bodies = new List<string>();
+        var requests = new List<AworkRequestEntry>();
         foreach (var requestEntry in requestsElement.EnumerateArray())
         {
             if (!requestEntry.TryGetProperty("request", out var request))
@@ -507,10 +578,28 @@ public class SubmissionProcessingTests
                 continue;
 
             var body = request.TryGetProperty("body", out var bodyElement) ? bodyElement.GetString() : null;
-            bodies.Add(body ?? string.Empty);
+            string? authorization = null;
+            if (request.TryGetProperty("headers", out var headersElement) &&
+                headersElement.TryGetProperty("Authorization", out var authorizationElement))
+            {
+                authorization = authorizationElement.ValueKind switch
+                {
+                    JsonValueKind.String => authorizationElement.GetString(),
+                    JsonValueKind.Array => authorizationElement.EnumerateArray()
+                        .Select(v => v.GetString())
+                        .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)),
+                    JsonValueKind.Object when authorizationElement.TryGetProperty("values", out var valuesElement) &&
+                        valuesElement.ValueKind == JsonValueKind.Array => valuesElement.EnumerateArray()
+                            .Select(v => v.GetString())
+                            .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)),
+                    _ => null
+                };
+            }
+
+            requests.Add(new AworkRequestEntry(body ?? string.Empty, authorization));
         }
 
-        return bodies;
+        return requests;
     }
 
     private static string? GetJsonStringProperty(string json, string propertyName)
@@ -520,4 +609,6 @@ public class SubmissionProcessingTests
             ? property.GetString()
             : null;
     }
+
+    private sealed record AworkRequestEntry(string Body, string? Authorization);
 }

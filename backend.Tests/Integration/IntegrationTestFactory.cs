@@ -70,6 +70,19 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
 
     public async Task<(User user, string token)> SeedUserAsync()
     {
+        return await SeedUserAsync(
+            workspaceId: Guid.NewGuid(),
+            accessToken: "access-token",
+            email: "integration@test.local",
+            name: "Integration User");
+    }
+
+    public async Task<(User user, string token)> SeedUserAsync(
+        Guid workspaceId,
+        string accessToken,
+        string email,
+        string name)
+    {
         using var scope = Services.CreateScope();
         var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
         await using var db = await dbFactory.CreateDbContextAsync();
@@ -78,10 +91,10 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
         {
             Id = Guid.NewGuid(),
             AworkUserId = Guid.NewGuid(),
-            AworkWorkspaceId = Guid.NewGuid(),
-            Email = "integration@test.local",
-            Name = "Integration User",
-            AccessToken = "access-token",
+            AworkWorkspaceId = workspaceId,
+            Email = email,
+            Name = name,
+            AccessToken = accessToken,
             RefreshToken = "refresh-token",
             TokenExpiresAt = DateTime.UtcNow.AddHours(1),
             CreatedAt = DateTime.UtcNow,

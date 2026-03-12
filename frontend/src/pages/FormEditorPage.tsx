@@ -63,6 +63,7 @@ export function FormEditorPage() {
   const [formDescription, setFormDescription] = useState('');
   const [nameTranslations, setNameTranslations] = useState<Record<string, string>>({});
   const [descriptionTranslations, setDescriptionTranslations] = useState<Record<string, string>>({});
+  const [isSharedWithWorkspace, setIsSharedWithWorkspace] = useState(true);
   const [isActive, setIsActive] = useState(true);
   const [fields, setFields] = useState<FormField[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
@@ -112,6 +113,7 @@ export function FormEditorPage() {
       setFormDescription(data.description || '');
       setNameTranslations(data.nameTranslations || {});
       setDescriptionTranslations(data.descriptionTranslations || {});
+      setIsSharedWithWorkspace(data.isSharedWithWorkspace);
       setIsActive(data.isActive);
 
       // Parse fields from JSON
@@ -220,6 +222,7 @@ export function FormEditorPage() {
         nameTranslations: normalizedNameTranslations,
         descriptionTranslations: normalizedDescriptionTranslations,
         fieldsJson: JSON.stringify(fields),
+        isSharedWithWorkspace,
         isActive,
         ...aworkData,
         ...stylingData,
@@ -386,6 +389,7 @@ export function FormEditorPage() {
     <div className="flex flex-col h-full">
       <FormEditorHeader
         formName={formName}
+        isSharedWithWorkspace={isSharedWithWorkspace}
         isActive={isActive}
         fieldsCount={fields.length}
         publicId={form?.publicId}
@@ -404,9 +408,11 @@ export function FormEditorPage() {
             <FormEditorMetaPanel
               formName={formName}
               formDescription={formDescription}
+              isSharedWithWorkspace={isSharedWithWorkspace}
               isActive={isActive}
               onFormNameChange={(event) => setFormName(event.target.value)}
               onFormDescriptionChange={(event) => setFormDescription(event.target.value)}
+              onSharedWithWorkspaceChange={setIsSharedWithWorkspace}
               onActiveChange={setIsActive}
               nameTranslations={nameTranslations}
               descriptionTranslations={descriptionTranslations}

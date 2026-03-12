@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(e => e.PublicId).IsUnique();
             entity.HasIndex(e => e.WorkspaceId);
+            entity.HasIndex(e => new { e.WorkspaceId, e.IsSharedWithWorkspace, e.CreatedBy });
         });
 
         modelBuilder.Entity<Submission>(entity =>

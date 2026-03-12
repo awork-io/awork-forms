@@ -6,8 +6,11 @@ public class FormListDto
 {
     public int Id { get; set; }
     public Guid PublicId { get; set; }
+    public Guid? CreatedBy { get; set; }
+    public Guid? UpdatedBy { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public bool IsSharedWithWorkspace { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -19,6 +22,8 @@ public class FormDetailDto
 {
     public int Id { get; set; }
     public Guid PublicId { get; set; }
+    public Guid? CreatedBy { get; set; }
+    public Guid? UpdatedBy { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public Dictionary<string, string>? NameTranslations { get; set; }
@@ -39,6 +44,7 @@ public class FormDetailDto
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }
     public string? LogoUrl { get; set; }
+    public bool IsSharedWithWorkspace { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -64,6 +70,7 @@ public class CreateFormDto
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }
+    public bool? IsSharedWithWorkspace { get; set; }
     public bool? IsActive { get; set; }
 }
 
@@ -88,6 +95,7 @@ public class UpdateFormDto
     public string? PrimaryColor { get; set; }
     public string? BackgroundColor { get; set; }
     public string? LogoUrl { get; set; }
+    public bool? IsSharedWithWorkspace { get; set; }
     public bool? IsActive { get; set; }
 }
 

@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { InputField } from '@/components/ui/form-field';
+import { Badge } from '@/components/ui/badge';
 import { api, type Form } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { ShareFormDialog } from '@/components/form-editor/ShareFormDialog';
@@ -224,7 +225,12 @@ export function FormsPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0 pr-2">
-                    <CardTitle className="text-lg truncate group-hover:text-primary transition-colors">{form.name}</CardTitle>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <CardTitle className="text-lg truncate min-w-0 group-hover:text-primary transition-colors">{form.name}</CardTitle>
+                      <Badge variant="outline" className="shrink-0">
+                        {form.isSharedWithWorkspace ? t('formsPage.sharedBadge') : t('formsPage.privateBadge')}
+                      </Badge>
+                    </div>
                     {form.description && (
                       <CardDescription className="mt-1.5 line-clamp-2">{form.description}</CardDescription>
                     )}

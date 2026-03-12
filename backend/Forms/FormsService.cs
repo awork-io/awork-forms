@@ -21,15 +21,17 @@ public class FormsService
         using var db = _dbFactory.CreateDbContext();
         var workspaceId = GetWorkspaceId(db, userId);
         if (workspaceId == null) return [];
-        return db.Forms
-            .Where(f => f.WorkspaceId == workspaceId)
+        return ApplyFormAccessFilter(db.Forms, workspaceId.Value, userId)
             .OrderByDescending(f => f.UpdatedAt)
             .Select(f => new FormListDto
             {
                 Id = f.Id,
                 PublicId = f.PublicId,
+                CreatedBy = f.CreatedBy,
+                UpdatedBy = f.UpdatedBy,
                 Name = f.Name,
                 Description = f.Description,
+                IsSharedWithWorkspace = f.IsSharedWithWorkspace,
                 IsActive = f.IsActive,
                 CreatedAt = f.CreatedAt,
                 UpdatedAt = f.UpdatedAt,
@@ -44,7 +46,8 @@ public class FormsService
         using var db = _dbFactory.CreateDbContext();
         var workspaceId = GetWorkspaceId(db, userId);
         if (workspaceId == null) return null;
-        var form = db.Forms.FirstOrDefault(f => f.Id == formId && f.WorkspaceId == workspaceId);
+        var form = ApplyFormAccessFilter(db.Forms, workspaceId.Value, userId)
+            .FirstOrDefault(f => f.Id == formId);
         if (form == null) return null;
         return MapToDetailDto(form);
     }
@@ -61,6 +64,8 @@ public class FormsService
         {
             PublicId = Guid.NewGuid(),
             WorkspaceId = user.AworkWorkspaceId,
+            CreatedBy = userId,
+            UpdatedBy = userId,
             Name = dto.Name,
             Description = dto.Description,
             NameTranslationsJson = SerializeTranslations(dto.NameTranslations),
@@ -78,6 +83,7 @@ public class FormsService
             FieldMappingsJson = dto.FieldMappingsJson,
             PrimaryColor = dto.PrimaryColor,
             BackgroundColor = dto.BackgroundColor,
+            IsSharedWithWorkspace = dto.IsSharedWithWorkspace ?? true,
             IsActive = dto.IsActive ?? true,
             CreatedAt = now,
             UpdatedAt = now
@@ -95,7 +101,8 @@ public class FormsService
         var workspaceId = GetWorkspaceId(db, userId);
         if (workspaceId == null) return null;
 
-        var source = db.Forms.FirstOrDefault(f => f.Id == formId && f.WorkspaceId == workspaceId);
+        var source = ApplyFormAccessFilter(db.Forms, workspaceId.Value, userId)
+            .FirstOrDefault(f => f.Id == formId);
         if (source == null) return null;
 
         var now = DateTime.UtcNow;
@@ -105,6 +112,8 @@ public class FormsService
         {
             PublicId = publicId,
             WorkspaceId = source.WorkspaceId,
+            CreatedBy = userId,
+            UpdatedBy = userId,
             Name = duplicateName,
             Description = source.Description,
             NameTranslationsJson = source.NameTranslationsJson,
@@ -125,6 +134,7 @@ public class FormsService
             LogoData = source.LogoData,
             LogoContentType = source.LogoContentType,
             LogoUrl = source.LogoData != null ? $"/api/f/{publicId}/logo" : null,
+            IsSharedWithWorkspace = source.IsSharedWithWorkspace,
             IsActive = source.IsActive,
             CreatedAt = now,
             UpdatedAt = now
@@ -161,7 +171,8 @@ public class FormsService
         using var db = _dbFactory.CreateDbContext();
         var workspaceId = GetWorkspaceId(db, userId);
         if (workspaceId == null) return null;
-        var form = db.Forms.FirstOrDefault(f => f.Id == formId && f.WorkspaceId == workspaceId);
+        var form = ApplyFormAccessFilter(db.Forms, workspaceId.Value, userId)
+            .FirstOrDefault(f => f.Id == formId);
         if (form == null) return null;
 
         if (dto.Name != null) form.Name = dto.Name;
@@ -182,12 +193,14 @@ public class FormsService
         if (dto.PrimaryColor != null) form.PrimaryColor = dto.PrimaryColor;
         if (dto.BackgroundColor != null) form.BackgroundColor = dto.BackgroundColor;
         if (dto.LogoUrl != null) form.LogoUrl = dto.LogoUrl == "" ? null : dto.LogoUrl;
+        if (dto.IsSharedWithWorkspace != null) form.IsSharedWithWorkspace = dto.IsSharedWithWorkspace.Value;
         if (dto.IsActive != null) form.IsActive = dto.IsActive.Value;
 
         var typeOfWorkError = ValidateTypeOfWork(form.ActionType, form.AworkTypeOfWorkId, form.FieldMappingsJson, form.FieldsJson);
         if (typeOfWorkError != null)
             throw new ValidationException(typeOfWorkError);
 
+        form.UpdatedBy = userId;
         form.UpdatedAt = DateTime.UtcNow;
         db.SaveChanges();
 
@@ -199,7 +212,8 @@ public class FormsService
         using var db = _dbFactory.CreateDbContext();
         var workspaceId = GetWorkspaceId(db, userId);
         if (workspaceId == null) return false;
-        var form = db.Forms.FirstOrDefault(f => f.Id == formId && f.WorkspaceId == workspaceId);
+        var form = ApplyFormAccessFilter(db.Forms, workspaceId.Value, userId)
+            .FirstOrDefault(f => f.Id == formId);
         if (form == null) return false;
 
         db.Forms.Remove(form);
@@ -263,7 +277,8 @@ public class FormsService
         if (workspaceId == null) return [];
         return db.Submissions
             .Include(s => s.Form)
-            .Where(s => s.Form.WorkspaceId == workspaceId)
+            .Where(s => s.Form.WorkspaceId == workspaceId &&
+                (s.Form.IsSharedWithWorkspace || s.Form.CreatedBy == userId))
             .OrderByDescending(s => s.CreatedAt)
             .Select(MapToSubmissionListDto())
             .ToList();
@@ -276,7 +291,9 @@ public class FormsService
         if (workspaceId == null) return [];
         return db.Submissions
             .Include(s => s.Form)
-            .Where(s => s.FormId == formId && s.Form.WorkspaceId == workspaceId)
+            .Where(s => s.FormId == formId &&
+                s.Form.WorkspaceId == workspaceId &&
+                (s.Form.IsSharedWithWorkspace || s.Form.CreatedBy == userId))
             .OrderByDescending(s => s.CreatedAt)
             .Select(MapToSubmissionListDto())
             .ToList();
@@ -290,7 +307,9 @@ public class FormsService
 
         return db.Submissions
             .Include(s => s.Form)
-            .Where(s => s.Id == submissionId && s.Form.WorkspaceId == workspaceId)
+            .Where(s => s.Id == submissionId &&
+                s.Form.WorkspaceId == workspaceId &&
+                (s.Form.IsSharedWithWorkspace || s.Form.CreatedBy == userId))
             .Select(MapToSubmissionListDto())
             .FirstOrDefault();
     }
@@ -303,7 +322,9 @@ public class FormsService
 
         var submission = db.Submissions
             .Include(s => s.Form)
-            .FirstOrDefault(s => s.Id == submissionId && s.Form.WorkspaceId == workspaceId);
+            .FirstOrDefault(s => s.Id == submissionId &&
+                s.Form.WorkspaceId == workspaceId &&
+                (s.Form.IsSharedWithWorkspace || s.Form.CreatedBy == userId));
 
         if (submission == null || !string.Equals(submission.Status, "failed", StringComparison.OrdinalIgnoreCase))
             return false;
@@ -322,6 +343,8 @@ public class FormsService
     {
         Id = form.Id,
         PublicId = form.PublicId,
+        CreatedBy = form.CreatedBy,
+        UpdatedBy = form.UpdatedBy,
         Name = form.Name,
         Description = form.Description,
         NameTranslations = DeserializeTranslations(form.NameTranslationsJson),
@@ -340,10 +363,17 @@ public class FormsService
         PrimaryColor = form.PrimaryColor,
         BackgroundColor = form.BackgroundColor,
         LogoUrl = form.LogoUrl,
+        IsSharedWithWorkspace = form.IsSharedWithWorkspace,
         IsActive = form.IsActive,
         CreatedAt = form.CreatedAt,
         UpdatedAt = form.UpdatedAt
     };
+
+    private static IQueryable<Form> ApplyFormAccessFilter(IQueryable<Form> forms, Guid workspaceId, Guid userId)
+    {
+        return forms.Where(f => f.WorkspaceId == workspaceId &&
+            (f.IsSharedWithWorkspace || f.CreatedBy == userId));
+    }
 
     private static System.Linq.Expressions.Expression<Func<Submission, SubmissionListDto>> MapToSubmissionListDto() => s => new SubmissionListDto
     {

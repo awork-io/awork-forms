@@ -120,6 +120,8 @@
     "viewSubmissions": "View Submissions",
     "viewPublicForm": "View Public Form",
     "duplicate": "Duplicate",
+    "sharedBadge": "Shared",
+    "privateBadge": "Private",
     "updated": "Updated {{date}}",
     "dialog": {
       "title": "Create New Form",
@@ -159,6 +161,9 @@
     "formNamePlaceholder": "Enter form name",
     "descriptionLabel": "Description (optional)",
     "descriptionPlaceholder": "Describe what this form is for",
+    "teamSharing": "Team visibility",
+    "teamSharingShared": "Shared with the workspace team",
+    "teamSharingPrivate": "Visible only to the form owner",
     "formStatus": "Form Status",
     "formStatusActive": "Form is accepting submissions",
     "formStatusInactive": "Form is not accepting submissions",

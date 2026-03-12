@@ -9,9 +9,11 @@ import { useTranslation } from 'react-i18next';
 interface FormEditorMetaPanelProps {
   formName: string;
   formDescription: string;
+  isSharedWithWorkspace: boolean;
   isActive: boolean;
   onFormNameChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onFormDescriptionChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  onSharedWithWorkspaceChange: (value: boolean) => void;
   onActiveChange: (value: boolean) => void;
   nameTranslations: Record<string, string>;
   descriptionTranslations: Record<string, string>;
@@ -25,9 +27,11 @@ interface FormEditorMetaPanelProps {
 export function FormEditorMetaPanel({
   formName,
   formDescription,
+  isSharedWithWorkspace,
   isActive,
   onFormNameChange,
   onFormDescriptionChange,
+  onSharedWithWorkspaceChange,
   onActiveChange,
   nameTranslations,
   descriptionTranslations,
@@ -65,6 +69,15 @@ export function FormEditorMetaPanel({
             placeholder={t('formEditor.descriptionPlaceholder')}
             rows={2}
           />
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>{t('formEditor.teamSharing')}</Label>
+              <p className="text-sm text-muted-foreground">
+                {isSharedWithWorkspace ? t('formEditor.teamSharingShared') : t('formEditor.teamSharingPrivate')}
+              </p>
+            </div>
+            <Switch checked={isSharedWithWorkspace} onCheckedChange={onSharedWithWorkspaceChange} />
+          </div>
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t('formEditor.formStatus')}</Label>

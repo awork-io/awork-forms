@@ -120,6 +120,8 @@
     "viewSubmissions": "Einreichungen ansehen",
     "viewPublicForm": "Öffentliches Formular ansehen",
     "duplicate": "Duplizieren",
+    "sharedBadge": "Geteilt",
+    "privateBadge": "Privat",
     "updated": "Aktualisiert {{date}}",
     "dialog": {
       "title": "Neues Formular erstellen",
@@ -159,6 +161,9 @@
     "formNamePlaceholder": "Formularnamen eingeben",
     "descriptionLabel": "Beschreibung (optional)",
     "descriptionPlaceholder": "Beschreibe, wofür dieses Formular ist",
+    "teamSharing": "Team-Sichtbarkeit",
+    "teamSharingShared": "Mit dem Workspace-Team geteilt",
+    "teamSharingPrivate": "Nur für den Formularbesitzer sichtbar",
     "formStatus": "Formularstatus",
     "formStatusActive": "Formular nimmt Einreichungen an",
     "formStatusInactive": "Formular nimmt keine Einreichungen an",

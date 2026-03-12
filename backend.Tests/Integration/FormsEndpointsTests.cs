@@ -93,6 +93,64 @@ public class FormsEndpointsTests
     }
 
     [Fact]
+    public async Task PrivateForm_IsHiddenFromOtherUsersInSameWorkspace()
+    {
+        var workspaceId = Guid.NewGuid();
+        var (owner, ownerToken) = await _factory.SeedUserAsync(workspaceId, "owner-token", "owner@test.local", "Owner");
+        var (_, teammateToken) = await _factory.SeedUserAsync(workspaceId, "teammate-token", "teammate@test.local", "Teammate");
+        using var ownerClient = _factory.CreateAuthenticatedClient(ownerToken);
+        using var teammateClient = _factory.CreateAuthenticatedClient(teammateToken);
+
+        var createResponse = await ownerClient.PostAsJsonAsync("/api/forms", new CreateFormDto
+        {
+            Name = "Private Form",
+            FieldsJson = "[]",
+            IsSharedWithWorkspace = false
+        });
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+        Assert.Equal(owner.Id, created!.CreatedBy);
+        Assert.False(created.IsSharedWithWorkspace);
+
+        var teammateList = await teammateClient.GetFromJsonAsync<List<FormListDto>>("/api/forms");
+        Assert.NotNull(teammateList);
+        Assert.DoesNotContain(teammateList!, form => form.Id == created.Id);
+
+        var teammateGet = await teammateClient.GetAsync($"/api/forms/{created.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, teammateGet.StatusCode);
+    }
+
+    [Fact]
+    public async Task SharedForm_IsVisibleToOtherUsersInSameWorkspace()
+    {
+        var workspaceId = Guid.NewGuid();
+        var (owner, ownerToken) = await _factory.SeedUserAsync(workspaceId, "owner-token-shared", "owner-shared@test.local", "Owner");
+        var (_, teammateToken) = await _factory.SeedUserAsync(workspaceId, "teammate-token-shared", "teammate-shared@test.local", "Teammate");
+        using var ownerClient = _factory.CreateAuthenticatedClient(ownerToken);
+        using var teammateClient = _factory.CreateAuthenticatedClient(teammateToken);
+
+        var createResponse = await ownerClient.PostAsJsonAsync("/api/forms", new CreateFormDto
+        {
+            Name = "Shared Form",
+            FieldsJson = "[]",
+            IsSharedWithWorkspace = true
+        });
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+        Assert.Equal(owner.Id, created!.CreatedBy);
+
+        var teammateList = await teammateClient.GetFromJsonAsync<List<FormListDto>>("/api/forms");
+        Assert.NotNull(teammateList);
+        Assert.Contains(teammateList!, form => form.Id == created.Id && form.CreatedBy == owner.Id);
+
+        var teammateGet = await teammateClient.GetFromJsonAsync<FormDetailDto>($"/api/forms/{created.Id}");
+        Assert.NotNull(teammateGet);
+        Assert.Equal(owner.Id, teammateGet!.CreatedBy);
+    }
+
+    [Fact]
     public async Task DuplicateForm_CreatesIndependentCopyWithNewIds()
     {
         var (_, token) = await _factory.SeedUserAsync();

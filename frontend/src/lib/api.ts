@@ -19,8 +19,11 @@ export interface AuthResponse {
 export interface Form {
   id: number;
   publicId: string;
+  createdBy?: string;
+  updatedBy?: string;
   name: string;
   description?: string;
+  isSharedWithWorkspace: boolean;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -65,6 +68,7 @@ export interface CreateFormDto {
   fieldMappingsJson?: string;
   primaryColor?: string;
   backgroundColor?: string;
+  isSharedWithWorkspace?: boolean;
   isActive?: boolean;
 }
 
@@ -87,6 +91,7 @@ export interface UpdateFormDto {
   primaryColor?: string;
   backgroundColor?: string;
   logoUrl?: string;
+  isSharedWithWorkspace?: boolean;
   isActive?: boolean;
 }
 
