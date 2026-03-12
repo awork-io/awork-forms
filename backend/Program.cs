@@ -108,12 +108,20 @@ var frontendUrl = Environment.GetEnvironmentVariable("BASE_URL")
     ?? builder.Configuration["Frontend:Url"] 
     ?? "http://localhost:5173";
 var redirectUri = $"{frontendUrl}/auth/callback";
+var aworkApiBaseUrl = Environment.GetEnvironmentVariable("AWORK_API_BASE_URL");
+var keepaliveIntervalHours = int.TryParse(
+    builder.Configuration["Awork:TokenKeepaliveIntervalHours"] ?? Environment.GetEnvironmentVariable("FORM_OWNER_TOKEN_KEEPALIVE_INTERVAL_HOURS"),
+    out var parsedKeepaliveHours)
+    ? Math.Max(parsedKeepaliveHours, 1)
+    : 24;
+var keepaliveInterval = TimeSpan.FromHours(keepaliveIntervalHours);
 
 builder.Services.AddSingleton(sp => new AuthService(
     sp.GetRequiredService<IHttpClientFactory>().CreateClient(),
     sp.GetRequiredService<IDbContextFactory<AppDbContext>>(),
     sp.GetRequiredService<JwtService>(),
-    redirectUri
+    redirectUri,
+    aworkApiBaseUrl
 ));
 
 builder.Services.AddSingleton(sp => new FormsService(
@@ -122,14 +130,20 @@ builder.Services.AddSingleton(sp => new FormsService(
 
 builder.Services.AddSingleton(sp => new AworkApiService(
     sp.GetRequiredService<IHttpClientFactory>().CreateClient(),
-    sp.GetRequiredService<IDbContextFactory<AppDbContext>>(),
-    Environment.GetEnvironmentVariable("AWORK_API_BASE_URL")
+    sp.GetRequiredService<AuthService>(),
+    aworkApiBaseUrl
 ));
 
 builder.Services.AddSingleton(sp => new SubmissionProcessor(
     sp.GetRequiredService<IDbContextFactory<AppDbContext>>(),
     sp.GetRequiredService<AworkApiService>(),
     sp.GetRequiredService<ILogger<SubmissionProcessor>>()
+));
+builder.Services.AddSingleton<FormOwnerTokenKeepaliveRunner>();
+builder.Services.AddHostedService(sp => new FormOwnerTokenKeepaliveService(
+    sp.GetRequiredService<FormOwnerTokenKeepaliveRunner>(),
+    sp.GetRequiredService<ILogger<FormOwnerTokenKeepaliveService>>(),
+    keepaliveInterval
 ));
 
 var app = builder.Build();

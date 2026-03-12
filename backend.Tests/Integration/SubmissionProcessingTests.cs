@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Backend.Data;
 using Backend.Forms;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Backend.Tests.Integration;
@@ -159,6 +162,76 @@ public class SubmissionProcessingTests
         var requests = await GetAworkRequestsAsync("/api/v1/tasks", "POST");
         var matchingRequest = Assert.Single(requests, request => request.Body.Contains(uniqueTaskName, StringComparison.Ordinal));
         Assert.Equal("Bearer owner-access-token", matchingRequest.Authorization);
+    }
+
+    [Fact]
+    public async Task SubmitForm_RefreshesExpiredCreatorTokenBeforeCreatingTask()
+    {
+        var workspaceId = Guid.NewGuid();
+        var uniqueTaskName = $"Refreshed Token {Guid.NewGuid():N}";
+        var (owner, ownerToken) = await _factory.SeedUserAsync(workspaceId, "stale-owner-access-token", "owner-refresh@test.local", "Owner Refresh");
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+            await using var db = await dbFactory.CreateDbContextAsync();
+            var dbUser = await db.Users.SingleAsync(user => user.Id == owner.Id);
+            dbUser.RefreshToken = "owner-refresh-token";
+            dbUser.TokenExpiresAt = DateTime.UtcNow.AddMinutes(-10);
+            await db.SaveChangesAsync();
+        }
+
+        using var ownerClient = _factory.CreateAuthenticatedClient(ownerToken);
+
+        var fields = new[]
+        {
+            new { id = "field-name", type = "text", label = "Name", required = true }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = new[]
+            {
+                new { formFieldId = "field-name", aworkField = "name" }
+            },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createResponse = await ownerClient.PostAsJsonAsync("/api/forms", new CreateFormDto
+        {
+            Name = "Refresh Token Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsActive = true
+        });
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-name"] = uniqueTaskName
+            }
+        });
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var requests = await GetAworkRequestsAsync("/api/v1/tasks", "POST");
+        var matchingRequest = Assert.Single(requests, request => request.Body.Contains(uniqueTaskName, StringComparison.Ordinal));
+        Assert.Equal("Bearer refreshed-access-token", matchingRequest.Authorization);
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyDbFactory = verifyScope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+        await using var verifyDb = await verifyDbFactory.CreateDbContextAsync();
+        var refreshedUser = await verifyDb.Users.SingleAsync(user => user.Id == owner.Id);
+        Assert.Equal("refreshed-access-token", refreshedUser.AccessToken);
+        Assert.Equal("rotated-refresh-token", refreshedUser.RefreshToken);
+        Assert.True(refreshedUser.TokenExpiresAt > DateTime.UtcNow);
     }
 
     [Fact]

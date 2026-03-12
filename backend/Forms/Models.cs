@@ -8,6 +8,8 @@ public class FormListDto
     public Guid PublicId { get; set; }
     public Guid? CreatedBy { get; set; }
     public Guid? UpdatedBy { get; set; }
+    public string? CreatedByName { get; set; }
+    public string? UpdatedByName { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool IsSharedWithWorkspace { get; set; }
@@ -24,6 +26,8 @@ public class FormDetailDto
     public Guid PublicId { get; set; }
     public Guid? CreatedBy { get; set; }
     public Guid? UpdatedBy { get; set; }
+    public string? CreatedByName { get; set; }
+    public string? UpdatedByName { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public Dictionary<string, string>? NameTranslations { get; set; }

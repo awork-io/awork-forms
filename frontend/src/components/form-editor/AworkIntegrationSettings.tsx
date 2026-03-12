@@ -11,10 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { SearchableSelect } from '@/components/ui/searchable-select';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Loader2, Link2, AlertCircle } from 'lucide-react';
 import {
@@ -52,6 +52,8 @@ export interface AworkIntegrationConfig {
   projectFieldMappings: FieldMapping[];
 }
 
+type AworkLoadIssue = 'none' | 'access' | 'generic';
+
 interface AworkIntegrationSettingsProps {
   formFields: FormField[];
   config: AworkIntegrationConfig;
@@ -75,64 +77,57 @@ export function AworkIntegrationSettings({
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [isLoadingProjectTypes, setIsLoadingProjectTypes] = useState(false);
   const [isLoadingTaskData, setIsLoadingTaskData] = useState(false);
-  const [aworkError, setAworkError] = useState<string | null>(null);
+  const [projectsIssue, setProjectsIssue] = useState<AworkLoadIssue>('none');
+  const [projectTypesIssue, setProjectTypesIssue] = useState<AworkLoadIssue>('none');
+  const [taskDataIssue, setTaskDataIssue] = useState<AworkLoadIssue>('none');
+  const [taskCustomFieldsIssue, setTaskCustomFieldsIssue] = useState<AworkLoadIssue>('none');
 
   // Fetch awork projects
   const fetchProjects = useCallback(async () => {
     setIsLoadingProjects(true);
-    setAworkError(null);
+    setProjectsIssue('none');
     try {
       const data = await api.getAworkProjects();
       setProjects(data);
     } catch (err) {
-      const error = err as Error;
-      if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
-        setAworkError(t('aworkIntegration.errors.sessionExpired'));
-      } else {
-        setAworkError(t('aworkIntegration.errors.loadProjects'));
-      }
+      setProjectsIssue(getAworkLoadIssue(err as Error));
+      setProjects([]);
     } finally {
       setIsLoadingProjects(false);
     }
-  }, [t]);
+  }, []);
 
   // Fetch awork project types
   const fetchProjectTypes = useCallback(async () => {
     setIsLoadingProjectTypes(true);
-    setAworkError(null);
+    setProjectTypesIssue('none');
     try {
       const data = await api.getAworkProjectTypes();
       setProjectTypes(data);
     } catch (err) {
-      const error = err as Error;
-      if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
-        setAworkError(t('aworkIntegration.errors.sessionExpired'));
-      } else {
-        setAworkError(t('aworkIntegration.errors.loadProjectTypes'));
-      }
+      setProjectTypesIssue(getAworkLoadIssue(err as Error));
+      setProjectTypes([]);
     } finally {
       setIsLoadingProjectTypes(false);
     }
-  }, [t]);
+  }, []);
 
   // Fetch task custom field definitions (workspace-wide, not project-specific)
   const fetchTaskCustomFields = useCallback(async () => {
     try {
+      setTaskCustomFieldsIssue('none');
       const customFieldsData = await api.getAworkTaskCustomFields();
       onCustomFieldsChange?.(customFieldsData.filter(f => !f.isArchived));
     } catch (err) {
-      const error = err as Error;
-      if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
-        setAworkError(t('aworkIntegration.errors.sessionExpired'));
-      }
+      setTaskCustomFieldsIssue(getAworkLoadIssue(err as Error));
       onCustomFieldsChange?.([]);
     }
-  }, [onCustomFieldsChange, t]);
+  }, [onCustomFieldsChange]);
 
   // Fetch task-related data (statuses, lists, types of work, users)
   const fetchTaskData = useCallback(async (projectId: string) => {
     setIsLoadingTaskData(true);
-    setAworkError(null);
+    setTaskDataIssue('none');
     try {
       const [statusesData, listsData, typesData, usersData] = await Promise.all([
         api.getAworkTaskStatuses(projectId),
@@ -145,16 +140,15 @@ export function AworkIntegrationSettings({
       setTypesOfWork(typesData.filter((type) => !type.isArchived));
       setUsers(usersData.filter(u => !u.isArchived && !u.isExternal));
     } catch (err) {
-      const error = err as Error;
-      if (error.message.includes('TOKEN_EXPIRED') || error.message.includes('Unauthorized')) {
-        setAworkError(t('aworkIntegration.errors.sessionExpired'));
-      } else {
-        setAworkError(t('aworkIntegration.errors.loadTaskData'));
-      }
+      setTaskDataIssue(getAworkLoadIssue(err as Error));
+      setTaskStatuses([]);
+      setTaskLists([]);
+      setTypesOfWork([]);
+      setUsers([]);
     } finally {
       setIsLoadingTaskData(false);
     }
-  }, [t]);
+  }, []);
 
   // Load awork data when action type requires it
   useEffect(() => {
@@ -273,6 +267,117 @@ export function AworkIntegrationSettings({
     return `${project.name} · ${companyName}`;
   };
 
+  const projectMissing = Boolean(config.projectId) &&
+    !isLoadingProjects &&
+    !projects.some((project) => project.id === config.projectId);
+  const projectTypeMissing = Boolean(config.projectTypeId) &&
+    !isLoadingProjectTypes &&
+    !projectTypes.some((projectType) => projectType.id === config.projectTypeId);
+  const taskListMissing = Boolean(config.taskListId) &&
+    !isLoadingTaskData &&
+    !taskLists.some((taskList) => taskList.id === config.taskListId);
+  const taskStatusMissing = Boolean(config.taskStatusId) &&
+    !isLoadingTaskData &&
+    !taskStatuses.some((taskStatus) => taskStatus.id === config.taskStatusId);
+  const typeOfWorkMissing = Boolean(config.typeOfWorkId) &&
+    !isLoadingTaskData &&
+    !typesOfWork.some((typeOfWork) => typeOfWork.id === config.typeOfWorkId);
+  const assigneeMissing = Boolean(config.assigneeId) &&
+    !isLoadingTaskData &&
+    !users.some((user) => user.id === config.assigneeId);
+
+  const hasLimitedAworkAccess =
+    projectMissing ||
+    projectTypeMissing ||
+    taskListMissing ||
+    taskStatusMissing ||
+    typeOfWorkMissing ||
+    assigneeMissing ||
+    projectsIssue === 'access' ||
+    projectTypesIssue === 'access' ||
+    taskDataIssue === 'access' ||
+    taskCustomFieldsIssue === 'access';
+
+  const aworkError = projectsIssue === 'generic'
+    ? t('aworkIntegration.errors.loadProjects')
+    : projectTypesIssue === 'generic'
+      ? t('aworkIntegration.errors.loadProjectTypes')
+      : taskDataIssue === 'generic' || taskCustomFieldsIssue === 'generic'
+        ? t('aworkIntegration.errors.loadTaskData')
+        : null;
+
+  const projectOptions = withConfiguredFallback(
+    projects.map((project) => ({
+      value: project.id,
+      label: getProjectDisplayLabel(project),
+      secondaryLabel: project.projectKey || undefined,
+    })),
+    config.projectId,
+    t('aworkIntegration.task.configuredProjectUnavailable'),
+    t('aworkIntegration.unavailableSelection')
+  );
+
+  const projectTypeOptions = withConfiguredFallback(
+    projectTypes.map((projectType) => ({
+      value: projectType.id,
+      label: projectType.name,
+    })),
+    config.projectTypeId,
+    t('aworkIntegration.project.configuredProjectTypeUnavailable'),
+    t('aworkIntegration.unavailableSelection')
+  );
+
+  const taskListOptions = withConfiguredFallback(
+    taskLists.map((list) => ({
+      value: list.id,
+      label: list.name,
+    })),
+    config.taskListId,
+    t('aworkIntegration.task.configuredTaskListUnavailable'),
+    t('aworkIntegration.unavailableSelection')
+  );
+
+  const taskStatusOptions = withConfiguredFallback(
+    taskStatuses.map((status) => ({
+      value: status.id,
+      label: status.name,
+    })),
+    config.taskStatusId,
+    t('aworkIntegration.task.configuredTaskStatusUnavailable'),
+    t('aworkIntegration.unavailableSelection')
+  );
+
+  const typeOfWorkOptions = withConfiguredFallback(
+    typesOfWork.map((type) => ({
+      value: type.id,
+      label: type.name,
+    })),
+    config.typeOfWorkId,
+    t('aworkIntegration.task.configuredTypeOfWorkUnavailable'),
+    t('aworkIntegration.unavailableSelection')
+  );
+
+  const assigneeOptions = withConfiguredFallback(
+    users.map((user) => ({
+      value: user.id,
+      label: getUserDisplayName(user),
+      icon: user.profileImage ? (
+        <img
+          src={user.profileImage}
+          alt=""
+          className="w-7 h-7 rounded-full object-cover"
+        />
+      ) : (
+        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-medium">
+          {(user.firstName?.[0] || user.email?.[0] || '?').toUpperCase()}
+        </div>
+      ),
+    })),
+    config.assigneeId,
+    t('aworkIntegration.task.configuredAssigneeUnavailable'),
+    t('aworkIntegration.unavailableSelection')
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -285,7 +390,14 @@ export function AworkIntegrationSettings({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Error Alert */}
+        {hasLimitedAworkAccess && (
+          <Alert className="border-amber-200 bg-amber-50/80 text-amber-950 [&>svg]:text-amber-700">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>{t('aworkIntegration.permissionNotice.title')}</AlertTitle>
+            <AlertDescription>{t('aworkIntegration.permissionNotice.body')}</AlertDescription>
+          </Alert>
+        )}
+
         {aworkError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -332,17 +444,18 @@ export function AworkIntegrationSettings({
                   </div>
                 ) : (
                   <SearchableSelect
-                    options={projects.map((project) => ({
-                      value: project.id,
-                      label: getProjectDisplayLabel(project),
-                      secondaryLabel: project.projectKey || undefined,
-                    }))}
+                    options={projectOptions}
                     value={config.projectId}
                     onValueChange={handleProjectChange}
                     placeholder={t('aworkIntegration.task.selectProject')}
                     searchPlaceholder={t('aworkIntegration.task.searchProjects')}
                     emptyText={t('aworkIntegration.task.noProjectsFound')}
                   />
+                )}
+                {projectMissing && (
+                  <p className="mt-2 text-sm text-amber-800">
+                    {t('aworkIntegration.task.projectAccessHint')}
+                  </p>
                 )}
                 {projects.length === 0 && !isLoadingProjects && !aworkError && (
                   <Button
@@ -364,12 +477,9 @@ export function AworkIntegrationSettings({
                       <Loader2 className="w-4 h-4 animate-spin" />
                       {t('aworkIntegration.task.loadingTaskLists')}
                     </div>
-                  ) : (
-                    <SearchableSelect
-                      options={taskLists.map((list) => ({
-                        value: list.id,
-                        label: list.name,
-                      }))}
+                ) : (
+                  <SearchableSelect
+                      options={taskListOptions}
                       value={config.taskListId}
                       onValueChange={handleTaskListChange}
                       placeholder={t('aworkIntegration.task.selectTaskList')}
@@ -377,6 +487,11 @@ export function AworkIntegrationSettings({
                       emptyText={t('aworkIntegration.task.noTaskListsFound')}
                       clearable
                     />
+                  )}
+                  {taskListMissing && (
+                    <p className="mt-2 text-sm text-amber-800">
+                      {t('aworkIntegration.task.taskListAccessHint')}
+                    </p>
                   )}
                 </FormFieldWrapper>
               )}
@@ -389,12 +504,9 @@ export function AworkIntegrationSettings({
                       <Loader2 className="w-4 h-4 animate-spin" />
                       {t('aworkIntegration.task.loadingStatuses')}
                     </div>
-                  ) : (
-                    <SearchableSelect
-                      options={taskStatuses.map((status) => ({
-                        value: status.id,
-                        label: status.name,
-                      }))}
+                ) : (
+                  <SearchableSelect
+                      options={taskStatusOptions}
                       value={config.taskStatusId}
                       onValueChange={handleTaskStatusChange}
                       placeholder={t('aworkIntegration.task.selectStatus')}
@@ -402,6 +514,11 @@ export function AworkIntegrationSettings({
                       emptyText={t('aworkIntegration.task.noStatusesFound')}
                       clearable
                     />
+                  )}
+                  {taskStatusMissing && (
+                    <p className="mt-2 text-sm text-amber-800">
+                      {t('aworkIntegration.task.taskStatusAccessHint')}
+                    </p>
                   )}
                 </FormFieldWrapper>
               )}
@@ -418,12 +535,9 @@ export function AworkIntegrationSettings({
                       <Loader2 className="w-4 h-4 animate-spin" />
                       {t('aworkIntegration.task.loadingTypesOfWork')}
                     </div>
-                  ) : (
-                    <SearchableSelect
-                      options={typesOfWork.map((type) => ({
-                        value: type.id,
-                        label: type.name,
-                      }))}
+                ) : (
+                  <SearchableSelect
+                      options={typeOfWorkOptions}
                       value={config.typeOfWorkId}
                       onValueChange={handleTypeOfWorkChange}
                       placeholder={t('aworkIntegration.task.selectTypeOfWork')}
@@ -431,6 +545,11 @@ export function AworkIntegrationSettings({
                       emptyText={t('aworkIntegration.task.noTypesOfWorkFound')}
                       clearable
                     />
+                  )}
+                  {typeOfWorkMissing && (
+                    <p className="mt-2 text-sm text-amber-800">
+                      {t('aworkIntegration.task.typeOfWorkAccessHint')}
+                    </p>
                   )}
                 </FormFieldWrapper>
               )}
@@ -443,23 +562,9 @@ export function AworkIntegrationSettings({
                       <Loader2 className="w-4 h-4 animate-spin" />
                       {t('aworkIntegration.task.loadingUsers')}
                     </div>
-                  ) : (
-                    <SearchableSelect
-                      options={users.map((user) => ({
-                        value: user.id,
-                        label: getUserDisplayName(user),
-                        icon: user.profileImage ? (
-                          <img
-                            src={user.profileImage}
-                            alt=""
-                            className="w-7 h-7 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-medium">
-                            {(user.firstName?.[0] || user.email?.[0] || '?').toUpperCase()}
-                          </div>
-                        ),
-                      }))}
+                ) : (
+                  <SearchableSelect
+                      options={assigneeOptions}
                       value={config.assigneeId}
                       onValueChange={handleAssigneeChange}
                       placeholder={t('aworkIntegration.task.selectAssignee')}
@@ -467,6 +572,11 @@ export function AworkIntegrationSettings({
                       emptyText={t('aworkIntegration.task.noUsersFound')}
                       clearable
                     />
+                  )}
+                  {assigneeMissing && (
+                    <p className="mt-2 text-sm text-amber-800">
+                      {t('aworkIntegration.task.assigneeAccessHint')}
+                    </p>
                   )}
                 </FormFieldWrapper>
               )}
@@ -539,10 +649,7 @@ export function AworkIntegrationSettings({
                   </div>
                 ) : (
                   <SearchableSelect
-                    options={projectTypes.map((pt) => ({
-                      value: pt.id,
-                      label: pt.name,
-                    }))}
+                    options={projectTypeOptions}
                     value={config.projectTypeId}
                     onValueChange={handleProjectTypeChange}
                     placeholder={t('aworkIntegration.project.selectProjectType')}
@@ -550,6 +657,11 @@ export function AworkIntegrationSettings({
                     emptyText={t('aworkIntegration.project.noProjectTypesFound')}
                     clearable
                   />
+                )}
+                {projectTypeMissing && (
+                  <p className="mt-2 text-sm text-amber-800">
+                    {t('aworkIntegration.project.projectTypeAccessHint')}
+                  </p>
                 )}
                 {projectTypes.length === 0 && !isLoadingProjectTypes && !aworkError && (
                   <Button
@@ -579,6 +691,40 @@ export function AworkIntegrationSettings({
       </CardContent>
     </Card>
   );
+}
+
+function getAworkLoadIssue(error: Error): AworkLoadIssue {
+  if (
+    error.message.includes('TOKEN_EXPIRED') ||
+    error.message.includes('Unauthorized') ||
+    error.message.includes('401') ||
+    error.message.includes('403') ||
+    error.message.includes('Forbidden')
+  ) {
+    return 'access';
+  }
+
+  return 'generic';
+}
+
+function withConfiguredFallback(
+  options: SearchableSelectOption[],
+  selectedValue: string | null,
+  fallbackLabel: string,
+  fallbackSecondaryLabel: string
+) {
+  if (!selectedValue || options.some((option) => option.value === selectedValue)) {
+    return options;
+  }
+
+  return [
+    ...options,
+    {
+      value: selectedValue,
+      label: fallbackLabel,
+      secondaryLabel: fallbackSecondaryLabel,
+    },
+  ];
 }
 
 // Helper to parse config from form data

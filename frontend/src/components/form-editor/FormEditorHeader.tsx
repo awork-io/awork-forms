@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 interface FormEditorHeaderProps {
   formName: string;
+  createdByName?: string;
   isSharedWithWorkspace: boolean;
   isActive: boolean;
   fieldsCount: number;
@@ -18,6 +19,7 @@ interface FormEditorHeaderProps {
 
 export function FormEditorHeader({
   formName,
+  createdByName,
   isSharedWithWorkspace,
   isActive,
   fieldsCount,
@@ -38,6 +40,8 @@ export function FormEditorHeader({
         </Button>
         <h1 className="text-lg font-bold">{formName || t('formEditor.untitled')}</h1>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {createdByName ? <span>{t('formEditor.createdBy', { name: createdByName })}</span> : null}
+          {createdByName ? <span>·</span> : null}
           <Badge variant="outline">
             {isSharedWithWorkspace ? t('formsPage.sharedBadge') : t('formsPage.privateBadge')}
           </Badge>

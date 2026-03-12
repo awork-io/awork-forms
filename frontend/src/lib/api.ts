@@ -21,6 +21,8 @@ export interface Form {
   publicId: string;
   createdBy?: string;
   updatedBy?: string;
+  createdByName?: string;
+  updatedByName?: string;
   name: string;
   description?: string;
   isSharedWithWorkspace: boolean;
@@ -262,12 +264,14 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Request failed' }));
       if (response.status === 401) {
-        // Clear invalid token
+        if (error.code) {
+          throw new Error(error.code);
+        }
         this.setToken(null);
         throw new Error('Unauthorized');
       }
-      const error = await response.json().catch(() => ({ error: 'Request failed' }));
       throw new Error(error.error || 'Request failed');
     }
 

@@ -389,6 +389,7 @@ export function FormEditorPage() {
     <div className="flex flex-col h-full">
       <FormEditorHeader
         formName={formName}
+        createdByName={form?.createdByName}
         isSharedWithWorkspace={isSharedWithWorkspace}
         isActive={isActive}
         fieldsCount={fields.length}

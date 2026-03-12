@@ -1,7 +1,5 @@
 using System.Text.Json;
 using Backend.Auth;
-using Backend.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Awork;
 
@@ -10,32 +8,20 @@ public class AworkApiService
     private const string DefaultAworkApiBaseUrl = "https://api.awork.com/api/v1";
 
     private readonly HttpClient _httpClient;
-    private readonly IDbContextFactory<AppDbContext> _dbFactory;
+    private readonly AuthService _authService;
     private readonly string _baseUrl;
 
-    public AworkApiService(HttpClient httpClient, IDbContextFactory<AppDbContext> dbFactory, string? baseUrl = null)
+    public AworkApiService(HttpClient httpClient, AuthService authService, string? baseUrl = null)
     {
         _httpClient = httpClient;
-        _dbFactory = dbFactory;
+        _authService = authService;
         _baseUrl = string.IsNullOrWhiteSpace(baseUrl)
             ? DefaultAworkApiBaseUrl
             : baseUrl.TrimEnd('/');
     }
 
-    public async Task<string?> GetValidAccessToken(Guid userId)
-    {
-        await using var db = await _dbFactory.CreateDbContextAsync();
-        var user = await db.Users.FindAsync(userId);
-
-        if (user == null || string.IsNullOrEmpty(user.AccessToken))
-            return null;
-
-        if (user.TokenExpiresAt > DateTime.UtcNow.AddMinutes(5))
-            return user.AccessToken;
-
-        // Token needs refresh - for now, require re-auth
-        return null;
-    }
+    public Task<string?> GetValidAccessToken(Guid userId, bool forceRefresh = false) =>
+        _authService.GetValidAccessToken(userId, forceRefresh);
 
     public async Task<List<AworkProject>> GetProjects(Guid userId)
     {
@@ -177,12 +163,13 @@ public class AworkApiService
             // awork API expects an array of user ID strings
             var body = new[] { assigneeUserId.ToString() };
             var jsonBody = JsonSerializer.Serialize(body);
-
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/tasks/{taskId}/setassignees");
-            request.Headers.Add("Authorization", $"Bearer {accessToken}");
-            request.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.SendAsync(request);
+            using var response = await SendAuthorizedRequest(userId, token =>
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/tasks/{taskId}/setassignees");
+                request.Headers.Add("Authorization", $"Bearer {token}");
+                request.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
+                return request;
+            });
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -194,24 +181,20 @@ public class AworkApiService
 
     public async Task<bool> AttachFileToTask(Guid userId, Guid taskId, byte[] fileData, string fileName)
     {
-        var accessToken = await GetValidAccessToken(userId);
-        if (string.IsNullOrEmpty(accessToken))
-            throw new UnauthorizedAccessException("No valid awork access token available.");
-
         try
         {
-            using var form = new MultipartFormDataContent();
-            using var fileContent = new ByteArrayContent(fileData);
+            using var response = await SendAuthorizedRequest(userId, token =>
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/tasks/{taskId}/files");
+                request.Headers.Add("Authorization", $"Bearer {token}");
 
-            var mimeType = GetMimeType(fileName);
-            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mimeType);
-            form.Add(fileContent, "file", fileName);
-
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/tasks/{taskId}/files");
-            request.Headers.Add("Authorization", $"Bearer {accessToken}");
-            request.Content = form;
-
-            var response = await _httpClient.SendAsync(request);
+                var form = new MultipartFormDataContent();
+                var fileContent = new ByteArrayContent(fileData);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(GetMimeType(fileName));
+                form.Add(fileContent, "file", fileName);
+                request.Content = form;
+                return request;
+            });
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
@@ -280,17 +263,12 @@ public class AworkApiService
 
     private async Task<T?> MakeAworkRequest<T>(Guid userId, string endpoint) where T : class
     {
-        var accessToken = await GetValidAccessToken(userId);
-        if (string.IsNullOrEmpty(accessToken))
-            throw new UnauthorizedAccessException("No valid awork access token available. Please re-authenticate.");
-
-        var request = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/{endpoint}");
-        request.Headers.Add("Authorization", $"Bearer {accessToken}");
-
-        var response = await _httpClient.SendAsync(request);
-
-        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            throw new UnauthorizedAccessException("awork API returned unauthorized. Please re-authenticate.");
+        using var response = await SendAuthorizedRequest(userId, token =>
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}/{endpoint}");
+            request.Headers.Add("Authorization", $"Bearer {token}");
+            return request;
+        });
 
         if (!response.IsSuccessStatusCode)
         {
@@ -304,24 +282,18 @@ public class AworkApiService
 
     private async Task<T?> MakeAworkPostRequest<T>(Guid userId, string endpoint, object body) where T : class
     {
-        var accessToken = await GetValidAccessToken(userId);
-        if (string.IsNullOrEmpty(accessToken))
-            throw new UnauthorizedAccessException("No valid awork access token available. Please re-authenticate.");
-
-        var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/{endpoint}");
-        request.Headers.Add("Authorization", $"Bearer {accessToken}");
-
         var jsonBody = JsonSerializer.Serialize(body, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         });
-        request.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
-
-        var response = await _httpClient.SendAsync(request);
-
-        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            throw new UnauthorizedAccessException("awork API returned unauthorized. Please re-authenticate.");
+        using var response = await SendAuthorizedRequest(userId, token =>
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/{endpoint}");
+            request.Headers.Add("Authorization", $"Bearer {token}");
+            request.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
+            return request;
+        });
 
         if (!response.IsSuccessStatusCode)
         {
@@ -331,5 +303,37 @@ public class AworkApiService
 
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
+
+    private async Task<HttpResponseMessage> SendAuthorizedRequest(Guid userId, Func<string, HttpRequestMessage> requestFactory)
+    {
+        var accessToken = await GetValidAccessToken(userId);
+        if (string.IsNullOrEmpty(accessToken))
+            throw new UnauthorizedAccessException("No valid awork access token available. Please re-authenticate.");
+
+        var response = await SendAsync(requestFactory, accessToken);
+        if (response.StatusCode != System.Net.HttpStatusCode.Unauthorized)
+            return response;
+
+        response.Dispose();
+
+        var refreshedToken = await GetValidAccessToken(userId, forceRefresh: true);
+        if (string.IsNullOrEmpty(refreshedToken))
+            throw new UnauthorizedAccessException("awork API returned unauthorized. Please re-authenticate.");
+
+        var retryResponse = await SendAsync(requestFactory, refreshedToken);
+        if (retryResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            retryResponse.Dispose();
+            throw new UnauthorizedAccessException("awork API returned unauthorized. Please re-authenticate.");
+        }
+
+        return retryResponse;
+    }
+
+    private async Task<HttpResponseMessage> SendAsync(Func<string, HttpRequestMessage> requestFactory, string accessToken)
+    {
+        using var request = requestFactory(accessToken);
+        return await _httpClient.SendAsync(request);
     }
 }

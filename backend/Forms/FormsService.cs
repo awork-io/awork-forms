@@ -29,6 +29,8 @@ public class FormsService
                 PublicId = f.PublicId,
                 CreatedBy = f.CreatedBy,
                 UpdatedBy = f.UpdatedBy,
+                CreatedByName = db.Users.Where(u => u.Id == f.CreatedBy).Select(u => u.Name).FirstOrDefault(),
+                UpdatedByName = db.Users.Where(u => u.Id == f.UpdatedBy).Select(u => u.Name).FirstOrDefault(),
                 Name = f.Name,
                 Description = f.Description,
                 IsSharedWithWorkspace = f.IsSharedWithWorkspace,
@@ -49,7 +51,7 @@ public class FormsService
         var form = ApplyFormAccessFilter(db.Forms, workspaceId.Value, userId)
             .FirstOrDefault(f => f.Id == formId);
         if (form == null) return null;
-        return MapToDetailDto(form);
+        return MapToDetailDto(db, form);
     }
 
     public FormDetailDto CreateForm(CreateFormDto dto, Guid userId)
@@ -92,7 +94,7 @@ public class FormsService
         db.Forms.Add(form);
         db.SaveChanges();
 
-        return MapToDetailDto(form);
+        return MapToDetailDto(db, form);
     }
 
     public FormDetailDto? DuplicateForm(int formId, Guid userId)
@@ -143,7 +145,7 @@ public class FormsService
         db.Forms.Add(duplicated);
         db.SaveChanges();
 
-        return MapToDetailDto(duplicated);
+        return MapToDetailDto(db, duplicated);
     }
 
     private static string GenerateDuplicateName(AppDbContext db, Guid workspaceId, string sourceName)
@@ -204,7 +206,7 @@ public class FormsService
         form.UpdatedAt = DateTime.UtcNow;
         db.SaveChanges();
 
-        return MapToDetailDto(form);
+        return MapToDetailDto(db, form);
     }
 
     public bool DeleteForm(int formId, Guid userId)
@@ -339,12 +341,14 @@ public class FormsService
         return true;
     }
 
-    private static FormDetailDto MapToDetailDto(Form form) => new()
+    private static FormDetailDto MapToDetailDto(AppDbContext db, Form form) => new()
     {
         Id = form.Id,
         PublicId = form.PublicId,
         CreatedBy = form.CreatedBy,
         UpdatedBy = form.UpdatedBy,
+        CreatedByName = db.Users.Where(u => u.Id == form.CreatedBy).Select(u => u.Name).FirstOrDefault(),
+        UpdatedByName = db.Users.Where(u => u.Id == form.UpdatedBy).Select(u => u.Name).FirstOrDefault(),
         Name = form.Name,
         Description = form.Description,
         NameTranslations = DeserializeTranslations(form.NameTranslationsJson),

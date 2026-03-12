@@ -122,6 +122,36 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
 
         await RegisterAworkMappingAsync(client, new
         {
+            request = new { method = "POST", urlPath = "/api/v1/clientapplications/register" },
+            response = new
+            {
+                status = 200,
+                jsonBody = new
+                {
+                    client_id = "test-client-id",
+                    scope = "offline_access full_access"
+                }
+            }
+        });
+
+        await RegisterAworkMappingAsync(client, new
+        {
+            request = new { method = "POST", urlPath = "/api/v1/accounts/token" },
+            response = new
+            {
+                status = 200,
+                jsonBody = new
+                {
+                    access_token = "refreshed-access-token",
+                    refresh_token = "rotated-refresh-token",
+                    expires_in = 3600,
+                    token_type = "Bearer"
+                }
+            }
+        });
+
+        await RegisterAworkMappingAsync(client, new
+        {
             request = new { method = "GET", urlPath = "/api/v1/projects" },
             response = new
             {

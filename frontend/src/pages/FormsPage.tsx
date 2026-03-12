@@ -231,6 +231,11 @@ export function FormsPage() {
                         {form.isSharedWithWorkspace ? t('formsPage.sharedBadge') : t('formsPage.privateBadge')}
                       </Badge>
                     </div>
+                    {form.createdByName && (
+                      <CardDescription className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground/80">
+                        {t('formsPage.createdBy', { name: form.createdByName })}
+                      </CardDescription>
+                    )}
                     {form.description && (
                       <CardDescription className="mt-1.5 line-clamp-2">{form.description}</CardDescription>
                     )}

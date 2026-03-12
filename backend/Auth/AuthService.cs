@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Concurrent;
 using Backend.Data;
 using Backend.Data.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +14,12 @@ public class AuthService
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly JwtService _jwtService;
     private readonly string _redirectUri;
+    private readonly string _aworkAuthUrl;
+    private readonly string _aworkTokenUrl;
+    private readonly string _aworkUserInfoUrl;
+    private readonly string _aworkDcrUrl;
 
-    private const string AworkAuthUrl = "https://api.awork.com/api/v1/accounts/authorize";
-    private const string AworkTokenUrl = "https://api.awork.com/api/v1/accounts/token";
-    private const string AworkUserInfoUrl = "https://api.awork.com/api/v1/me";
-    private const string AworkDcrUrl = "https://api.awork.com/api/v1/clientapplications/register";
+    private const string DefaultAworkApiBaseUrl = "https://api.awork.com/api/v1";
 
     private const string DcrClientName = "awork Forms";
     private const string DcrScope = "offline_access full_access";
@@ -26,13 +28,27 @@ public class AuthService
     private const int DcrVersion = 3;
 
     private static string? _dcrClientId;
+    private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> RefreshLocks = new();
 
-    public AuthService(HttpClient httpClient, IDbContextFactory<AppDbContext> dbFactory, JwtService jwtService, string redirectUri)
+    public AuthService(
+        HttpClient httpClient,
+        IDbContextFactory<AppDbContext> dbFactory,
+        JwtService jwtService,
+        string redirectUri,
+        string? aworkApiBaseUrl = null)
     {
         _httpClient = httpClient;
         _dbFactory = dbFactory;
         _jwtService = jwtService;
         _redirectUri = redirectUri;
+
+        var baseUrl = string.IsNullOrWhiteSpace(aworkApiBaseUrl)
+            ? DefaultAworkApiBaseUrl
+            : aworkApiBaseUrl.TrimEnd('/');
+        _aworkAuthUrl = $"{baseUrl}/accounts/authorize";
+        _aworkTokenUrl = $"{baseUrl}/accounts/token";
+        _aworkUserInfoUrl = $"{baseUrl}/me";
+        _aworkDcrUrl = $"{baseUrl}/clientapplications/register";
     }
 
     public static string GenerateCodeVerifier()
@@ -82,7 +98,7 @@ public class AuthService
 
         await CleanupExpiredStates();
 
-        var authUrl = $"{AworkAuthUrl}?response_type=code&client_id={clientId}&redirect_uri={Uri.EscapeDataString(_redirectUri)}&scope={Uri.EscapeDataString(DcrScope)}&state={state}&code_challenge={codeChallenge}&code_challenge_method=S256";
+        var authUrl = $"{_aworkAuthUrl}?response_type=code&client_id={clientId}&redirect_uri={Uri.EscapeDataString(_redirectUri)}&scope={Uri.EscapeDataString(DcrScope)}&state={state}&code_challenge={codeChallenge}&code_challenge_method=S256";
 
         return new AuthInitResult { AuthorizationUrl = authUrl, State = state };
     }
@@ -223,7 +239,7 @@ public class AuthService
         Console.WriteLine($"[DCR] Registering client with request: {requestJson}");
 
         var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync(AworkDcrUrl, content);
+        var response = await _httpClient.PostAsync(_aworkDcrUrl, content);
 
         var responseJson = await response.Content.ReadAsStringAsync();
         Console.WriteLine($"[DCR] Response status: {response.StatusCode}, body: {responseJson}");
@@ -243,7 +259,7 @@ public class AuthService
             ["code_verifier"] = codeVerifier
         };
 
-        var response = await _httpClient.PostAsync(AworkTokenUrl, new FormUrlEncodedContent(tokenRequest));
+        var response = await _httpClient.PostAsync(_aworkTokenUrl, new FormUrlEncodedContent(tokenRequest));
         var json = await response.Content.ReadAsStringAsync();
         Console.WriteLine($"[TOKEN] Response: {json}");
 
@@ -267,7 +283,7 @@ public class AuthService
 
     private async Task<AworkUserInfo?> GetUserInfo(string accessToken)
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, AworkUserInfoUrl);
+        var request = new HttpRequestMessage(HttpMethod.Get, _aworkUserInfoUrl);
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
         var response = await _httpClient.SendAsync(request);
@@ -339,22 +355,42 @@ public class AuthService
         return await db.Users.FindAsync(userId);
     }
 
-    public async Task<string?> GetValidAccessToken(Guid userId)
+    public async Task<string?> GetValidAccessToken(Guid userId, bool forceRefresh = false)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
         var user = await db.Users.FindAsync(userId);
 
-        if (user == null || string.IsNullOrEmpty(user.AccessToken))
+        if (user == null)
             return null;
 
-        if (user.TokenExpiresAt > DateTime.UtcNow.AddMinutes(5))
+        if (!forceRefresh && HasUsableAccessToken(user))
             return user.AccessToken;
 
         if (string.IsNullOrEmpty(user.RefreshToken))
             return null;
 
-        var refreshed = await RefreshToken(user);
-        return refreshed ? user.AccessToken : null;
+        var refreshLock = RefreshLocks.GetOrAdd(userId, static _ => new SemaphoreSlim(1, 1));
+        await refreshLock.WaitAsync();
+        try
+        {
+            await using var refreshDb = await _dbFactory.CreateDbContextAsync();
+            var refreshUser = await refreshDb.Users.FindAsync(userId);
+            if (refreshUser == null)
+                return null;
+
+            if (!forceRefresh && HasUsableAccessToken(refreshUser))
+                return refreshUser.AccessToken;
+
+            if (string.IsNullOrEmpty(refreshUser.RefreshToken))
+                return null;
+
+            var refreshed = await RefreshToken(refreshUser);
+            return refreshed ? refreshUser.AccessToken : null;
+        }
+        finally
+        {
+            refreshLock.Release();
+        }
     }
 
     private async Task<bool> RefreshToken(User user)
@@ -368,7 +404,7 @@ public class AuthService
             ["client_id"] = clientId
         };
 
-        var response = await _httpClient.PostAsync(AworkTokenUrl, new FormUrlEncodedContent(tokenRequest));
+        var response = await _httpClient.PostAsync(_aworkTokenUrl, new FormUrlEncodedContent(tokenRequest));
         if (!response.IsSuccessStatusCode) return false;
 
         var json = await response.Content.ReadAsStringAsync();
@@ -393,6 +429,13 @@ public class AuthService
         user.TokenExpiresAt = dbUser.TokenExpiresAt;
 
         return true;
+    }
+
+    private static bool HasUsableAccessToken(User user)
+    {
+        return !string.IsNullOrEmpty(user.AccessToken) &&
+            user.TokenExpiresAt.HasValue &&
+            user.TokenExpiresAt.Value > DateTime.UtcNow.AddMinutes(5);
     }
 
     private async Task CleanupExpiredStates()
