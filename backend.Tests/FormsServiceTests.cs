@@ -161,29 +161,39 @@ public class FormsServiceTests : IDisposable
     }
 
     [Fact]
-    public void DeleteForm_WithExistingForm_ReturnsTrue()
+    public void DeleteForm_WithExistingForm_ReturnsDeleted()
     {
         var created = _formsService.CreateForm(new CreateFormDto { Name = "Test Form" }, _testUserId);
         var result = _formsService.DeleteForm(created.Id, _testUserId);
 
-        Assert.True(result);
+        Assert.Equal(DeleteFormResult.Deleted, result);
         Assert.Null(_formsService.GetFormById(created.Id, _testUserId));
     }
 
     [Fact]
-    public void DeleteForm_WithNonExistingForm_ReturnsFalse()
+    public void DeleteForm_WithNonExistingForm_ReturnsNotFound()
     {
         var result = _formsService.DeleteForm(9999, _testUserId);
-        Assert.False(result);
+        Assert.Equal(DeleteFormResult.NotFound, result);
     }
 
     [Fact]
-    public void DeleteForm_WithWrongUser_ReturnsFalse()
+    public void DeleteForm_WithWrongWorkspaceUser_ReturnsNotFound()
     {
         var created = _formsService.CreateForm(new CreateFormDto { Name = "Test Form" }, _testUserId);
         var result = _formsService.DeleteForm(created.Id, _otherWorkspaceUserId);
 
-        Assert.False(result);
+        Assert.Equal(DeleteFormResult.NotFound, result);
+        Assert.NotNull(_formsService.GetFormById(created.Id, _testUserId));
+    }
+
+    [Fact]
+    public void DeleteForm_WithSameWorkspaceTeammate_ReturnsForbidden()
+    {
+        var created = _formsService.CreateForm(new CreateFormDto { Name = "Test Form" }, _testUserId);
+        var result = _formsService.DeleteForm(created.Id, _sameWorkspaceUserId);
+
+        Assert.Equal(DeleteFormResult.Forbidden, result);
         Assert.NotNull(_formsService.GetFormById(created.Id, _testUserId));
     }
 

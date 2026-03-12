@@ -6,6 +6,12 @@ using Microsoft.EntityFrameworkCore;
 namespace Backend.Forms;
 
 public class ValidationException(string message) : Exception(message);
+public enum DeleteFormResult
+{
+    Deleted,
+    NotFound,
+    Forbidden
+}
 
 public class FormsService
 {
@@ -209,18 +215,22 @@ public class FormsService
         return MapToDetailDto(db, form);
     }
 
-    public bool DeleteForm(int formId, Guid userId)
+    public DeleteFormResult DeleteForm(int formId, Guid userId)
     {
         using var db = _dbFactory.CreateDbContext();
         var workspaceId = GetWorkspaceId(db, userId);
-        if (workspaceId == null) return false;
+        if (workspaceId == null) return DeleteFormResult.NotFound;
+
         var form = ApplyFormAccessFilter(db.Forms, workspaceId.Value, userId)
             .FirstOrDefault(f => f.Id == formId);
-        if (form == null) return false;
+        if (form == null) return DeleteFormResult.NotFound;
+
+        if (form.CreatedBy != userId)
+            return DeleteFormResult.Forbidden;
 
         db.Forms.Remove(form);
         db.SaveChanges();
-        return true;
+        return DeleteFormResult.Deleted;
     }
 
     public PublicFormDto? GetPublicFormByPublicId(Guid publicId)

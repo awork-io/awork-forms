@@ -11,10 +11,13 @@ public class DeleteFormEndpoint : IEndpoint
             var userId = context.GetCurrentUserId();
             if (userId == null) return Results.Unauthorized();
 
-            var deleted = formsService.DeleteForm(id, userId.Value);
-            if (!deleted) return Results.NotFound(new { error = "Form not found" });
-
-            return Results.Ok(new { message = "Form deleted successfully" });
+            var result = formsService.DeleteForm(id, userId.Value);
+            return result switch
+            {
+                DeleteFormResult.Deleted => Results.Ok(new { message = "Form deleted successfully" }),
+                DeleteFormResult.Forbidden => Results.StatusCode(StatusCodes.Status403Forbidden),
+                _ => Results.NotFound(new { error = "Form not found" })
+            };
         }).RequireAuth();
     }
 }

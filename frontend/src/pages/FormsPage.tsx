@@ -37,9 +37,11 @@ import { trackEvent, trackScreenSeen } from '@/lib/tracking';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { EmptyStateCard } from '@/components/common/EmptyStateCard';
 import { formatDateForLocale } from '@/lib/date-format';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function FormsPage() {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
@@ -271,13 +273,15 @@ export function FormsPage() {
                         <Share2 className="w-4 h-4 mr-2" />
                         {t('common.share')}
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={() => setDeleteFormId(form.id)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        {t('common.delete')}
-                      </DropdownMenuItem>
+                      {form.createdBy === user?.id ? (
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setDeleteFormId(form.id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          {t('common.delete')}
+                        </DropdownMenuItem>
+                      ) : null}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>

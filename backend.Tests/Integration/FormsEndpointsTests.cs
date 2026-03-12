@@ -151,6 +151,33 @@ public class FormsEndpointsTests
     }
 
     [Fact]
+    public async Task SharedForm_CannotBeDeletedByTeammate()
+    {
+        var workspaceId = Guid.NewGuid();
+        var (owner, ownerToken) = await _factory.SeedUserAsync(workspaceId, "owner-token-delete", "owner-delete@test.local", "Owner");
+        var (_, teammateToken) = await _factory.SeedUserAsync(workspaceId, "teammate-token-delete", "teammate-delete@test.local", "Teammate");
+        using var ownerClient = _factory.CreateAuthenticatedClient(ownerToken);
+        using var teammateClient = _factory.CreateAuthenticatedClient(teammateToken);
+
+        var createResponse = await ownerClient.PostAsJsonAsync("/api/forms", new CreateFormDto
+        {
+            Name = "Shared Delete Protected",
+            FieldsJson = "[]",
+            IsSharedWithWorkspace = true
+        });
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+        Assert.Equal(owner.Id, created!.CreatedBy);
+
+        var deleteResponse = await teammateClient.DeleteAsync($"/api/forms/{created.Id}");
+        Assert.Equal(HttpStatusCode.Forbidden, deleteResponse.StatusCode);
+
+        var ownerGet = await ownerClient.GetAsync($"/api/forms/{created.Id}");
+        Assert.Equal(HttpStatusCode.OK, ownerGet.StatusCode);
+    }
+
+    [Fact]
     public async Task DuplicateForm_CreatesIndependentCopyWithNewIds()
     {
         var (_, token) = await _factory.SeedUserAsync();
