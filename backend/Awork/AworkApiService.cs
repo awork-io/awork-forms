@@ -38,7 +38,9 @@ public class AworkApiService
     public async Task<List<AworkUser>> GetUsers(Guid userId)
     {
         var result = await MakeAworkRequest<List<AworkUser>>(userId, "users");
-        return result ?? [];
+        return result?
+            .Where(user => !user.IsArchived && !user.IsDeactivated && !user.IsExternal)
+            .ToList() ?? [];
     }
 
     public async Task<List<AworkProjectStatus>> GetProjectStatuses(Guid userId, Guid projectTypeId)

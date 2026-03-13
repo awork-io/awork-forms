@@ -196,5 +196,32 @@ describe('ApiClient', () => {
       );
       expect(result).toEqual(mockResponse);
     });
+
+    it('should fetch workspace access settings', async () => {
+      api.setToken('my-token');
+      const mockResponse = {
+        allowAllUsers: false,
+        allowedUserIds: ['aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await api.getWorkspaceAccessSettings();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/settings/workspace-access',
+        expect.objectContaining({
+          credentials: 'include',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer my-token',
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
+      expect(result).toEqual(mockResponse);
+    });
   });
 });

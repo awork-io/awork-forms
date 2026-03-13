@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Setting> Settings => Set<Setting>();
     public DbSet<OAuthState> OAuthStates => Set<OAuthState>();
     public DbSet<FileUpload> FileUploads => Set<FileUpload>();
+    public DbSet<WorkspaceAccessPolicy> WorkspaceAccessPolicies => Set<WorkspaceAccessPolicy>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +42,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Setting>(entity =>
         {
             entity.HasIndex(e => e.Key).IsUnique();
+        });
+
+        modelBuilder.Entity<WorkspaceAccessPolicy>(entity =>
+        {
+            entity.HasIndex(e => e.WorkspaceId).IsUnique();
         });
 
         modelBuilder.Entity<OAuthState>(entity =>

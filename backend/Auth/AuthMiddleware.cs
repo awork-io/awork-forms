@@ -62,13 +62,31 @@ public static class AuthMiddleware
     {
         return builder.AddEndpointFilter(async (context, next) =>
         {
-            var user = context.HttpContext.User;
+            var httpContext = context.HttpContext;
+            var user = httpContext.User;
             var userId = JwtService.GetUserId(user);
             var workspaceId = JwtService.GetWorkspaceId(user);
 
             if (userId == null || workspaceId == null || workspaceId == Guid.Empty)
             {
                 return Results.Unauthorized();
+            }
+
+            var path = httpContext.Request.Path.Value ?? string.Empty;
+            var isAuthStatusRoute =
+                string.Equals(path, "/api/auth/me", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(path, "/api/auth/logout", StringComparison.OrdinalIgnoreCase);
+
+            if (!isAuthStatusRoute)
+            {
+                var workspaceAccessService = httpContext.RequestServices.GetRequiredService<Backend.WorkspaceAccess.WorkspaceAccessService>();
+                var hasFormsAccess = await workspaceAccessService.HasFormsAccess(userId.Value);
+                if (!hasFormsAccess)
+                {
+                    return Results.Json(
+                        new { error = "Forms access denied.", code = "FORMS_ACCESS_DENIED" },
+                        statusCode: StatusCodes.Status403Forbidden);
+                }
             }
 
             return await next(context);

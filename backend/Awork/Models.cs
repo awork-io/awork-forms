@@ -41,6 +41,7 @@ public class AworkUser
     public string? ProfileImage { get; set; }
     public bool IsExternal { get; set; }
     public bool IsArchived { get; set; }
+    public bool IsDeactivated { get; set; }
 }
 
 public class AworkProjectStatus

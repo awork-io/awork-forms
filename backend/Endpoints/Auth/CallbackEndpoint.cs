@@ -1,5 +1,6 @@
 using Backend.Auth;
 using Microsoft.AspNetCore.RateLimiting;
+using Backend.WorkspaceAccess;
 
 namespace Backend.Endpoints.Auth;
 
@@ -13,11 +14,12 @@ public class CallbackEndpoint : IEndpoint
             string state,
             AuthService authService,
             JwtService jwtService,
+            WorkspaceAccessService workspaceAccessService,
             IHostEnvironment env,
             IConfiguration config) =>
         {
             var result = await authService.HandleCallback(code, state);
-            if (!result.Success)
+            if (!result.Success || result.User == null)
             {
                 return Results.BadRequest(new { error = result.Error });
             }
@@ -35,9 +37,15 @@ public class CallbackEndpoint : IEndpoint
             var exposeToken = env.IsDevelopment() ||
                               string.Equals(config["Auth:ExposeToken"] ?? Environment.GetEnvironmentVariable("AUTH_EXPOSE_TOKEN"), "true", StringComparison.OrdinalIgnoreCase);
 
+            var userDto = await workspaceAccessService.GetUserDto(result.User.Id);
+            if (userDto == null)
+            {
+                return Results.BadRequest(new { error = "Authentication failed" });
+            }
+
             return exposeToken
-                ? Results.Ok(new { user = result.User, token = result.SessionToken })
-                : Results.Ok(new { user = result.User });
+                ? Results.Ok(new { user = userDto, token = result.SessionToken })
+                : Results.Ok(new { user = userDto });
         }).RequireRateLimiting("auth");
     }
 }

@@ -12,12 +12,13 @@ import { PublicFormPage } from '@/pages/PublicFormPage';
 import { SubmissionsPage } from '@/pages/SubmissionsPage';
 import { Toaster } from '@/components/ui/toaster';
 import { useTranslation } from 'react-i18next';
+import { FormsAccessBlockedModal } from '@/components/auth/FormsAccessBlockedModal';
 
 const queryClient = new QueryClient();
 
 // Protected route wrapper with AppLayout
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { t } = useTranslation();
 
   if (isLoading) {
@@ -30,6 +31,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user && !user.hasFormsAccess) {
+    return <FormsAccessBlockedModal />;
   }
 
   return <AppLayout>{children}</AppLayout>;

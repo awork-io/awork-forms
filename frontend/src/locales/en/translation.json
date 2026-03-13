@@ -523,7 +523,35 @@
     "formsDesc": "Information about awork Forms",
     "version": "Version",
     "status": "Status",
-    "connected": "Connected to awork"
+    "connected": "Connected to awork",
+    "accessControl": {
+      "title": "Workspace access",
+      "description": "Control whether everyone in this workspace can open awork Forms or only selected users.",
+      "allowAllLabel": "Allow all users",
+      "allowAllHint": "Recommended default. Turn this off to restrict Forms to a curated list.",
+      "overrideHint": "awork admins and users with workspace-manage-config access always keep access, even if they are not on the allowlist.",
+      "allowedUsersTitle": "Allowed users",
+      "allowedUsersHint_one": "{{count}} user currently has access. awork admins and workspace access managers always keep access.",
+      "allowedUsersHint_other": "{{count}} users currently have access. awork admins and workspace access managers always keep access.",
+      "searchPlaceholder": "Search users by name or email",
+      "restrictedHint": "If no users are selected, only awork admins and users with workspace-manage-config access can open Forms.",
+      "adminOverrideBadge": "Admin override active",
+      "managerOverrideBadge": "Workspace access override active",
+      "noUsers": "No matching users found.",
+      "save": "Save access settings",
+      "saving": "Saving...",
+      "saveSuccessTitle": "Access settings updated",
+      "saveSuccessBody": "Workspace access rules were saved.",
+      "saveErrorTitle": "Could not save access settings",
+      "saveErrorBody": "Please try again.",
+      "loadErrorTitle": "Could not load access settings",
+      "loadErrorBody": "Refresh the page and try again."
+    }
+  },
+  "formsAccessBlocked": {
+    "title": "Access to awork Forms is restricted",
+    "description": "Your workspace only allows selected users to open awork Forms in {{workspaceName}}. awork admins and workspace access managers can still enter. Ask one of them to add you.",
+    "signOut": "Sign out"
   },
   "publicForm": {
     "invalidUrl": "Invalid form URL",

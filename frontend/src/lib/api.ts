@@ -9,6 +9,14 @@ export interface User {
   workspaceName?: string;
   workspaceUrl?: string;
   hasRefreshToken: boolean;
+  isAworkAdmin: boolean;
+  canManageWorkspaceAccess: boolean;
+  hasFormsAccess: boolean;
+}
+
+export interface WorkspaceAccessSettings {
+  allowAllUsers: boolean;
+  allowedUserIds: string[];
 }
 
 export interface AuthResponse {
@@ -138,6 +146,7 @@ export interface AworkUser {
   profileImage?: string;
   isExternal: boolean;
   isArchived: boolean;
+  isDeactivated: boolean;
 }
 
 export interface AworkProjectStatus {
@@ -294,6 +303,17 @@ class ApiClient {
   async logout(): Promise<void> {
     await this.request('/api/auth/logout', { method: 'POST' });
     this.setToken(null);
+  }
+
+  async getWorkspaceAccessSettings(): Promise<WorkspaceAccessSettings> {
+    return this.request('/api/settings/workspace-access');
+  }
+
+  async updateWorkspaceAccessSettings(data: WorkspaceAccessSettings): Promise<WorkspaceAccessSettings> {
+    return this.request('/api/settings/workspace-access', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   }
 
   // Health check

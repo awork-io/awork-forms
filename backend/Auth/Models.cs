@@ -1,3 +1,4 @@
+using Backend.Data.Entities;
 using System.Text.Json.Serialization;
 
 namespace Backend.Auth;
@@ -25,7 +26,7 @@ public class AuthCallbackResult
     public bool Success { get; set; }
     public string? Error { get; set; }
     public string? SessionToken { get; set; }
-    public UserDto? User { get; set; }
+    public User? User { get; set; }
 }
 
 public class TokenResult
@@ -47,6 +48,9 @@ public class UserDto
     public string? WorkspaceName { get; set; }
     public string? WorkspaceUrl { get; set; }
     public bool HasRefreshToken { get; set; }
+    public bool IsAworkAdmin { get; set; }
+    public bool CanManageWorkspaceAccess { get; set; }
+    public bool HasFormsAccess { get; set; }
 }
 
 public class AuthTokenResponse
@@ -81,4 +85,27 @@ public class AworkWorkspaceInfo
     public Guid Id { get; set; }
     public string? Name { get; set; }
     public string? Url { get; set; }
+}
+
+public class AworkPermissionInfoResponse
+{
+    public AworkUserPermission? UserPermission { get; set; }
+}
+
+public class WorkspaceAccessPermissionSnapshot
+{
+    public bool IsAdmin { get; set; }
+    public bool CanManageWorkspaceAccess { get; set; }
+}
+
+public class AworkUserPermission
+{
+    public bool IsAdmin { get; set; }
+    public List<AworkPermission>? Permissions { get; set; }
+}
+
+public class AworkPermission
+{
+    public string? Feature { get; set; }
+    public List<string>? AccessLevels { get; set; }
 }
