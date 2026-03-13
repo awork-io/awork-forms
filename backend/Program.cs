@@ -6,6 +6,7 @@ using Backend.Endpoints;
 using Backend.Forms;
 using Backend.Observability;
 using Backend.Submissions;
+using Backend.WorkspaceAccess;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -125,6 +126,10 @@ builder.Services.AddSingleton(sp => new AuthService(
 ));
 
 builder.Services.AddSingleton(sp => new FormsService(
+    sp.GetRequiredService<IDbContextFactory<AppDbContext>>()
+));
+
+builder.Services.AddSingleton(sp => new WorkspaceAccessService(
     sp.GetRequiredService<IDbContextFactory<AppDbContext>>()
 ));
 

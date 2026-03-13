@@ -17,9 +17,12 @@ public class AuthService
     private readonly string _aworkAuthUrl;
     private readonly string _aworkTokenUrl;
     private readonly string _aworkUserInfoUrl;
+    private readonly string _aworkPermissionsUrl;
     private readonly string _aworkDcrUrl;
 
     private const string DefaultAworkApiBaseUrl = "https://api.awork.com/api/v1";
+    private const string WorkspaceManageConfigFeature = "workspace-manage-config";
+    private static readonly string[] WorkspaceManageConfigAccessLevels = ["manage", "write", "config"];
 
     private const string DcrClientName = "awork Forms";
     private const string DcrScope = "offline_access full_access";
@@ -48,6 +51,7 @@ public class AuthService
         _aworkAuthUrl = $"{baseUrl}/accounts/authorize";
         _aworkTokenUrl = $"{baseUrl}/accounts/token";
         _aworkUserInfoUrl = $"{baseUrl}/me";
+        _aworkPermissionsUrl = $"{baseUrl}/me/permissions";
         _aworkDcrUrl = $"{baseUrl}/clientapplications/register";
     }
 
@@ -77,6 +81,9 @@ public class AuthService
         return Base64UrlEncode(bytes);
     }
 
+    /// <summary>
+    /// Starts the awork OAuth flow and persists the PKCE state.
+    /// </summary>
     public async Task<AuthInitResult> InitiateAuth()
     {
         var clientId = await GetOrCreateDcrClientId();
@@ -103,6 +110,9 @@ public class AuthService
         return new AuthInitResult { AuthorizationUrl = authUrl, State = state };
     }
 
+    /// <summary>
+    /// Completes the OAuth callback, upserts the user, and issues the Forms session token.
+    /// </summary>
     public async Task<AuthCallbackResult> HandleCallback(string code, string state)
     {
         OAuthState? pkceState;
@@ -133,24 +143,15 @@ public class AuthService
             if (userInfo == null)
                 return new AuthCallbackResult { Success = false, Error = "Failed to get user info" };
 
-            var user = await UpsertUser(userInfo, tokenResult);
+            var permissionSnapshot = await GetWorkspaceAccessPermissionSnapshot(tokenResult.AccessToken!);
+            var user = await UpsertUser(userInfo, tokenResult, permissionSnapshot);
             var sessionToken = _jwtService.GenerateToken(user.Id, user.AworkUserId, user.AworkWorkspaceId);
 
             return new AuthCallbackResult
             {
                 Success = true,
                 SessionToken = sessionToken,
-                User = new UserDto
-                {
-                    Id = user.Id,
-                    Email = user.Email,
-                    Name = user.Name,
-                    AvatarUrl = user.AvatarUrl,
-                    WorkspaceId = user.AworkWorkspaceId,
-                    WorkspaceName = user.WorkspaceName,
-                    WorkspaceUrl = user.WorkspaceUrl,
-                    HasRefreshToken = !string.IsNullOrEmpty(user.RefreshToken)
-                }
+                User = user
             };
         }
         catch (Exception ex)
@@ -160,6 +161,9 @@ public class AuthService
         }
     }
 
+    /// <summary>
+    /// Clears the stored awork tokens for the given user.
+    /// </summary>
     public async Task ClearUserTokens(Guid userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
@@ -296,7 +300,33 @@ public class AuthService
         return userInfo;
     }
 
-    private async Task<User> UpsertUser(AworkUserInfo userInfo, TokenResult tokenResult)
+    private async Task<WorkspaceAccessPermissionSnapshot> GetWorkspaceAccessPermissionSnapshot(string accessToken)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, _aworkPermissionsUrl);
+        request.Headers.Add("Authorization", $"Bearer {accessToken}");
+
+        var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode) return new WorkspaceAccessPermissionSnapshot();
+
+        var json = await response.Content.ReadAsStringAsync();
+        var permissions = JsonSerializer.Deserialize<AworkPermissionInfoResponse>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        var canManageWorkspaceAccess = permissions?.UserPermission?.Permissions?.Any(permission =>
+            string.Equals(permission.Feature, WorkspaceManageConfigFeature, StringComparison.OrdinalIgnoreCase) &&
+            permission.AccessLevels?.Any(level =>
+                WorkspaceManageConfigAccessLevels.Contains(level, StringComparer.OrdinalIgnoreCase)) == true) == true;
+
+        return new WorkspaceAccessPermissionSnapshot
+        {
+            IsAdmin = permissions?.UserPermission?.IsAdmin == true,
+            CanManageWorkspaceAccess = canManageWorkspaceAccess
+        };
+    }
+
+    private async Task<User> UpsertUser(AworkUserInfo userInfo, TokenResult tokenResult, WorkspaceAccessPermissionSnapshot permissionSnapshot)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
 
@@ -315,6 +345,8 @@ public class AuthService
             {
                 AworkUserId = userInfo.Id,
                 AworkWorkspaceId = workspaceId,
+                IsAworkAdmin = permissionSnapshot.IsAdmin,
+                CanManageWorkspaceAccess = permissionSnapshot.CanManageWorkspaceAccess,
                 WorkspaceName = userInfo.Workspace?.Name,
                 WorkspaceUrl = userInfo.Workspace?.Url,
                 Email = userInfo.Email ?? "",
@@ -335,6 +367,8 @@ public class AuthService
             user.Email = userInfo.Email ?? user.Email;
             user.Name = $"{userInfo.FirstName} {userInfo.LastName}".Trim();
             user.AvatarUrl = userInfo.ProfileImage;
+            user.IsAworkAdmin = permissionSnapshot.IsAdmin;
+            user.CanManageWorkspaceAccess = permissionSnapshot.CanManageWorkspaceAccess;
             if (!string.IsNullOrWhiteSpace(userInfo.Workspace?.Name))
                 user.WorkspaceName = userInfo.Workspace.Name;
             if (!string.IsNullOrWhiteSpace(userInfo.Workspace?.Url))
@@ -349,12 +383,49 @@ public class AuthService
         return user;
     }
 
+    /// <summary>
+    /// Returns the stored local user by Forms user id.
+    /// </summary>
     public async Task<User?> GetUserById(Guid userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
         return await db.Users.FindAsync(userId);
     }
 
+    /// <summary>
+    /// Refreshes the stored admin and manage-config flags from awork.
+    /// </summary>
+    public async Task RefreshWorkspaceAccessPermission(Guid userId)
+    {
+        try
+        {
+            var accessToken = await GetValidAccessToken(userId);
+            if (string.IsNullOrEmpty(accessToken))
+                return;
+
+            var permissionSnapshot = await GetWorkspaceAccessPermissionSnapshot(accessToken);
+
+            await using var db = await _dbFactory.CreateDbContextAsync();
+            var user = await db.Users.FindAsync(userId);
+            if (user == null ||
+                (user.CanManageWorkspaceAccess == permissionSnapshot.CanManageWorkspaceAccess &&
+                 user.IsAworkAdmin == permissionSnapshot.IsAdmin))
+                return;
+
+            user.IsAworkAdmin = permissionSnapshot.IsAdmin;
+            user.CanManageWorkspaceAccess = permissionSnapshot.CanManageWorkspaceAccess;
+            user.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to refresh workspace access permissions for user {userId}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Returns a usable awork access token, refreshing it when needed.
+    /// </summary>
     public async Task<string?> GetValidAccessToken(Guid userId, bool forceRefresh = false)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();

@@ -523,7 +523,35 @@
     "formsDesc": "Informationen über awork Forms",
     "version": "Version",
     "status": "Status",
-    "connected": "Mit awork verbunden"
+    "connected": "Mit awork verbunden",
+    "accessControl": {
+      "title": "Workspace-Zugriff",
+      "description": "Steuere, ob alle Benutzer in diesem Workspace awork Forms öffnen dürfen oder nur ausgewählte Personen.",
+      "allowAllLabel": "Alle Benutzer zulassen",
+      "allowAllHint": "Empfohlener Standard. Deaktiviere dies, um Forms auf eine Auswahl zu beschränken.",
+      "overrideHint": "awork-Admins und Benutzer mit workspace-manage-config-Zugriff behalten immer Zugriff, auch wenn sie nicht auf der Allowlist stehen.",
+      "allowedUsersTitle": "Zugelassene Benutzer",
+      "allowedUsersHint_one": "{{count}} Benutzer hat aktuell Zugriff. awork-Admins und Workspace-Zugriffsmanager behalten immer Zugriff.",
+      "allowedUsersHint_other": "{{count}} Benutzer haben aktuell Zugriff. awork-Admins und Workspace-Zugriffsmanager behalten immer Zugriff.",
+      "searchPlaceholder": "Benutzer nach Name oder E-Mail suchen",
+      "restrictedHint": "Wenn keine Benutzer ausgewählt sind, können nur awork-Admins und Benutzer mit workspace-manage-config-Recht Forms öffnen.",
+      "adminOverrideBadge": "Admin-Override aktiv",
+      "managerOverrideBadge": "Workspace-Zugriffs-Override aktiv",
+      "noUsers": "Keine passenden Benutzer gefunden.",
+      "save": "Zugriffseinstellungen speichern",
+      "saving": "Speichert...",
+      "saveSuccessTitle": "Zugriffseinstellungen aktualisiert",
+      "saveSuccessBody": "Die Workspace-Zugriffsregeln wurden gespeichert.",
+      "saveErrorTitle": "Zugriffseinstellungen konnten nicht gespeichert werden",
+      "saveErrorBody": "Bitte versuche es erneut.",
+      "loadErrorTitle": "Zugriffseinstellungen konnten nicht geladen werden",
+      "loadErrorBody": "Seite neu laden und erneut versuchen."
+    }
+  },
+  "formsAccessBlocked": {
+    "title": "Der Zugriff auf awork Forms ist eingeschränkt",
+    "description": "In {{workspaceName}} dürfen nur ausgewählte Benutzer awork Forms öffnen. awork-Admins und Workspace-Zugriffsmanager kommen trotzdem hinein. Bitte jemanden davon, dich freizuschalten.",
+    "signOut": "Abmelden"
   },
   "publicForm": {
     "invalidUrl": "Ungültige Formular-URL",

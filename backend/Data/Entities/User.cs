@@ -5,6 +5,8 @@ public class User
     public Guid Id { get; set; }
     public Guid AworkUserId { get; set; }
     public Guid AworkWorkspaceId { get; set; }
+    public bool IsAworkAdmin { get; set; }
+    public bool CanManageWorkspaceAccess { get; set; }
     public string? WorkspaceName { get; set; }
     public string? WorkspaceUrl { get; set; }
     public string Email { get; set; } = string.Empty;

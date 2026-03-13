@@ -20,51 +20,80 @@ public class AworkApiService
             : baseUrl.TrimEnd('/');
     }
 
+    /// <summary>
+    /// Returns a usable awork access token for the given Forms user.
+    /// </summary>
     public Task<string?> GetValidAccessToken(Guid userId, bool forceRefresh = false) =>
         _authService.GetValidAccessToken(userId, forceRefresh);
 
+    /// <summary>
+    /// Fetches awork projects visible to the current user.
+    /// </summary>
     public async Task<List<AworkProject>> GetProjects(Guid userId)
     {
         var result = await MakeAworkRequest<List<AworkProject>>(userId, "projects");
         return result ?? [];
     }
 
+    /// <summary>
+    /// Fetches awork project types visible to the current user.
+    /// </summary>
     public async Task<List<AworkProjectType>> GetProjectTypes(Guid userId)
     {
         var result = await MakeAworkRequest<List<AworkProjectType>>(userId, "projecttypes");
         return result ?? [];
     }
 
+    /// <summary>
+    /// Fetches non-archived, non-deactivated, internal awork users for the picker UI.
+    /// </summary>
     public async Task<List<AworkUser>> GetUsers(Guid userId)
     {
         var result = await MakeAworkRequest<List<AworkUser>>(userId, "users");
-        return result ?? [];
+        return result?
+            .Where(user => !user.IsArchived && !user.IsDeactivated && !user.IsExternal)
+            .ToList() ?? [];
     }
 
+    /// <summary>
+    /// Fetches project statuses for the given project type.
+    /// </summary>
     public async Task<List<AworkProjectStatus>> GetProjectStatuses(Guid userId, Guid projectTypeId)
     {
         var result = await MakeAworkRequest<List<AworkProjectStatus>>(userId, $"projecttypes/{projectTypeId}/projectstatuses");
         return result ?? [];
     }
 
+    /// <summary>
+    /// Fetches task statuses for the given project.
+    /// </summary>
     public async Task<List<AworkTaskStatus>> GetTaskStatuses(Guid userId, Guid projectId)
     {
         var result = await MakeAworkRequest<List<AworkTaskStatus>>(userId, $"projects/{projectId}/taskstatuses");
         return result ?? [];
     }
 
+    /// <summary>
+    /// Fetches task lists for the given project.
+    /// </summary>
     public async Task<List<AworkTaskList>> GetTaskLists(Guid userId, Guid projectId)
     {
         var result = await MakeAworkRequest<List<AworkTaskList>>(userId, $"projects/{projectId}/tasklists");
         return result ?? [];
     }
 
+    /// <summary>
+    /// Fetches types of work visible to the current user.
+    /// </summary>
     public async Task<List<AworkTypeOfWork>> GetTypesOfWork(Guid userId)
     {
         var result = await MakeAworkRequest<List<AworkTypeOfWork>>(userId, "typeofwork");
         return result ?? [];
     }
 
+    /// <summary>
+    /// Creates a type of work when a valid name is provided.
+    /// </summary>
     public async Task<AworkTypeOfWork?> CreateTypeOfWork(Guid userId, string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -77,23 +106,35 @@ public class AworkApiService
         return await MakeAworkPostRequest<AworkTypeOfWork>(userId, "typeofwork", request);
     }
 
+    /// <summary>
+    /// Fetches project custom field definitions for a project.
+    /// </summary>
     public async Task<List<AworkCustomFieldDefinition>> GetProjectCustomFields(Guid userId, Guid projectId)
     {
         var result = await MakeAworkRequest<List<AworkCustomFieldDefinition>>(userId, $"projects/{projectId}/customfielddefinitions");
         return result ?? [];
     }
 
+    /// <summary>
+    /// Fetches task custom field definitions.
+    /// </summary>
     public async Task<List<AworkCustomFieldDefinition>> GetTaskCustomFieldDefinitions(Guid userId)
     {
         var result = await MakeAworkRequest<List<AworkCustomFieldDefinition>>(userId, "customfielddefinitions?filterby=entity eq 'task'");
         return result ?? [];
     }
 
+    /// <summary>
+    /// Creates an awork project.
+    /// </summary>
     public async Task<AworkCreateProjectResponse?> CreateProject(Guid userId, AworkCreateProjectRequest request)
     {
         return await MakeAworkPostRequest<AworkCreateProjectResponse>(userId, "projects", request);
     }
 
+    /// <summary>
+    /// Creates an awork task in the given project.
+    /// </summary>
     public async Task<AworkCreateTaskResponse?> CreateTask(Guid userId, Guid projectId, AworkCreateTaskRequest request)
     {
         request.EntityId = projectId;
@@ -101,6 +142,9 @@ public class AworkApiService
         return await MakeAworkPostRequest<AworkCreateTaskResponse>(userId, "tasks", request);
     }
 
+    /// <summary>
+    /// Links a custom field definition to a project.
+    /// </summary>
     public async Task<bool> LinkCustomFieldToProject(Guid userId, Guid projectId, Guid customFieldDefinitionId)
     {
         try
@@ -119,6 +163,9 @@ public class AworkApiService
         }
     }
 
+    /// <summary>
+    /// Sets custom field values on a task.
+    /// </summary>
     public async Task<bool> SetTaskCustomFields(Guid userId, Guid taskId, List<CustomFieldValue> customFields)
     {
         if (customFields.Count == 0) return true;
@@ -135,6 +182,9 @@ public class AworkApiService
         }
     }
 
+    /// <summary>
+    /// Adds tags to a task.
+    /// </summary>
     public async Task<bool> AddTagsToTask(Guid userId, Guid taskId, List<string> tags)
     {
         if (tags.Count == 0) return true;
@@ -152,6 +202,9 @@ public class AworkApiService
         }
     }
 
+    /// <summary>
+    /// Assigns a user to a task.
+    /// </summary>
     public async Task<bool> AssignUserToTask(Guid userId, Guid taskId, Guid assigneeUserId)
     {
         try
@@ -179,6 +232,9 @@ public class AworkApiService
         }
     }
 
+    /// <summary>
+    /// Uploads a file attachment to a task.
+    /// </summary>
     public async Task<bool> AttachFileToTask(Guid userId, Guid taskId, byte[] fileData, string fileName)
     {
         try
@@ -210,6 +266,9 @@ public class AworkApiService
         }
     }
 
+    /// <summary>
+    /// Sends a tracking event to awork.
+    /// </summary>
     public async Task<bool> TrackEvent(Guid userId, string eventName, Dictionary<string, object> data)
     {
         try
