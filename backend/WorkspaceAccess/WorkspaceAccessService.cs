@@ -17,6 +17,9 @@ public class WorkspaceAccessService
         _dbFactory = dbFactory;
     }
 
+    /// <summary>
+    /// Builds the current authenticated user payload including workspace access flags.
+    /// </summary>
     public async Task<UserDto?> GetUserDto(Guid userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
@@ -40,6 +43,9 @@ public class WorkspaceAccessService
         };
     }
 
+    /// <summary>
+    /// Checks whether the given user may access the Forms application.
+    /// </summary>
     public async Task<bool> HasFormsAccess(Guid userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
@@ -49,6 +55,9 @@ public class WorkspaceAccessService
         return await EvaluateAccess(db, user);
     }
 
+    /// <summary>
+    /// Returns the workspace access settings for a user with override permissions.
+    /// </summary>
     public async Task<WorkspaceAccessSettingsDto> GetSettings(Guid userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
@@ -62,6 +71,9 @@ public class WorkspaceAccessService
         return MapSettings(policy);
     }
 
+    /// <summary>
+    /// Updates the workspace access settings for a user with override permissions.
+    /// </summary>
     public async Task<WorkspaceAccessSettingsDto> UpdateSettings(Guid userId, UpdateWorkspaceAccessSettingsRequest request)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();

@@ -81,6 +81,9 @@ public class AuthService
         return Base64UrlEncode(bytes);
     }
 
+    /// <summary>
+    /// Starts the awork OAuth flow and persists the PKCE state.
+    /// </summary>
     public async Task<AuthInitResult> InitiateAuth()
     {
         var clientId = await GetOrCreateDcrClientId();
@@ -107,6 +110,9 @@ public class AuthService
         return new AuthInitResult { AuthorizationUrl = authUrl, State = state };
     }
 
+    /// <summary>
+    /// Completes the OAuth callback, upserts the user, and issues the Forms session token.
+    /// </summary>
     public async Task<AuthCallbackResult> HandleCallback(string code, string state)
     {
         OAuthState? pkceState;
@@ -155,6 +161,9 @@ public class AuthService
         }
     }
 
+    /// <summary>
+    /// Clears the stored awork tokens for the given user.
+    /// </summary>
     public async Task ClearUserTokens(Guid userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
@@ -374,12 +383,18 @@ public class AuthService
         return user;
     }
 
+    /// <summary>
+    /// Returns the stored local user by Forms user id.
+    /// </summary>
     public async Task<User?> GetUserById(Guid userId)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
         return await db.Users.FindAsync(userId);
     }
 
+    /// <summary>
+    /// Refreshes the stored admin and manage-config flags from awork.
+    /// </summary>
     public async Task RefreshWorkspaceAccessPermission(Guid userId)
     {
         try
@@ -408,6 +423,9 @@ public class AuthService
         }
     }
 
+    /// <summary>
+    /// Returns a usable awork access token, refreshing it when needed.
+    /// </summary>
     public async Task<string?> GetValidAccessToken(Guid userId, bool forceRefresh = false)
     {
         await using var db = await _dbFactory.CreateDbContextAsync();
