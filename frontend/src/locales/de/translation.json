@@ -278,6 +278,8 @@
     "optionTranslations": "Optionen übersetzen",
     "optionTranslationPlaceholder": "Übersetzung (optional)",
     "addOptionPlaceholder": "Option hinzufügen...",
+    "searchAworkFields": "awork-Felder durchsuchen...",
+    "noAworkFieldsFound": "Keine awork-Felder gefunden.",
     "add": "Hinzufügen",
     "deleteField": "Feld löschen",
     "done": "Fertig"
