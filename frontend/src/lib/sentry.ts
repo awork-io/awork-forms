@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react';
+import type { ErrorEvent, Exception, StackFrame } from '@sentry/react';
 
 export interface FrontendSentryEnv {
   MODE?: string;
@@ -18,6 +19,35 @@ export interface FrontendSentryConfig {
   dsn?: string;
   environment: string;
   release?: string;
+}
+
+const SAFARI_MASKED_URL_PREFIX = 'webkit-masked-url://hidden/';
+
+function getExceptionFrames(exception: Exception): StackFrame[] {
+  return exception.stacktrace?.frames || [];
+}
+
+function hasOnlySafariMaskedFrames(exception: Exception) {
+  const frames = getExceptionFrames(exception);
+  return frames.length > 0 && frames.every((frame) => {
+    const filename = frame.filename || frame.abs_path;
+    return filename === '[native code]' || filename?.startsWith(SAFARI_MASKED_URL_PREFIX);
+  });
+}
+
+export function shouldIgnoreThirdPartySafariAutofillError(event: ErrorEvent): boolean {
+  const exceptions = event.exception?.values || [];
+  if (exceptions.length === 0) return false;
+
+  const combinedMessage = exceptions
+    .map((exception) => `${exception.type || ''} ${exception.value || ''}`.toLowerCase())
+    .join('\n');
+
+  const isKnownSafariAutofillFailure = combinedMessage.includes('autofillfielddata')
+    || combinedMessage.includes('autocompletetype.includes');
+
+  return isKnownSafariAutofillFailure
+    && exceptions.every((exception) => hasOnlySafariMaskedFrames(exception));
 }
 
 export async function fetchRuntimeSentryConfig(fetchImpl: typeof fetch = fetch): Promise<RuntimeSentryConfig | undefined> {
@@ -66,5 +96,12 @@ export async function initFrontendSentry(env: FrontendSentryEnv = import.meta.en
     environment: config.environment,
     release: config.release,
     tracesSampleRate: 1.0,
+    beforeSend(event) {
+      if (shouldIgnoreThirdPartySafariAutofillError(event)) {
+        return null;
+      }
+
+      return event;
+    },
   });
 }

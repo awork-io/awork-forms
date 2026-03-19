@@ -10,7 +10,12 @@ vi.mock('@sentry/react', () => ({
   setUser: sentrySetUserMock,
 }));
 
-import { getFrontendSentryConfig, initFrontendSentry, setSentryUser } from './sentry';
+import {
+  getFrontendSentryConfig,
+  initFrontendSentry,
+  setSentryUser,
+  shouldIgnoreThirdPartySafariAutofillError,
+} from './sentry';
 
 describe('frontend sentry config', () => {
   beforeEach(() => {
@@ -37,12 +42,13 @@ describe('frontend sentry config', () => {
       VITE_SENTRY_RELEASE: 'awork-forms@1.2.3',
     });
 
-    expect(sentryInitMock).toHaveBeenCalledWith({
+    expect(sentryInitMock).toHaveBeenCalledWith(expect.objectContaining({
       dsn: 'https://key@o0.ingest.sentry.io/1',
       environment: 'staging',
       release: 'awork-forms@1.2.3',
       tracesSampleRate: 1.0,
-    });
+      beforeSend: expect.any(Function),
+    }));
   });
 
   it('does not initialize sentry when dsn is blank', async () => {
@@ -75,12 +81,57 @@ describe('frontend sentry config', () => {
       VITE_SENTRY_RELEASE: 'vite-release',
     });
 
-    expect(sentryInitMock).toHaveBeenCalledWith({
+    expect(sentryInitMock).toHaveBeenCalledWith(expect.objectContaining({
       dsn: 'https://runtime@o0.ingest.sentry.io/1',
       environment: 'runtime-env',
       release: 'runtime-release',
       tracesSampleRate: 1.0,
-    });
+      beforeSend: expect.any(Function),
+    }));
+  });
+
+  it('ignores Safari autofill errors from masked third-party frames', () => {
+    const event = {
+      type: undefined,
+      exception: {
+        values: [
+          {
+            type: 'TypeError',
+            value: "null is not an object (evaluating 'autofillFieldData.autoCompleteType.includes')",
+            stacktrace: {
+              frames: [
+                { filename: 'webkit-masked-url://hidden/', function: 'setupOverlayOnField' },
+                { filename: '[native code]', function: 'Promise' },
+              ],
+            },
+          },
+        ],
+      },
+    } satisfies Parameters<typeof shouldIgnoreThirdPartySafariAutofillError>[0];
+
+    expect(shouldIgnoreThirdPartySafariAutofillError(event)).toBe(true);
+  });
+
+  it('keeps application errors with real app frames', () => {
+    const event = {
+      type: undefined,
+      exception: {
+        values: [
+          {
+            type: 'TypeError',
+            value: "Cannot read properties of undefined (reading 'id')",
+            stacktrace: {
+              frames: [
+                { filename: 'https://forms.awork.com/assets/index.js', function: 'renderField' },
+                { filename: 'https://forms.awork.com/assets/index.js', function: 'handleSave' },
+              ],
+            },
+          },
+        ],
+      },
+    } satisfies Parameters<typeof shouldIgnoreThirdPartySafariAutofillError>[0];
+
+    expect(shouldIgnoreThirdPartySafariAutofillError(event)).toBe(false);
   });
 
   it('sets sentry user with id, email, and workspace_id', () => {
