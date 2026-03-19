@@ -50,6 +50,14 @@ export function SearchableSelect({
 
   const selectedOption = [...pinnedOptions, ...options].find((option) => option.value === value)
 
+  const sortedOptions = React.useMemo(() => {
+    if (options.some((option) => option.group)) {
+      return options
+    }
+
+    return [...options].sort((a, b) => a.label.localeCompare(b.label))
+  }, [options])
+
   const filteredPinnedOptions = React.useMemo(() => {
     if (!search) return pinnedOptions
     const lower = search.toLowerCase()
@@ -62,15 +70,15 @@ export function SearchableSelect({
   }, [pinnedOptions, search])
 
   const filteredOptions = React.useMemo(() => {
-    if (!search) return options
+    if (!search) return sortedOptions
     const lower = search.toLowerCase()
-    return options.filter(
+    return sortedOptions.filter(
       (opt) =>
         opt.label.toLowerCase().includes(lower) ||
         opt.secondaryLabel?.toLowerCase().includes(lower) ||
         opt.group?.toLowerCase().includes(lower)
     )
-  }, [options, search])
+  }, [search, sortedOptions])
 
   const groupedOptions = React.useMemo(() => {
     const groups = new Map<string, SearchableSelectOption[]>()

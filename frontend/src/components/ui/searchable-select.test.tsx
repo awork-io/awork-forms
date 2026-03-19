@@ -13,6 +13,35 @@ describe('SearchableSelect', () => {
   const pinnedOptions: SearchableSelectOption[] = [
     { value: 'none', label: 'Not mapped' },
   ];
+  const ungroupedOptions: SearchableSelectOption[] = [
+    { value: 'zeta', label: 'Zeta field' },
+    { value: 'alpha', label: 'Alpha field' },
+    { value: 'beta', label: 'Beta field' },
+  ];
+
+  it('keeps ungrouped options alphabetized by label', async () => {
+    const user = userEvent.setup();
+    render(
+      <SearchableSelect
+        options={ungroupedOptions}
+        value={null}
+        onValueChange={vi.fn()}
+        placeholder="Select..."
+      />
+    );
+
+    await user.click(screen.getByRole('combobox'));
+
+    const buttons = screen
+      .getAllByRole('button')
+      .filter((button) => /field$/i.test(button.textContent ?? ''));
+
+    expect(buttons.map((button) => button.textContent)).toEqual([
+      expect.stringContaining('Alpha field'),
+      expect.stringContaining('Beta field'),
+      expect.stringContaining('Zeta field'),
+    ]);
+  });
 
   it('pins not mapped first, preserves default field order, and keeps custom fields alphabetized when provided that way', async () => {
     const user = userEvent.setup();
