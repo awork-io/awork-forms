@@ -22,6 +22,7 @@ public class AworkEndpointsTests
         [$"/api/awork/projects/{IntegrationTestFactory.AworkProjectId}/tasklists", IntegrationTestFactory.AworkTaskListId.ToString()],
         ["/api/awork/typesofwork", IntegrationTestFactory.AworkTypeOfWorkId.ToString()],
         [$"/api/awork/projects/{IntegrationTestFactory.AworkProjectId}/customfields", IntegrationTestFactory.AworkCustomFieldId.ToString()],
+        [$"/api/awork/projects/{IntegrationTestFactory.AworkProjectId}/projectstatuses", IntegrationTestFactory.AworkProjectStatusId.ToString()],
         [$"/api/awork/projecttypes/{IntegrationTestFactory.AworkProjectTypeId}/projectstatuses", IntegrationTestFactory.AworkProjectStatusId.ToString()]
     ];
 

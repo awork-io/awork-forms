@@ -56,9 +56,18 @@ public class AworkApiService
     }
 
     /// <summary>
-    /// Fetches project statuses for the given project type.
+    /// Fetches project statuses for the given project, including workflow-inherited statuses.
     /// </summary>
-    public async Task<List<AworkProjectStatus>> GetProjectStatuses(Guid userId, Guid projectTypeId)
+    public async Task<List<AworkProjectStatus>> GetProjectStatuses(Guid userId, Guid projectId)
+    {
+        var result = await MakeAworkRequest<List<AworkProjectStatus>>(userId, $"projects/{projectId}/projectstatuses");
+        return result ?? [];
+    }
+
+    /// <summary>
+    /// Legacy fallback for fetching project statuses by project type.
+    /// </summary>
+    public async Task<List<AworkProjectStatus>> GetProjectTypeStatuses(Guid userId, Guid projectTypeId)
     {
         var result = await MakeAworkRequest<List<AworkProjectStatus>>(userId, $"projecttypes/{projectTypeId}/projectstatuses");
         return result ?? [];

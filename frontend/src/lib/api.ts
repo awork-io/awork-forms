@@ -154,6 +154,8 @@ export interface AworkProjectStatus {
   name: string;
   type: string;
   order: number;
+  projectId?: string | null;
+  workflowId?: string | null;
 }
 
 export interface AworkTaskStatus {
@@ -161,6 +163,8 @@ export interface AworkTaskStatus {
   name: string;
   type: string;
   order: number;
+  projectId?: string | null;
+  workflowId?: string | null;
 }
 
 export interface AworkTaskList {
@@ -374,8 +378,8 @@ class ApiClient {
     return this.request('/api/awork/users');
   }
 
-  async getAworkProjectStatuses(projectTypeId: string): Promise<AworkProjectStatus[]> {
-    return this.request(`/api/awork/projecttypes/${projectTypeId}/projectstatuses`);
+  async getAworkProjectStatuses(projectId: string): Promise<AworkProjectStatus[]> {
+    return this.request(`/api/awork/projects/${projectId}/projectstatuses`);
   }
 
   async getAworkTaskStatuses(projectId: string): Promise<AworkTaskStatus[]> {

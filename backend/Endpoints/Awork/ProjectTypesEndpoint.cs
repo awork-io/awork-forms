@@ -32,7 +32,7 @@ public class ProjectTypesEndpoint : IEndpoint
 
             try
             {
-                return Results.Ok(await aworkService.GetProjectStatuses(userId.Value, id));
+                return Results.Ok(await aworkService.GetProjectTypeStatuses(userId.Value, id));
             }
             catch (UnauthorizedAccessException ex)
             {
