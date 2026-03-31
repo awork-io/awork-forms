@@ -1,4 +1,4 @@
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   type FieldTranslation,
   type FormField,
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { InputField } from '@/components/ui/form-field';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +53,35 @@ export function FieldConfigDialog({
   translationsEnabled: globalTranslationsEnabled = false,
 }: FieldConfigDialogProps) {
   const { t } = useTranslation();
+
+  const taskMappingOptions = useMemo<SearchableSelectOption[]>(() => {
+    const defaultOptions = AWORK_TASK_FIELDS.map((aworkField) => ({
+      value: aworkField.value,
+      label: t(aworkField.labelKey),
+      secondaryLabel: t(aworkField.labelKey),
+      group: t('common.defaultFields'),
+    }));
+
+    const customOptions = [...aworkCustomFields]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((customField) => ({
+        value: `custom:${customField.id}`,
+        label: customField.name,
+        secondaryLabel: customField.type,
+        group: t('common.customFields'),
+      }));
+
+    return [...defaultOptions, ...customOptions];
+  }, [aworkCustomFields, t]);
+
+  const notMappedTaskOption = useMemo<SearchableSelectOption>(
+    () => ({
+      value: 'none',
+      label: t('aworkIntegration.task.notMapped'),
+    }),
+    [t]
+  );
+
   if (!field) return null;
 
   const handleUpdate = (updates: Partial<FormField>) => {
@@ -60,6 +90,7 @@ export function FieldConfigDialog({
 
   const showTaskMapping = aworkConfig.actionType === 'task' || aworkConfig.actionType === 'both';
   const showProjectMapping = aworkConfig.actionType === 'project' || aworkConfig.actionType === 'both';
+  const showAworkMapping = showTaskMapping || showProjectMapping;
 
   const getTaskMapping = () => {
     const mapping = aworkConfig.taskFieldMappings.find((item) => item.formFieldId === field.id);
@@ -158,53 +189,28 @@ export function FieldConfigDialog({
           <Separator />
 
           {globalTranslationsEnabled && (
-            <>
-              <Separator />
-              <FieldTranslationsEditor field={field} onUpdate={handleUpdate} />
-            </>
+            <FieldTranslationsEditor field={field} onUpdate={handleUpdate} />
           )}
 
-          {(showTaskMapping || showProjectMapping) && (
+          {globalTranslationsEnabled && showAworkMapping && <Separator />}
+
+          {showAworkMapping && (
             <>
-              <Separator />
               <div className="space-y-4">
                 {showTaskMapping && (
                   <div className="space-y-2">
                     <Label>{t('aworkIntegration.task.mapFields')}</Label>
-                    <Select value={getTaskMapping()} onValueChange={updateTaskMapping}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('aworkIntegration.task.notMapped')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t('aworkIntegration.task.notMapped')}</SelectItem>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          {t('common.defaultFields')}
-                        </div>
-                        {AWORK_TASK_FIELDS.map((aworkField) => (
-                          <SelectItem key={aworkField.value} value={aworkField.value}>
-                            {t(aworkField.labelKey)}
-                          </SelectItem>
-                        ))}
-                        {aworkCustomFields.length > 0 && (
-                          <>
-                            <Separator className="my-1" />
-                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                              {t('common.customFields')}
-                            </div>
-                            {aworkCustomFields.map((customField) => (
-                              <SelectItem key={`custom:${customField.id}`} value={`custom:${customField.id}`}>
-                                <div className="flex items-center gap-2">
-                                  <span>{customField.name}</span>
-                                  <Badge variant="outline" className="text-[10px] px-1 py-0">
-                                    {customField.type}
-                                  </Badge>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={taskMappingOptions}
+                      pinnedOptions={[notMappedTaskOption]}
+                      value={getTaskMapping()}
+                      onValueChange={updateTaskMapping}
+                      placeholder={t('aworkIntegration.task.notMapped')}
+                      searchPlaceholder={t('fieldConfigDialog.searchAworkFields')}
+                      emptyText={t('fieldConfigDialog.noAworkFieldsFound')}
+                      clearable
+                      onClear={() => updateTaskMapping('none')}
+                    />
                   </div>
                 )}
 

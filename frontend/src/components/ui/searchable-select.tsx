@@ -12,10 +12,12 @@ export interface SearchableSelectOption {
   label: string
   secondaryLabel?: string
   icon?: React.ReactNode
+  group?: string
 }
 
 interface SearchableSelectProps {
   options: SearchableSelectOption[]
+  pinnedOptions?: SearchableSelectOption[]
   value: string | null
   onValueChange: (value: string) => void
   placeholder?: string
@@ -29,6 +31,7 @@ interface SearchableSelectProps {
 
 export function SearchableSelect({
   options,
+  pinnedOptions = [],
   value,
   onValueChange,
   placeholder = "Select...",
@@ -45,18 +48,51 @@ export function SearchableSelect({
   const triggerRef = React.useRef<HTMLButtonElement>(null)
   const [triggerWidth, setTriggerWidth] = React.useState(0)
 
-  const selectedOption = options.find((option) => option.value === value)
+  const selectedOption = [...pinnedOptions, ...options].find((option) => option.value === value)
 
-  const filteredOptions = React.useMemo(() => {
-    const sorted = [...options].sort((a, b) => a.label.localeCompare(b.label))
-    if (!search) return sorted
+  const sortedOptions = React.useMemo(() => {
+    if (options.some((option) => option.group)) {
+      return options
+    }
+
+    return [...options].sort((a, b) => a.label.localeCompare(b.label))
+  }, [options])
+
+  const filteredPinnedOptions = React.useMemo(() => {
+    if (!search) return pinnedOptions
     const lower = search.toLowerCase()
-    return sorted.filter(
+    return pinnedOptions.filter(
       (opt) =>
         opt.label.toLowerCase().includes(lower) ||
-        opt.secondaryLabel?.toLowerCase().includes(lower)
+        opt.secondaryLabel?.toLowerCase().includes(lower) ||
+        opt.group?.toLowerCase().includes(lower)
     )
-  }, [options, search])
+  }, [pinnedOptions, search])
+
+  const filteredOptions = React.useMemo(() => {
+    if (!search) return sortedOptions
+    const lower = search.toLowerCase()
+    return sortedOptions.filter(
+      (opt) =>
+        opt.label.toLowerCase().includes(lower) ||
+        opt.secondaryLabel?.toLowerCase().includes(lower) ||
+        opt.group?.toLowerCase().includes(lower)
+    )
+  }, [search, sortedOptions])
+
+  const groupedOptions = React.useMemo(() => {
+    const groups = new Map<string, SearchableSelectOption[]>()
+
+    for (const option of filteredOptions) {
+      const group = option.group ?? ""
+      if (!groups.has(group)) {
+        groups.set(group, [])
+      }
+      groups.get(group)!.push(option)
+    }
+
+    return Array.from(groups.entries()).map(([groupName, items]) => [groupName, items] as const)
+  }, [filteredOptions])
 
   React.useEffect(() => {
     if (open) {
@@ -147,48 +183,98 @@ export function SearchableSelect({
         </div>
 
         {/* Options list */}
-        <div className="max-h-[280px] overflow-y-auto p-1.5">
-          {filteredOptions.length === 0 ? (
+        <div
+          className="max-h-[280px] overflow-y-auto overscroll-contain touch-pan-y p-1.5"
+          onWheel={(event) => event.stopPropagation()}
+        >
+          {filteredPinnedOptions.length === 0 && groupedOptions.length === 0 ? (
             <div className="py-8 text-center text-sm text-gray-400">
               {emptyText}
             </div>
           ) : (
-            filteredOptions.map((option) => {
-              const isSelected = option.value === value
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    onValueChange(option.value)
-                    setOpen(false)
-                  }}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-left transition-colors",
-                    "hover:bg-gray-50",
-                    isSelected && "bg-[#edf5ff] hover:bg-[#e0efff]"
-                  )}
-                >
-                  {option.icon && (
-                    <span className="shrink-0">{option.icon}</span>
-                  )}
-                  <span className={cn(
-                    "flex-1 text-sm truncate",
-                    isSelected ? "text-[#006dfa] font-medium" : "text-gray-700"
-                  )}>
-                    {option.label}
-                  </span>
-                  {option.secondaryLabel && (
-                    <span className="text-xs text-gray-400 truncate max-w-[120px]">
-                      {option.secondaryLabel}
+            <>
+              {filteredPinnedOptions.map((option) => {
+                const isSelected = option.value === value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      onValueChange(option.value)
+                      setOpen(false)
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-left transition-colors",
+                      "hover:bg-gray-50",
+                      isSelected && "bg-[#edf5ff] hover:bg-[#e0efff]"
+                    )}
+                  >
+                    {option.icon && (
+                      <span className="shrink-0">{option.icon}</span>
+                    )}
+                    <span className={cn(
+                      "flex-1 text-sm truncate",
+                      isSelected ? "text-[#006dfa] font-medium" : "text-gray-700"
+                    )}>
+                      {option.label}
                     </span>
+                    {option.secondaryLabel && (
+                      <span className="text-xs text-gray-400 truncate max-w-[120px]">
+                        {option.secondaryLabel}
+                      </span>
+                    )}
+                    {isSelected && (
+                      <Check className="h-4 w-4 shrink-0 text-[#006dfa]" />
+                    )}
+                  </button>
+                )
+              })}
+              {groupedOptions.map(([groupName, items]) => (
+                <div key={groupName || "ungrouped"}>
+                  {groupName && (
+                    <div className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                      {groupName}
+                    </div>
                   )}
-                  {isSelected && (
-                    <Check className="h-4 w-4 shrink-0 text-[#006dfa]" />
-                  )}
-                </button>
-              )
-            })
+                  {items.map((option) => {
+                    const isSelected = option.value === value
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          onValueChange(option.value)
+                          setOpen(false)
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-left transition-colors",
+                          "hover:bg-gray-50",
+                          isSelected && "bg-[#edf5ff] hover:bg-[#e0efff]"
+                        )}
+                      >
+                        {option.icon && (
+                          <span className="shrink-0">{option.icon}</span>
+                        )}
+                        <span className={cn(
+                          "flex-1 text-sm truncate",
+                          isSelected ? "text-[#006dfa] font-medium" : "text-gray-700"
+                        )}>
+                          {option.label}
+                        </span>
+                        {option.secondaryLabel && (
+                          <span className="text-xs text-gray-400 truncate max-w-[120px]">
+                            {option.secondaryLabel}
+                          </span>
+                        )}
+                        {isSelected && (
+                          <Check className="h-4 w-4 shrink-0 text-[#006dfa]" />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              ))}
+            </>
           )}
         </div>
       </PopoverContent>

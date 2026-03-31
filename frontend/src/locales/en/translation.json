@@ -278,6 +278,8 @@
     "optionTranslations": "Option translations",
     "optionTranslationPlaceholder": "Translation (optional)",
     "addOptionPlaceholder": "Add option...",
+    "searchAworkFields": "Search awork fields...",
+    "noAworkFieldsFound": "No awork fields found.",
     "add": "Add",
     "deleteField": "Delete Field",
     "done": "Done"
