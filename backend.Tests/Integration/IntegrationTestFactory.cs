@@ -34,6 +34,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
     public static readonly Guid AworkTaskStatusId = Guid.Parse("44444444-4444-4444-4444-444444444444");
     public static readonly Guid AworkTaskListId = Guid.Parse("55555555-5555-5555-5555-555555555555");
     public static readonly Guid AworkTypeOfWorkId = Guid.Parse("66666666-6666-6666-6666-666666666666");
+    public static readonly Guid AworkWorkflowId = Guid.Parse("67676767-6767-6767-6767-676767676767");
     public static readonly Guid AworkCustomFieldId = Guid.Parse("77777777-7777-7777-7777-777777777777");
     public static readonly Guid AworkSelectCustomFieldId = Guid.Parse("7f7f7f7f-7f7f-7f7f-7f7f-7f7f7f7f7f7f");
     public static readonly Guid AworkSelectOptionId = Guid.Parse("8f8f8f8f-8f8f-8f8f-8f8f-8f8f8f8f8f8f");
@@ -197,7 +198,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
                 status = 200,
                 jsonBody = new[]
                 {
-                    new { id = AworkTaskStatusId, name = "Todo", type = "todo", order = 1 }
+                    new { id = AworkTaskStatusId, name = "Todo", type = "todo", order = 1, projectId = (Guid?)null, workflowId = AworkWorkflowId }
                 }
             }
         });
@@ -256,13 +257,26 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
 
         await RegisterAworkMappingAsync(client, new
         {
+            request = new { method = "GET", urlPath = $"/api/v1/projects/{AworkProjectId}/projectstatuses" },
+            response = new
+            {
+                status = 200,
+                jsonBody = new[]
+                {
+                    new { id = AworkProjectStatusId, name = "Active", type = "open", order = 1, projectId = (Guid?)null, workflowId = AworkWorkflowId }
+                }
+            }
+        });
+
+        await RegisterAworkMappingAsync(client, new
+        {
             request = new { method = "GET", urlPath = $"/api/v1/projecttypes/{AworkProjectTypeId}/projectstatuses" },
             response = new
             {
                 status = 200,
                 jsonBody = new[]
                 {
-                    new { id = AworkProjectStatusId, name = "Active", type = "open", order = 1 }
+                    new { id = AworkProjectStatusId, name = "Active", type = "open", order = 1, projectId = AworkProjectId, workflowId = (Guid?)null }
                 }
             }
         });

@@ -50,49 +50,39 @@ export function SearchableSelect({
 
   const selectedOption = [...pinnedOptions, ...options].find((option) => option.value === value)
 
-  const sortedOptions = React.useMemo(() => {
-    if (options.some((option) => option.group)) {
-      return options
-    }
+  const sortedOptions = options.some((option) => option.group)
+    ? options
+    : [...options].sort((a, b) => a.label.localeCompare(b.label))
 
-    return [...options].sort((a, b) => a.label.localeCompare(b.label))
-  }, [options])
+  const lowerSearch = search.toLowerCase()
 
-  const filteredPinnedOptions = React.useMemo(() => {
-    if (!search) return pinnedOptions
-    const lower = search.toLowerCase()
-    return pinnedOptions.filter(
+  const filteredPinnedOptions = !search
+    ? pinnedOptions
+    : pinnedOptions.filter(
       (opt) =>
-        opt.label.toLowerCase().includes(lower) ||
-        opt.secondaryLabel?.toLowerCase().includes(lower) ||
-        opt.group?.toLowerCase().includes(lower)
+        opt.label.toLowerCase().includes(lowerSearch) ||
+        opt.secondaryLabel?.toLowerCase().includes(lowerSearch) ||
+        opt.group?.toLowerCase().includes(lowerSearch)
     )
-  }, [pinnedOptions, search])
 
-  const filteredOptions = React.useMemo(() => {
-    if (!search) return sortedOptions
-    const lower = search.toLowerCase()
-    return sortedOptions.filter(
+  const filteredOptions = !search
+    ? sortedOptions
+    : sortedOptions.filter(
       (opt) =>
-        opt.label.toLowerCase().includes(lower) ||
-        opt.secondaryLabel?.toLowerCase().includes(lower) ||
-        opt.group?.toLowerCase().includes(lower)
+        opt.label.toLowerCase().includes(lowerSearch) ||
+        opt.secondaryLabel?.toLowerCase().includes(lowerSearch) ||
+        opt.group?.toLowerCase().includes(lowerSearch)
     )
-  }, [search, sortedOptions])
 
-  const groupedOptions = React.useMemo(() => {
-    const groups = new Map<string, SearchableSelectOption[]>()
-
-    for (const option of filteredOptions) {
-      const group = option.group ?? ""
-      if (!groups.has(group)) {
-        groups.set(group, [])
-      }
-      groups.get(group)!.push(option)
+  const groups = new Map<string, SearchableSelectOption[]>()
+  for (const option of filteredOptions) {
+    const group = option.group ?? ""
+    if (!groups.has(group)) {
+      groups.set(group, [])
     }
-
-    return Array.from(groups.entries()).map(([groupName, items]) => [groupName, items] as const)
-  }, [filteredOptions])
+    groups.get(group)!.push(option)
+  }
+  const groupedOptions = Array.from(groups.entries()).map(([groupName, items]) => [groupName, items] as const)
 
   React.useEffect(() => {
     if (open) {
