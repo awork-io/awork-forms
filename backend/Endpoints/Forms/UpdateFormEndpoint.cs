@@ -5,6 +5,8 @@ namespace Backend.Endpoints.Forms;
 
 public class UpdateFormEndpoint : IEndpoint
 {
+    private static readonly JsonSerializerOptions RequestJsonOptions = new(JsonSerializerDefaults.Web);
+
     public static void Map(IEndpointRouteBuilder app)
     {
         app.MapPut("/api/forms/{id:int}", async (HttpContext context, FormsService formsService, int id) =>
@@ -16,7 +18,7 @@ public class UpdateFormEndpoint : IEndpoint
             {
                 using var requestBody = await JsonDocument.ParseAsync(context.Request.Body);
                 var hasAworkAssigneeId = requestBody.RootElement.TryGetProperty("aworkAssigneeId", out _);
-                var dto = requestBody.RootElement.Deserialize<UpdateFormDto>();
+                var dto = requestBody.RootElement.Deserialize<UpdateFormDto>(RequestJsonOptions);
                 if (dto == null) return Results.BadRequest(new { error = "Invalid request body" });
 
                 var form = formsService.UpdateForm(id, dto, userId.Value, hasAworkAssigneeId);
