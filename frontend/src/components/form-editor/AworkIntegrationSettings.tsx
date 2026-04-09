@@ -776,7 +776,7 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
   aworkTaskListId: string | undefined;
   aworkTaskStatusId: string | undefined;
   aworkTypeOfWorkId: string | undefined;
-  aworkAssigneeId: string | undefined;
+  aworkAssigneeId: string | null;
   aworkTaskIsPriority: boolean | undefined;
   aworkTaskTag: string | undefined;
   fieldMappingsJson: string | undefined;
@@ -791,7 +791,7 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
     aworkTaskListId: config.taskListId || undefined,
     aworkTaskStatusId: config.taskStatusId || undefined,
     aworkTypeOfWorkId: config.typeOfWorkId || undefined,
-    aworkAssigneeId: config.assigneeId || undefined,
+    aworkAssigneeId: config.assigneeId ?? null,
     aworkTaskIsPriority: config.isPriority ?? undefined,
     aworkTaskTag: config.taskTag === null ? undefined : config.taskTag,
     fieldMappingsJson: (hasTaskMappings || hasProjectMappings)

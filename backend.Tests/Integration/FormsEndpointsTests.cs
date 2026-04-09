@@ -63,6 +63,39 @@ public class FormsEndpointsTests
     }
 
     [Fact]
+    public async Task UpdateForm_WhenAssigneeCleared_PersistsNullAssignee()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var client = _factory.CreateAuthenticatedClient(token);
+
+        var createResponse = await client.PostAsJsonAsync("/api/forms", new CreateFormDto
+        {
+            Name = "Assignee Reset Form",
+            ActionType = "task",
+            FieldsJson = "[]",
+            AworkTypeOfWorkId = Guid.NewGuid(),
+            AworkAssigneeId = Guid.NewGuid()
+        });
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+        Assert.NotNull(created!.AworkAssigneeId);
+
+        var updateResponse = await client.PutAsJsonAsync($"/api/forms/{created.Id}", new UpdateFormDto
+        {
+            AworkAssigneeId = null
+        });
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(updated);
+        Assert.Null(updated!.AworkAssigneeId);
+
+        var fetched = await client.GetFromJsonAsync<FormDetailDto>($"/api/forms/{created.Id}");
+        Assert.NotNull(fetched);
+        Assert.Null(fetched!.AworkAssigneeId);
+    }
+
+    [Fact]
     public async Task GetForm_ReturnsTranslationsAndFields()
     {
         var (_, token) = await _factory.SeedUserAsync();
