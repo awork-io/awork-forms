@@ -174,7 +174,7 @@ public class FormsService
         return $"{baseName} {counter}";
     }
 
-    public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId)
+    public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId, bool hasAworkAssigneeId = false)
     {
         using var db = _dbFactory.CreateDbContext();
         var workspaceId = GetWorkspaceId(db, userId);
@@ -194,7 +194,7 @@ public class FormsService
         if (dto.AworkTaskListId != null) form.AworkTaskListId = dto.AworkTaskListId;
         if (dto.AworkTaskStatusId != null) form.AworkTaskStatusId = dto.AworkTaskStatusId;
         if (dto.AworkTypeOfWorkId != null) form.AworkTypeOfWorkId = dto.AworkTypeOfWorkId;
-        if (dto.AworkAssigneeId != null) form.AworkAssigneeId = dto.AworkAssigneeId;
+        if (dto.AworkAssigneeId != null || hasAworkAssigneeId) form.AworkAssigneeId = dto.AworkAssigneeId;
         if (dto.AworkTaskIsPriority != null) form.AworkTaskIsPriority = dto.AworkTaskIsPriority;
         if (dto.AworkTaskTag != null) form.AworkTaskTag = dto.AworkTaskTag == "" ? null : dto.AworkTaskTag;
         if (dto.FieldMappingsJson != null) form.FieldMappingsJson = dto.FieldMappingsJson;

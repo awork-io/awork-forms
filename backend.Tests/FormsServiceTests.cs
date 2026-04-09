@@ -161,6 +161,26 @@ public class FormsServiceTests : IDisposable
     }
 
     [Fact]
+    public void UpdateForm_CanClearAworkAssigneeWhenPropertyIsExplicitlyPresent()
+    {
+        var assigneeId = Guid.NewGuid();
+        var created = _formsService.CreateForm(new CreateFormDto
+        {
+            Name = "Assignee Form",
+            AworkAssigneeId = assigneeId
+        }, _testUserId);
+
+        var result = _formsService.UpdateForm(
+            created.Id,
+            new UpdateFormDto { AworkAssigneeId = null },
+            _testUserId,
+            hasAworkAssigneeId: true);
+
+        Assert.NotNull(result);
+        Assert.Null(result.AworkAssigneeId);
+    }
+
+    [Fact]
     public void DeleteForm_WithExistingForm_ReturnsDeleted()
     {
         var created = _formsService.CreateForm(new CreateFormDto { Name = "Test Form" }, _testUserId);
