@@ -770,35 +770,36 @@ export function parseAworkConfig(
 
 // Helper to serialize config for saving
 export function serializeAworkConfig(config: AworkIntegrationConfig): {
-  actionType: string | undefined;
-  aworkProjectId: string | undefined;
-  aworkProjectTypeId: string | undefined;
-  aworkTaskListId: string | undefined;
-  aworkTaskStatusId: string | undefined;
-  aworkTypeOfWorkId: string | undefined;
-  aworkAssigneeId: string | undefined;
-  aworkTaskIsPriority: boolean | undefined;
-  aworkTaskTag: string | undefined;
-  fieldMappingsJson: string | undefined;
+  actionType: string | null;
+  aworkProjectId: string | null;
+  aworkProjectTypeId: string | null;
+  aworkTaskListId: string | null;
+  aworkTaskStatusId: string | null;
+  aworkTypeOfWorkId: string | null;
+  aworkAssigneeId: string | null;
+  aworkTaskIsPriority: boolean | null;
+  aworkTaskTag: string | null;
+  fieldMappingsJson: string | null;
 } {
   const hasTaskMappings = config.taskFieldMappings.length > 0;
   const hasProjectMappings = config.projectFieldMappings.length > 0;
+  const normalizedTaskTag = config.taskTag?.trim();
 
   return {
-    actionType: config.actionType || undefined,
-    aworkProjectId: config.projectId || undefined,
-    aworkProjectTypeId: config.projectTypeId || undefined,
-    aworkTaskListId: config.taskListId || undefined,
-    aworkTaskStatusId: config.taskStatusId || undefined,
-    aworkTypeOfWorkId: config.typeOfWorkId || undefined,
-    aworkAssigneeId: config.assigneeId || undefined,
-    aworkTaskIsPriority: config.isPriority ?? undefined,
-    aworkTaskTag: config.taskTag === null ? undefined : config.taskTag,
+    actionType: config.actionType,
+    aworkProjectId: config.projectId,
+    aworkProjectTypeId: config.projectTypeId,
+    aworkTaskListId: config.taskListId,
+    aworkTaskStatusId: config.taskStatusId,
+    aworkTypeOfWorkId: config.typeOfWorkId,
+    aworkAssigneeId: config.assigneeId,
+    aworkTaskIsPriority: config.isPriority ?? null,
+    aworkTaskTag: normalizedTaskTag ? normalizedTaskTag : null,
     fieldMappingsJson: (hasTaskMappings || hasProjectMappings)
       ? JSON.stringify({
           taskFieldMappings: config.taskFieldMappings,
           projectFieldMappings: config.projectFieldMappings,
         })
-      : undefined,
+      : null,
   };
 }

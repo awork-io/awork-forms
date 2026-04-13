@@ -83,26 +83,26 @@ export interface CreateFormDto {
 }
 
 export interface UpdateFormDto {
-  name?: string;
-  description?: string;
-  nameTranslations?: Record<string, string>;
-  descriptionTranslations?: Record<string, string>;
-  fieldsJson?: string;
-  actionType?: string;
-  aworkProjectId?: string;
-  aworkProjectTypeId?: string;
-  aworkTaskListId?: string;
-  aworkTaskStatusId?: string;
-  aworkTypeOfWorkId?: string;
-  aworkAssigneeId?: string;
-  aworkTaskIsPriority?: boolean;
-  aworkTaskTag?: string;
-  fieldMappingsJson?: string;
-  primaryColor?: string;
-  backgroundColor?: string;
-  logoUrl?: string;
-  isSharedWithWorkspace?: boolean;
-  isActive?: boolean;
+  name: string;
+  description: string | null;
+  nameTranslations: Record<string, string> | null;
+  descriptionTranslations: Record<string, string> | null;
+  fieldsJson: string;
+  actionType: string | null;
+  aworkProjectId: string | null;
+  aworkProjectTypeId: string | null;
+  aworkTaskListId: string | null;
+  aworkTaskStatusId: string | null;
+  aworkTypeOfWorkId: string | null;
+  aworkAssigneeId: string | null;
+  aworkTaskIsPriority: boolean | null;
+  aworkTaskTag: string | null;
+  fieldMappingsJson: string | null;
+  primaryColor: string | null;
+  backgroundColor: string | null;
+  logoUrl: string | null;
+  isSharedWithWorkspace: boolean;
+  isActive: boolean;
 }
 
 export interface LoginInitResponse {
