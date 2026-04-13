@@ -174,8 +174,9 @@ public class FormsService
         return $"{baseName} {counter}";
     }
 
-    public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId)
+    public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId, bool hasAworkAssigneeId = false)
     {
+        _ = hasAworkAssigneeId;
         using var db = _dbFactory.CreateDbContext();
         var workspaceId = GetWorkspaceId(db, userId);
         if (workspaceId == null) return null;

@@ -161,6 +161,48 @@ public class FormsServiceTests : IDisposable
     }
 
     [Fact]
+    public void UpdateForm_CanClearAworkAssigneeWhenPropertyIsExplicitlyPresent()
+    {
+        var assigneeId = Guid.NewGuid();
+        var created = _formsService.CreateForm(new CreateFormDto
+        {
+            Name = "Assignee Form",
+            AworkAssigneeId = assigneeId
+        }, _testUserId);
+
+        var result = _formsService.UpdateForm(
+            created.Id,
+            new UpdateFormDto
+            {
+                Name = created.Name,
+                Description = created.Description,
+                NameTranslations = created.NameTranslations,
+                DescriptionTranslations = created.DescriptionTranslations,
+                FieldsJson = created.FieldsJson,
+                ActionType = created.ActionType,
+                AworkProjectId = created.AworkProjectId,
+                AworkProjectTypeId = created.AworkProjectTypeId,
+                AworkTaskListId = created.AworkTaskListId,
+                AworkTaskStatusId = created.AworkTaskStatusId,
+                AworkTypeOfWorkId = created.AworkTypeOfWorkId,
+                AworkAssigneeId = null,
+                AworkTaskIsPriority = created.AworkTaskIsPriority,
+                AworkTaskTag = created.AworkTaskTag,
+                FieldMappingsJson = created.FieldMappingsJson,
+                PrimaryColor = created.PrimaryColor,
+                BackgroundColor = created.BackgroundColor,
+                LogoUrl = created.LogoUrl,
+                IsSharedWithWorkspace = created.IsSharedWithWorkspace,
+                IsActive = created.IsActive
+            },
+            _testUserId,
+            hasAworkAssigneeId: true);
+
+        Assert.NotNull(result);
+        Assert.Null(result.AworkAssigneeId);
+    }
+
+    [Fact]
     public void DeleteForm_WithExistingForm_ReturnsDeleted()
     {
         var created = _formsService.CreateForm(new CreateFormDto { Name = "Test Form" }, _testUserId);

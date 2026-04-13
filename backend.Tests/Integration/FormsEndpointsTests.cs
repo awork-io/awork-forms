@@ -81,6 +81,58 @@ public class FormsEndpointsTests
     }
 
     [Fact]
+    public async Task UpdateForm_WhenAssigneeCleared_PersistsNullAssignee()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var client = _factory.CreateAuthenticatedClient(token);
+
+        var createResponse = await client.PostAsJsonAsync("/api/forms", new CreateFormDto
+        {
+            Name = "Assignee Reset Form",
+            ActionType = "task",
+            FieldsJson = "[]",
+            AworkTypeOfWorkId = Guid.NewGuid(),
+            AworkAssigneeId = Guid.NewGuid()
+        });
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+        Assert.NotNull(created!.AworkAssigneeId);
+
+        var updateResponse = await client.PutAsJsonAsync($"/api/forms/{created.Id}", new UpdateFormDto
+        {
+            Name = created.Name,
+            Description = created.Description,
+            NameTranslations = created.NameTranslations,
+            DescriptionTranslations = created.DescriptionTranslations,
+            FieldsJson = created.FieldsJson,
+            ActionType = created.ActionType,
+            AworkProjectId = created.AworkProjectId,
+            AworkProjectTypeId = created.AworkProjectTypeId,
+            AworkTaskListId = created.AworkTaskListId,
+            AworkTaskStatusId = created.AworkTaskStatusId,
+            AworkTypeOfWorkId = created.AworkTypeOfWorkId,
+            AworkAssigneeId = null,
+            AworkTaskIsPriority = created.AworkTaskIsPriority,
+            AworkTaskTag = created.AworkTaskTag,
+            FieldMappingsJson = created.FieldMappingsJson,
+            PrimaryColor = created.PrimaryColor,
+            BackgroundColor = created.BackgroundColor,
+            LogoUrl = created.LogoUrl,
+            IsSharedWithWorkspace = created.IsSharedWithWorkspace,
+            IsActive = created.IsActive
+        });
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(updated);
+        Assert.Null(updated!.AworkAssigneeId);
+
+        var fetched = await client.GetFromJsonAsync<FormDetailDto>($"/api/forms/{created.Id}");
+        Assert.NotNull(fetched);
+        Assert.Null(fetched!.AworkAssigneeId);
+    }
+
+    [Fact]
     public async Task GetForm_ReturnsTranslationsAndFields()
     {
         var (_, token) = await _factory.SeedUserAsync();
