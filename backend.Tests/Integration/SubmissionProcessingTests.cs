@@ -141,7 +141,26 @@ public class SubmissionProcessingTests
 
         var updateResponse = await teammateClient.PutAsJsonAsync($"/api/forms/{created.Id}", new UpdateFormDto
         {
-            Description = "Updated by teammate"
+            Name = created.Name,
+            Description = "Updated by teammate",
+            NameTranslations = created.NameTranslations,
+            DescriptionTranslations = created.DescriptionTranslations,
+            FieldsJson = created.FieldsJson,
+            ActionType = created.ActionType,
+            AworkProjectId = created.AworkProjectId,
+            AworkProjectTypeId = created.AworkProjectTypeId,
+            AworkTaskListId = created.AworkTaskListId,
+            AworkTaskStatusId = created.AworkTaskStatusId,
+            AworkTypeOfWorkId = created.AworkTypeOfWorkId,
+            AworkAssigneeId = created.AworkAssigneeId,
+            AworkTaskIsPriority = created.AworkTaskIsPriority,
+            AworkTaskTag = created.AworkTaskTag,
+            FieldMappingsJson = created.FieldMappingsJson,
+            PrimaryColor = created.PrimaryColor,
+            BackgroundColor = created.BackgroundColor,
+            LogoUrl = created.LogoUrl,
+            IsSharedWithWorkspace = created.IsSharedWithWorkspace,
+            IsActive = created.IsActive
         });
         updateResponse.EnsureSuccessStatusCode();
         var updated = await updateResponse.Content.ReadFromJsonAsync<FormDetailDto>();

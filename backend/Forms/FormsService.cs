@@ -176,6 +176,7 @@ public class FormsService
 
     public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId, bool hasAworkAssigneeId = false)
     {
+        _ = hasAworkAssigneeId;
         using var db = _dbFactory.CreateDbContext();
         var workspaceId = GetWorkspaceId(db, userId);
         if (workspaceId == null) return null;
@@ -183,26 +184,29 @@ public class FormsService
             .FirstOrDefault(f => f.Id == formId);
         if (form == null) return null;
 
-        if (dto.Name != null) form.Name = dto.Name;
-        if (dto.Description != null) form.Description = dto.Description;
-        if (dto.NameTranslations != null) form.NameTranslationsJson = SerializeTranslations(dto.NameTranslations);
-        if (dto.DescriptionTranslations != null) form.DescriptionTranslationsJson = SerializeTranslations(dto.DescriptionTranslations);
-        if (dto.FieldsJson != null) form.FieldsJson = dto.FieldsJson;
-        if (dto.ActionType != null) form.ActionType = dto.ActionType;
-        if (dto.AworkProjectId != null) form.AworkProjectId = dto.AworkProjectId;
-        if (dto.AworkProjectTypeId != null) form.AworkProjectTypeId = dto.AworkProjectTypeId;
-        if (dto.AworkTaskListId != null) form.AworkTaskListId = dto.AworkTaskListId;
-        if (dto.AworkTaskStatusId != null) form.AworkTaskStatusId = dto.AworkTaskStatusId;
-        if (dto.AworkTypeOfWorkId != null) form.AworkTypeOfWorkId = dto.AworkTypeOfWorkId;
-        if (dto.AworkAssigneeId != null || hasAworkAssigneeId) form.AworkAssigneeId = dto.AworkAssigneeId;
-        if (dto.AworkTaskIsPriority != null) form.AworkTaskIsPriority = dto.AworkTaskIsPriority;
-        if (dto.AworkTaskTag != null) form.AworkTaskTag = dto.AworkTaskTag == "" ? null : dto.AworkTaskTag;
-        if (dto.FieldMappingsJson != null) form.FieldMappingsJson = dto.FieldMappingsJson;
-        if (dto.PrimaryColor != null) form.PrimaryColor = dto.PrimaryColor;
-        if (dto.BackgroundColor != null) form.BackgroundColor = dto.BackgroundColor;
-        if (dto.LogoUrl != null) form.LogoUrl = dto.LogoUrl == "" ? null : dto.LogoUrl;
-        if (dto.IsSharedWithWorkspace != null) form.IsSharedWithWorkspace = dto.IsSharedWithWorkspace.Value;
-        if (dto.IsActive != null) form.IsActive = dto.IsActive.Value;
+        if (string.IsNullOrWhiteSpace(dto.Name))
+            throw new ValidationException("Form name is required.");
+
+        form.Name = dto.Name.Trim();
+        form.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
+        form.NameTranslationsJson = SerializeTranslations(dto.NameTranslations);
+        form.DescriptionTranslationsJson = SerializeTranslations(dto.DescriptionTranslations);
+        form.FieldsJson = string.IsNullOrWhiteSpace(dto.FieldsJson) ? "[]" : dto.FieldsJson;
+        form.ActionType = string.IsNullOrWhiteSpace(dto.ActionType) ? null : dto.ActionType;
+        form.AworkProjectId = dto.AworkProjectId;
+        form.AworkProjectTypeId = dto.AworkProjectTypeId;
+        form.AworkTaskListId = dto.AworkTaskListId;
+        form.AworkTaskStatusId = dto.AworkTaskStatusId;
+        form.AworkTypeOfWorkId = dto.AworkTypeOfWorkId;
+        form.AworkAssigneeId = dto.AworkAssigneeId;
+        form.AworkTaskIsPriority = dto.AworkTaskIsPriority;
+        form.AworkTaskTag = string.IsNullOrWhiteSpace(dto.AworkTaskTag) ? null : dto.AworkTaskTag.Trim();
+        form.FieldMappingsJson = string.IsNullOrWhiteSpace(dto.FieldMappingsJson) ? null : dto.FieldMappingsJson;
+        form.PrimaryColor = string.IsNullOrWhiteSpace(dto.PrimaryColor) ? null : dto.PrimaryColor;
+        form.BackgroundColor = string.IsNullOrWhiteSpace(dto.BackgroundColor) ? null : dto.BackgroundColor;
+        form.LogoUrl = string.IsNullOrWhiteSpace(dto.LogoUrl) ? null : dto.LogoUrl;
+        form.IsSharedWithWorkspace = dto.IsSharedWithWorkspace ?? form.IsSharedWithWorkspace;
+        form.IsActive = dto.IsActive ?? form.IsActive;
 
         var typeOfWorkError = ValidateTypeOfWork(form.ActionType, form.AworkTypeOfWorkId, form.FieldMappingsJson, form.FieldsJson);
         if (typeOfWorkError != null)

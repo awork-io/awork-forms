@@ -150,14 +150,14 @@ public class FormsServiceTests : IDisposable
     }
 
     [Fact]
-    public void UpdateForm_PartialUpdate_KeepsExistingValues()
+    public void UpdateForm_FullPut_AllowsClearingDescription()
     {
         var created = _formsService.CreateForm(new CreateFormDto { Name = "Original Name", Description = "Original Description" }, _testUserId);
-        var result = _formsService.UpdateForm(created.Id, new UpdateFormDto { Name = "Updated Name" }, _testUserId);
+        var result = _formsService.UpdateForm(created.Id, new UpdateFormDto { Name = "Updated Name", Description = null }, _testUserId);
 
         Assert.NotNull(result);
         Assert.Equal("Updated Name", result.Name);
-        Assert.Equal("Original Description", result.Description);
+        Assert.Null(result.Description);
     }
 
     [Fact]
@@ -172,7 +172,29 @@ public class FormsServiceTests : IDisposable
 
         var result = _formsService.UpdateForm(
             created.Id,
-            new UpdateFormDto { AworkAssigneeId = null },
+            new UpdateFormDto
+            {
+                Name = created.Name,
+                Description = created.Description,
+                NameTranslations = created.NameTranslations,
+                DescriptionTranslations = created.DescriptionTranslations,
+                FieldsJson = created.FieldsJson,
+                ActionType = created.ActionType,
+                AworkProjectId = created.AworkProjectId,
+                AworkProjectTypeId = created.AworkProjectTypeId,
+                AworkTaskListId = created.AworkTaskListId,
+                AworkTaskStatusId = created.AworkTaskStatusId,
+                AworkTypeOfWorkId = created.AworkTypeOfWorkId,
+                AworkAssigneeId = null,
+                AworkTaskIsPriority = created.AworkTaskIsPriority,
+                AworkTaskTag = created.AworkTaskTag,
+                FieldMappingsJson = created.FieldMappingsJson,
+                PrimaryColor = created.PrimaryColor,
+                BackgroundColor = created.BackgroundColor,
+                LogoUrl = created.LogoUrl,
+                IsSharedWithWorkspace = created.IsSharedWithWorkspace,
+                IsActive = created.IsActive
+            },
             _testUserId,
             hasAworkAssigneeId: true);
 
@@ -289,7 +311,7 @@ public class FormsServiceTests : IDisposable
         var created = _formsService.CreateForm(new CreateFormDto { Name = "Test Form" }, _testUserId);
         Assert.True(created.IsActive);
 
-        var result = _formsService.UpdateForm(created.Id, new UpdateFormDto { IsActive = false }, _testUserId);
+        var result = _formsService.UpdateForm(created.Id, new UpdateFormDto { Name = created.Name, IsActive = false }, _testUserId);
         Assert.NotNull(result);
         Assert.False(result.IsActive);
     }
@@ -520,7 +542,7 @@ public class FormsServiceTests : IDisposable
 
         // Try to set actionType=task without providing a typeOfWorkId
         Assert.Throws<ValidationException>(() =>
-            _formsService.UpdateForm(created.Id, new UpdateFormDto { ActionType = "task" }, _testUserId));
+            _formsService.UpdateForm(created.Id, new UpdateFormDto { Name = created.Name, ActionType = "task" }, _testUserId));
     }
 }
 

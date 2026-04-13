@@ -114,7 +114,26 @@ public class SubmissionsEndpointsTests
 
         var updateResponse = await client.PutAsJsonAsync($"/api/forms/{created.Id}", new UpdateFormDto
         {
-            FieldMappingsJson = JsonSerializer.Serialize(updatedMappings)
+            Name = created.Name,
+            Description = created.Description,
+            NameTranslations = created.NameTranslations,
+            DescriptionTranslations = created.DescriptionTranslations,
+            FieldsJson = created.FieldsJson,
+            ActionType = created.ActionType,
+            AworkProjectId = created.AworkProjectId,
+            AworkProjectTypeId = created.AworkProjectTypeId,
+            AworkTaskListId = created.AworkTaskListId,
+            AworkTaskStatusId = created.AworkTaskStatusId,
+            AworkTypeOfWorkId = created.AworkTypeOfWorkId,
+            AworkAssigneeId = created.AworkAssigneeId,
+            AworkTaskIsPriority = created.AworkTaskIsPriority,
+            AworkTaskTag = created.AworkTaskTag,
+            FieldMappingsJson = JsonSerializer.Serialize(updatedMappings),
+            PrimaryColor = created.PrimaryColor,
+            BackgroundColor = created.BackgroundColor,
+            LogoUrl = created.LogoUrl,
+            IsSharedWithWorkspace = created.IsSharedWithWorkspace,
+            IsActive = created.IsActive
         });
         updateResponse.EnsureSuccessStatusCode();
 
