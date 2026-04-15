@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { TFunction } from 'i18next';
 import type { FormField } from '@/lib/form-types';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,6 +27,7 @@ export function PublicFormField({
   t,
 }: PublicFormFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fieldTranslation = getFieldTranslation(field, languageKeys);
   const fieldLabel = fieldTranslation?.label || field.label;
   const fieldPlaceholder = fieldTranslation?.placeholder || field.placeholder;
@@ -52,6 +53,16 @@ export function PublicFormField({
     onFocus: () => setIsFocused(true),
     onBlur: () => setIsFocused(false),
   };
+
+  useEffect(() => {
+    if (field.type !== 'textarea' || !textareaRef.current) {
+      return;
+    }
+
+    const textareaElement = textareaRef.current;
+    textareaElement.style.height = 'auto';
+    textareaElement.style.height = `${Math.max(textareaElement.scrollHeight, 160)}px`;
+  }, [field.type, value]);
 
   return (
     <div
@@ -119,12 +130,13 @@ export function PublicFormField({
 
         {field.type === 'textarea' ? (
           <textarea
+            ref={textareaRef}
             id={field.id}
             placeholder={fieldPlaceholder || t('publicForm.placeholders.textarea')}
             value={(value as string) || ''}
             onChange={(event) => onChange(event.target.value)}
             rows={4}
-            className={cn(inputClasses, 'resize-none')}
+            className={cn(inputClasses, 'min-h-40 resize-y overflow-hidden')}
             {...commonFocusProps}
           />
         ) : null}
