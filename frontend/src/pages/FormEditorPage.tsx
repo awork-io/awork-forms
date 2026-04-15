@@ -214,11 +214,11 @@ export function FormEditorPage() {
     try {
       const aworkData = serializeAworkConfig(aworkConfig);
       const stylingData = serializeStyling(styling);
-      const normalizedNameTranslations = normalizeTranslations(nameTranslations, formName) ?? {};
-      const normalizedDescriptionTranslations = normalizeTranslations(descriptionTranslations, formDescription) ?? {};
+      const normalizedNameTranslations = normalizeTranslations(nameTranslations, formName) ?? null;
+      const normalizedDescriptionTranslations = normalizeTranslations(descriptionTranslations, formDescription) ?? null;
       await api.updateForm(parseInt(id), {
         name: formName.trim(),
-        description: formDescription.trim() || undefined,
+        description: formDescription.trim() || null,
         nameTranslations: normalizedNameTranslations,
         descriptionTranslations: normalizedDescriptionTranslations,
         fieldsJson: JSON.stringify(fields),

@@ -418,11 +418,13 @@ export function parseStyling(
 }
 
 export function serializeStyling(styling: FormStyling): {
-  primaryColor?: string;
-  backgroundColor?: string;
+  primaryColor: string | null;
+  backgroundColor: string | null;
+  logoUrl: string | null;
 } {
   return {
-    primaryColor: styling.primaryColor || undefined,
-    backgroundColor: styling.backgroundColor || undefined,
+    primaryColor: styling.primaryColor?.trim() || null,
+    backgroundColor: styling.backgroundColor?.trim() || null,
+    logoUrl: styling.logoUrl,
   };
 }
