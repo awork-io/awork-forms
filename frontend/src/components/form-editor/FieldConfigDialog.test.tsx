@@ -1,10 +1,50 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import '@/i18n';
 import { FieldConfigDialog } from './FieldConfigDialog';
 import type { AworkIntegrationConfig } from './AworkIntegrationSettings';
 import type { FormField } from '@/lib/form-types';
+
+vi.mock('@dnd-kit/core', async () => {
+  const actual = await vi.importActual<typeof import('@dnd-kit/core')>('@dnd-kit/core');
+  return {
+    ...actual,
+    DndContext: ({
+      children,
+      onDragEnd,
+    }: {
+      children: React.ReactNode;
+      onDragEnd: (event: { active: { id: string }; over: { id: string } }) => void;
+    }) => (
+      <div>
+        {children}
+        <button
+          type="button"
+          onClick={() => onDragEnd({ active: { id: 'first-0' }, over: { id: 'second-1' } })}
+        >
+          Simulate drag
+        </button>
+      </div>
+    ),
+  };
+});
+
+vi.mock('@dnd-kit/sortable', async () => {
+  const actual = await vi.importActual<typeof import('@dnd-kit/sortable')>('@dnd-kit/sortable');
+  return {
+    ...actual,
+    useSortable: () => ({
+      attributes: {},
+      listeners: {},
+      setNodeRef: vi.fn(),
+      transform: null,
+      transition: undefined,
+      isDragging: false,
+    }),
+  };
+});
 
 const emptyAworkConfig: AworkIntegrationConfig = {
   actionType: null,
@@ -49,7 +89,7 @@ describe('FieldConfigDialog', () => {
       />
     );
 
-    await user.click(screen.getAllByLabelText('Move option down')[0]);
+    await user.click(screen.getByRole('button', { name: 'Simulate drag' }));
 
     expect(onUpdate).toHaveBeenCalledWith('field-1', {
       options: [

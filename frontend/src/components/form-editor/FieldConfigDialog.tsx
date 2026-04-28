@@ -1,5 +1,22 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   type FieldTranslation,
   type FormField,
   type SelectOption,
@@ -23,7 +40,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Trash2, GripVertical, Settings2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { AworkCustomFieldDefinition } from '@/lib/api';
 import type { AworkIntegrationConfig } from '@/components/form-editor/AworkIntegrationSettings';
@@ -317,6 +334,20 @@ interface SelectOptionsEditorProps {
 function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
   const { t } = useTranslation();
   const [newOptionLabel, setNewOptionLabel] = useState('');
+  const optionIds = useMemo(
+    () => options.map((option, index) => getOptionId(option, index)),
+    [options]
+  );
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 6,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const addOption = () => {
     if (!newOptionLabel.trim()) return;
@@ -340,66 +371,39 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
 
   const moveOption = (fromIndex: number, toIndex: number) => {
     if (toIndex < 0 || toIndex >= options.length) return;
-    const newOptions = [...options];
-    const [moved] = newOptions.splice(fromIndex, 1);
-    newOptions.splice(toIndex, 0, moved);
-    onUpdate(newOptions);
+    onUpdate(arrayMove(options, fromIndex, toIndex));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const fromIndex = optionIds.indexOf(String(active.id));
+    const toIndex = optionIds.indexOf(String(over.id));
+    moveOption(fromIndex, toIndex);
   };
 
   return (
     <div className="space-y-3">
       <Label>{t('fieldConfigDialog.dropdownOptions')}</Label>
-      <div className="space-y-2 max-h-48 overflow-y-auto">
-        {options.map((option, index) => (
-          <div
-            key={index}
-            className="flex items-center gap-2 p-2 rounded-md border bg-muted/30 group"
-          >
-            <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
-            <Input
-              value={option.label}
-              onChange={(e) => updateOption(index, { label: e.target.value })}
-              className="h-8 flex-1"
-              placeholder={t('fieldConfigDialog.optionLabelPlaceholder')}
-            />
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground"
-                onClick={() => moveOption(index, index - 1)}
-                disabled={index === 0}
-                aria-label="Move option up"
-              >
-                <ChevronUp className="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground"
-                onClick={() => moveOption(index, index + 1)}
-                disabled={index === options.length - 1}
-                aria-label="Move option down"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={() => removeOption(index)}
-                disabled={options.length <= 1}
-                aria-label="Remove option"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={optionIds} strategy={verticalListSortingStrategy}>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {options.map((option, index) => (
+              <SortableOptionRow
+                key={optionIds[index]}
+                id={optionIds[index]}
+                option={option}
+                index={index}
+                optionsCount={options.length}
+                placeholder={t('fieldConfigDialog.optionLabelPlaceholder')}
+                onUpdate={updateOption}
+                onRemove={removeOption}
+              />
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+      </DndContext>
       <div className="flex items-center gap-2">
         <Input
           value={newOptionLabel}
@@ -425,6 +429,79 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
       </div>
     </div>
   );
+}
+
+interface SortableOptionRowProps {
+  id: string;
+  option: SelectOption;
+  index: number;
+  optionsCount: number;
+  placeholder: string;
+  onUpdate: (index: number, updates: Partial<SelectOption>) => void;
+  onRemove: (index: number) => void;
+}
+
+function SortableOptionRow({
+  id,
+  option,
+  index,
+  optionsCount,
+  placeholder,
+  onUpdate,
+  onRemove,
+}: SortableOptionRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      className={`flex items-center gap-2 p-2 rounded-md border bg-muted/30 group ${
+        isDragging ? 'opacity-70 shadow-lg' : ''
+      }`}
+    >
+      <button
+        type="button"
+        className="text-muted-foreground cursor-grab active:cursor-grabbing"
+        aria-label="Drag option to reorder"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-4 h-4" />
+      </button>
+      <Input
+        value={option.label}
+        onChange={(e) => onUpdate(index, { label: e.target.value })}
+        className="h-8 flex-1"
+        placeholder={placeholder}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+        onClick={() => onRemove(index)}
+        disabled={optionsCount <= 1}
+        aria-label="Remove option"
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+}
+
+function getOptionId(option: SelectOption, index: number) {
+  return `${option.value}-${index}`;
 }
 
 interface FieldTranslationsEditorProps {
