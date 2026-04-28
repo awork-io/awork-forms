@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Trash2, GripVertical, Settings2 } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Settings2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { AworkCustomFieldDefinition } from '@/lib/api';
 import type { AworkIntegrationConfig } from '@/components/form-editor/AworkIntegrationSettings';
@@ -338,6 +338,14 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
     onUpdate(options.filter((_, i) => i !== index));
   };
 
+  const moveOption = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= options.length) return;
+    const newOptions = [...options];
+    const [moved] = newOptions.splice(fromIndex, 1);
+    newOptions.splice(toIndex, 0, moved);
+    onUpdate(newOptions);
+  };
+
   return (
     <div className="space-y-3">
       <Label>{t('fieldConfigDialog.dropdownOptions')}</Label>
@@ -354,15 +362,41 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
               className="h-8 flex-1"
               placeholder={t('fieldConfigDialog.optionLabelPlaceholder')}
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-              onClick={() => removeOption(index)}
-              disabled={options.length <= 1}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={() => moveOption(index, index - 1)}
+                disabled={index === 0}
+                aria-label="Move option up"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={() => moveOption(index, index + 1)}
+                disabled={index === options.length - 1}
+                aria-label="Move option down"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={() => removeOption(index)}
+                disabled={options.length <= 1}
+                aria-label="Remove option"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         ))}
       </div>
@@ -380,6 +414,7 @@ function SelectOptionsEditor({ options, onUpdate }: SelectOptionsEditorProps) {
           }}
         />
         <Button
+          type="button"
           size="sm"
           onClick={addOption}
           disabled={!newOptionLabel.trim()}
