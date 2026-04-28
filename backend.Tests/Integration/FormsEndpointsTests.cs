@@ -40,8 +40,26 @@ public class FormsEndpointsTests
 
         var updateDto = new UpdateFormDto
         {
+            Name = created.Name,
+            Description = created.Description,
+            NameTranslations = created.NameTranslations,
+            DescriptionTranslations = created.DescriptionTranslations,
+            FieldsJson = created.FieldsJson,
+            ActionType = created.ActionType,
+            AworkProjectId = created.AworkProjectId,
+            AworkProjectTypeId = created.AworkProjectTypeId,
+            AworkTaskListId = created.AworkTaskListId,
+            AworkTaskStatusId = created.AworkTaskStatusId,
+            AworkTypeOfWorkId = created.AworkTypeOfWorkId,
+            AworkAssigneeId = created.AworkAssigneeId,
             AworkTaskTag = "updated-tag",
-            AworkTaskIsPriority = true
+            AworkTaskIsPriority = true,
+            FieldMappingsJson = created.FieldMappingsJson,
+            PrimaryColor = created.PrimaryColor,
+            BackgroundColor = created.BackgroundColor,
+            LogoUrl = created.LogoUrl,
+            IsSharedWithWorkspace = created.IsSharedWithWorkspace,
+            IsActive = created.IsActive
         };
 
         var updateResponse = await client.PutAsJsonAsync($"/api/forms/{created.Id}", updateDto);
@@ -83,7 +101,26 @@ public class FormsEndpointsTests
 
         var updateResponse = await client.PutAsJsonAsync($"/api/forms/{created.Id}", new UpdateFormDto
         {
-            AworkAssigneeId = null
+            Name = created.Name,
+            Description = created.Description,
+            NameTranslations = created.NameTranslations,
+            DescriptionTranslations = created.DescriptionTranslations,
+            FieldsJson = created.FieldsJson,
+            ActionType = created.ActionType,
+            AworkProjectId = created.AworkProjectId,
+            AworkProjectTypeId = created.AworkProjectTypeId,
+            AworkTaskListId = created.AworkTaskListId,
+            AworkTaskStatusId = created.AworkTaskStatusId,
+            AworkTypeOfWorkId = created.AworkTypeOfWorkId,
+            AworkAssigneeId = null,
+            AworkTaskIsPriority = created.AworkTaskIsPriority,
+            AworkTaskTag = created.AworkTaskTag,
+            FieldMappingsJson = created.FieldMappingsJson,
+            PrimaryColor = created.PrimaryColor,
+            BackgroundColor = created.BackgroundColor,
+            LogoUrl = created.LogoUrl,
+            IsSharedWithWorkspace = created.IsSharedWithWorkspace,
+            IsActive = created.IsActive
         });
         updateResponse.EnsureSuccessStatusCode();
         var updated = await updateResponse.Content.ReadFromJsonAsync<FormDetailDto>();
