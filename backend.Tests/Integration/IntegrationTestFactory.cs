@@ -248,7 +248,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
                         isArchived = false,
                         selectionOptions = new[]
                         {
-                            new { id = AworkSelectOptionId, value = "option2", order = 1 }
+                            new { id = AworkSelectOptionId, value = "Customer Success", order = 1 }
                         }
                     }
                 }

@@ -531,6 +531,10 @@ public class SubmissionProcessor
             case "coloredselect":
                 if (TryResolveSelectionOptionId(definition, rawValue, out var selectionId))
                     return new CustomFieldValue { SelectionOptionIdValue = selectionId };
+                if (!string.IsNullOrWhiteSpace(displayValue) &&
+                    !string.Equals(displayValue, rawValue, StringComparison.Ordinal) &&
+                    TryResolveSelectionOptionId(definition, displayValue, out selectionId))
+                    return new CustomFieldValue { SelectionOptionIdValue = selectionId };
                 return null;
             case "boolean":
                 if (TryParseBoolean(rawValue, out var booleanValue))
