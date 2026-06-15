@@ -1,7 +1,6 @@
 import type { SubmissionResponse } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { AWORK_GRADIENT } from './constants';
 
 interface PublicFormSuccessStateProps {
   backgroundColor: string;
@@ -58,7 +57,7 @@ export function PublicFormSuccessState({
         {!hasIntegrationError && <CelebrationParticles primaryColor={primaryColor} />}
 
         {/* Gradient accent bar */}
-        <div className="absolute top-0 left-0 right-0 h-1.5" style={{ background: AWORK_GRADIENT }} />
+        <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: primaryColor }} />
 
         <div
           className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 mt-2 animate-in zoom-in duration-300 relative"
@@ -142,7 +141,7 @@ export function PublicFormSuccessState({
             onClick={handleSubmitAnother}
             className="w-full h-11 text-base font-semibold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
             style={{
-              background: AWORK_GRADIENT,
+              backgroundColor: primaryColor,
               color: 'white',
             }}
           >
@@ -171,7 +170,8 @@ export function PublicFormSuccessState({
               href="https://awork.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-blue-500 hover:text-blue-600 transition-colors"
+              className="font-semibold transition-colors"
+              style={{ color: primaryColor }}
             >
               {t('brand.full')}
             </a>

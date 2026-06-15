@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { AWORK_GRADIENT } from '@/components/public-form/constants';
 
 interface PublicFormShellProps {
   backgroundColor: string;
+  primaryColor: string;
   progress: number;
   showProgress: boolean;
   children: ReactNode;
@@ -10,6 +10,7 @@ interface PublicFormShellProps {
 
 export function PublicFormShell({
   backgroundColor,
+  primaryColor,
   progress,
   showProgress,
   children,
@@ -41,11 +42,11 @@ export function PublicFormShell({
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div
           className="absolute -top-1/3 -right-1/4 w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"
-          style={{ background: AWORK_GRADIENT }}
+          style={{ backgroundColor: primaryColor }}
         />
         <div
           className="absolute -bottom-1/3 -left-1/4 w-[400px] h-[400px] rounded-full opacity-15 blur-3xl"
-          style={{ background: 'linear-gradient(135deg, #4d9aff 0%, #a157f6 100%)' }}
+          style={{ backgroundColor: primaryColor }}
         />
       </div>
 
@@ -57,7 +58,7 @@ export function PublicFormShell({
                 className="h-full transition-all duration-500 ease-out"
                 style={{
                   width: `${progress}%`,
-                  background: AWORK_GRADIENT,
+                  backgroundColor: primaryColor,
                 }}
               />
             </div>

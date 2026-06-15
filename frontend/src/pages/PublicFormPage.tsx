@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils';
 import { getErrorMessage } from '@/lib/i18n-errors';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
-import { AWORK_GRADIENT } from '@/components/public-form/constants';
 import { PublicFormShell } from '@/components/public-form/PublicFormShell';
 import { PublicFormLoading } from '@/components/public-form/PublicFormLoading';
 import { PublicFormErrorState } from '@/components/public-form/PublicFormErrorState';
@@ -197,14 +196,19 @@ export function PublicFormPage() {
   const progress = fields.length > 0 ? (filledFields / fields.length) * 100 : 0;
 
   return (
-    <PublicFormShell backgroundColor={backgroundColor} progress={progress} showProgress={fields.length > 1}>
+    <PublicFormShell
+      backgroundColor={backgroundColor}
+      primaryColor={primaryColor}
+      progress={progress}
+      showProgress={fields.length > 1}
+    >
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:py-16">
         <div className="w-full max-w-2xl">
           <div
             className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-gray-900/10 overflow-hidden"
             style={{ animation: 'fadeInUp 0.8s ease-out forwards' }}
           >
-            <div className="h-2" style={{ background: AWORK_GRADIENT }} />
+            <div className="h-2" style={{ backgroundColor: primaryColor }} />
 
             <div className="p-6 sm:p-8">
               <div className="flex justify-end mb-4 -mt-2">
@@ -235,7 +239,7 @@ export function PublicFormPage() {
               {fields.length > 1 ? (
                 <div className="flex justify-center mb-6">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-600">
-                    <span className="font-semibold text-blue-600">{filledFields}</span>
+                    <span className="font-semibold" style={{ color: primaryColor }}>{filledFields}</span>
                     <span>/</span>
                     <span>{fields.length}</span>
                     <span>{t('publicForm.progressCompleted')}</span>
@@ -281,7 +285,7 @@ export function PublicFormPage() {
                       !isSubmitting && 'hover:scale-[1.01] active:scale-[0.99]'
                     )}
                     style={{
-                      background: AWORK_GRADIENT,
+                      backgroundColor: primaryColor,
                       color: 'white',
                     }}
                   >
@@ -318,7 +322,8 @@ export function PublicFormPage() {
                 href="https://awork.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-blue-500 hover:text-blue-600 transition-colors"
+                className="font-semibold transition-colors"
+                style={{ color: primaryColor }}
               >
                 {t('brand.full')}
               </a>
