@@ -41,6 +41,16 @@ export function PublicFormField({
     ? t('publicForm.fileUpload.maxSizeHint', { maxSizeMb: field.maxFileSizeMB || 10 })
     : '';
 
+  useEffect(() => {
+    if (field.type !== 'textarea' || !textareaRef.current) {
+      return;
+    }
+
+    const textareaElement = textareaRef.current;
+    textareaElement.style.height = 'auto';
+    textareaElement.style.height = `${Math.max(textareaElement.scrollHeight, 160)}px`;
+  }, [field.type, value]);
+
   if (field.type === 'section') {
     return (
       <div
@@ -86,16 +96,6 @@ export function PublicFormField({
     onFocus: () => setIsFocused(true),
     onBlur: () => setIsFocused(false),
   };
-
-  useEffect(() => {
-    if (field.type !== 'textarea' || !textareaRef.current) {
-      return;
-    }
-
-    const textareaElement = textareaRef.current;
-    textareaElement.style.height = 'auto';
-    textareaElement.style.height = `${Math.max(textareaElement.scrollHeight, 160)}px`;
-  }, [field.type, value]);
 
   return (
     <div
