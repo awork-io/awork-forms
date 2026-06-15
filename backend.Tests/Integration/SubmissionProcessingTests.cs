@@ -513,7 +513,7 @@ public class SubmissionProcessingTests
     }
 
     [Fact]
-    public async Task SubmitForm_CustomSelectMapping_UsesRawOptionValueForSelectionResolution()
+    public async Task SubmitForm_CustomSelectMapping_UsesOptionLabelForSelectionResolution()
     {
         var (_, token) = await _factory.SeedUserAsync();
         using var authedClient = _factory.CreateAuthenticatedClient(token);
@@ -527,7 +527,7 @@ public class SubmissionProcessingTests
                 label = "Kategorie",
                 options = new[]
                 {
-                    new { label = "Support", value = "option2" }
+                    new { label = "Customer Success", value = "customer-success" }
                 }
             }
         };
@@ -562,7 +562,7 @@ public class SubmissionProcessingTests
         {
             Data = new Dictionary<string, object>
             {
-                ["field-category"] = "option2"
+                ["field-category"] = "customer-success"
             }
         };
 
