@@ -20,6 +20,8 @@ import {
   MoreVertical,
   Copy,
   Trash2,
+  Heading1,
+  Minus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -77,7 +79,7 @@ export function FieldCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <p className="font-medium truncate">{field.label}</p>
-              {field.required && (
+              {field.required && field.type !== 'section' && field.type !== 'divider' && (
                 <Badge variant="secondary" className="text-xs">
                   {t('common.required')}
                 </Badge>
@@ -166,6 +168,10 @@ function FieldIcon({ type, className }: { type: string; className?: string }) {
       return <CheckSquare className={className} />;
     case 'date':
       return <Calendar className={className} />;
+    case 'section':
+      return <Heading1 className={className} />;
+    case 'divider':
+      return <Minus className={className} />;
     default:
       return <Type className={className} />;
   }
@@ -218,6 +224,17 @@ function FieldPreview({ field }: { field: FormField }) {
           <Calendar className="w-4 h-4" />
         </div>
       );
+    case 'section':
+      return (
+        <div className="rounded-md border-l-4 border-primary/50 bg-muted/60 px-4 py-3">
+          <p className="font-semibold">{field.label}</p>
+          {field.placeholder ? (
+            <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">{field.placeholder}</p>
+          ) : null}
+        </div>
+      );
+    case 'divider':
+      return <div className="h-px bg-border" />;
     default:
       return null;
   }

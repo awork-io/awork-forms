@@ -41,6 +41,49 @@ export function PublicFormField({
     ? t('publicForm.fileUpload.maxSizeHint', { maxSizeMb: field.maxFileSizeMB || 10 })
     : '';
 
+  useEffect(() => {
+    if (field.type !== 'textarea' || !textareaRef.current) {
+      return;
+    }
+
+    const textareaElement = textareaRef.current;
+    textareaElement.style.height = 'auto';
+    textareaElement.style.height = `${Math.max(textareaElement.scrollHeight, 160)}px`;
+  }, [field.type, value]);
+
+  if (field.type === 'section') {
+    return (
+      <div
+        className="p-2 pt-8 pb-3"
+        style={{
+          animationDelay: `${index * 80}ms`,
+          animation: 'fadeInUp 0.6s ease-out forwards',
+          opacity: 0,
+        }}
+      >
+        <h2 className="text-xl font-bold text-gray-900 tracking-tight">{fieldLabel}</h2>
+        {fieldPlaceholder ? (
+          <p className="mt-2 text-sm text-gray-500 leading-relaxed whitespace-pre-wrap">{fieldPlaceholder}</p>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (field.type === 'divider') {
+    return (
+      <div
+        className="px-2 py-5"
+        style={{
+          animationDelay: `${index * 80}ms`,
+          animation: 'fadeInUp 0.6s ease-out forwards',
+          opacity: 0,
+        }}
+      >
+        <div className="h-px bg-gray-200" />
+      </div>
+    );
+  }
+
   const inputClasses = cn(
     'w-full px-3 py-3 text-base bg-white border-2 rounded-xl transition-all duration-300 outline-none',
     'placeholder:text-gray-400',
@@ -53,16 +96,6 @@ export function PublicFormField({
     onFocus: () => setIsFocused(true),
     onBlur: () => setIsFocused(false),
   };
-
-  useEffect(() => {
-    if (field.type !== 'textarea' || !textareaRef.current) {
-      return;
-    }
-
-    const textareaElement = textareaRef.current;
-    textareaElement.style.height = 'auto';
-    textareaElement.style.height = `${Math.max(textareaElement.scrollHeight, 160)}px`;
-  }, [field.type, value]);
 
   return (
     <div

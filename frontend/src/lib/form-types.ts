@@ -9,7 +9,9 @@ export type FieldType =
   | 'select'
   | 'checkbox'
   | 'date'
-  | 'file';
+  | 'file'
+  | 'section'
+  | 'divider';
 
 export interface SelectOption {
   label: string;
@@ -95,6 +97,18 @@ export const FIELD_TYPES: FieldTypeInfo[] = [
     icon: 'Paperclip',
     description: 'Upload files',
   },
+  {
+    type: 'section',
+    label: 'Section',
+    icon: 'Heading1',
+    description: 'Header with optional text',
+  },
+  {
+    type: 'divider',
+    label: 'Divider',
+    icon: 'Minus',
+    description: 'Visual separator',
+  },
 ];
 
 const FIELD_TYPE_TRANSLATION_KEYS: Record<
@@ -140,6 +154,16 @@ const FIELD_TYPE_TRANSLATION_KEYS: Record<
     labelKey: 'fieldTypes.file.label',
     descriptionKey: 'fieldTypes.file.description',
     defaultLabelKey: 'fieldDefaults.file',
+  },
+  section: {
+    labelKey: 'fieldTypes.section.label',
+    descriptionKey: 'fieldTypes.section.description',
+    defaultLabelKey: 'fieldDefaults.section',
+  },
+  divider: {
+    labelKey: 'fieldTypes.divider.label',
+    descriptionKey: 'fieldTypes.divider.description',
+    defaultLabelKey: 'fieldDefaults.divider',
   },
 };
 
@@ -187,6 +211,16 @@ const FIELD_TYPE_FALLBACKS: Record<
     description: 'Upload files',
     defaultLabel: 'Attachment',
   },
+  section: {
+    label: 'Section',
+    description: 'Header with optional text',
+    defaultLabel: 'Section title',
+  },
+  divider: {
+    label: 'Divider',
+    description: 'Visual separator',
+    defaultLabel: 'Divider',
+  },
 };
 
 const OPTION_LABEL_KEYS = {
@@ -214,6 +248,10 @@ export function getTranslatedFieldTypes(t?: TFunction): FieldTypeInfo[] {
     label: getFieldTypeLabel(fieldType.type, t),
     description: getFieldTypeDescription(fieldType.type, t),
   }));
+}
+
+export function isInputField(field: FormField): boolean {
+  return field.type !== 'section' && field.type !== 'divider';
 }
 
 // Create a new field with default values
@@ -269,6 +307,10 @@ function getDefaultLabel(type: FieldType, t?: TFunction): string {
       return 'Date';
     case 'file':
       return 'Attachment';
+    case 'section':
+      return 'Section title';
+    case 'divider':
+      return 'Divider';
     default:
       return 'Field';
   }

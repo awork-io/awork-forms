@@ -15,6 +15,8 @@ import {
   CheckSquare,
   Calendar,
   Paperclip,
+  Heading1,
+  Minus,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -101,6 +103,10 @@ function FieldTypeIcon({ iconName, className }: { iconName: string; className?: 
       return <Calendar className={className} />;
     case 'Paperclip':
       return <Paperclip className={className} />;
+    case 'Heading1':
+      return <Heading1 className={className} />;
+    case 'Minus':
+      return <Minus className={className} />;
     default:
       return <Type className={className} />;
   }
