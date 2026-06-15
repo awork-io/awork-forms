@@ -231,6 +231,14 @@
     "file": {
       "label": "Datei-Upload",
       "description": "Dateien hochladen"
+    },
+    "section": {
+      "label": "Abschnitt",
+      "description": "Ueberschrift mit optionalem Text"
+    },
+    "divider": {
+      "label": "Trenner",
+      "description": "Visuelle Trennlinie"
     }
   },
   "fieldDefaults": {
@@ -242,6 +250,8 @@
     "checkbox": "Ich stimme zu",
     "date": "Datum",
     "file": "Anhang",
+    "section": "Abschnittstitel",
+    "divider": "Trenner",
     "option1": "Option 1",
     "option2": "Option 2"
   },
@@ -262,6 +272,8 @@
     "labelPlaceholder": "Feldbezeichnung",
     "placeholder": "Platzhalter",
     "placeholderOptional": "Platzhaltertext (optional)",
+    "body": "Text",
+    "bodyOptional": "Optionaler Begleittext",
     "required": "Erforderlich",
     "requiredDescription": "Benutzer müssen dieses Feld ausfüllen",
     "acceptedTypes": "Zulässige Dateitypen",

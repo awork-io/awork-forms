@@ -231,6 +231,14 @@
     "file": {
       "label": "File Upload",
       "description": "Upload files"
+    },
+    "section": {
+      "label": "Section",
+      "description": "Header with optional text"
+    },
+    "divider": {
+      "label": "Divider",
+      "description": "Visual separator"
     }
   },
   "fieldDefaults": {
@@ -242,6 +250,8 @@
     "checkbox": "I agree",
     "date": "Date",
     "file": "Attachment",
+    "section": "Section title",
+    "divider": "Divider",
     "option1": "Option 1",
     "option2": "Option 2"
   },
@@ -262,6 +272,8 @@
     "labelPlaceholder": "Field label",
     "placeholder": "Placeholder",
     "placeholderOptional": "Placeholder text (optional)",
+    "body": "Body",
+    "bodyOptional": "Optional supporting text",
     "required": "Required",
     "requiredDescription": "User must fill this field to submit",
     "acceptedTypes": "Accepted File Types",

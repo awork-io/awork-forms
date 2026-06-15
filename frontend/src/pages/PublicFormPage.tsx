@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { PublicForm, SubmissionResponse } from '@/lib/api';
-import type { FormField } from '@/lib/form-types';
+import { isInputField, type FormField } from '@/lib/form-types';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -45,7 +45,7 @@ export function PublicFormPage() {
         setFields(parsedFields);
 
         const initialData: Record<string, unknown> = {};
-        parsedFields.forEach((field) => {
+        parsedFields.filter(isInputField).forEach((field) => {
           initialData[field.id] = field.type === 'checkbox' ? false : '';
         });
         setFormData(initialData);
@@ -73,7 +73,7 @@ export function PublicFormPage() {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    fields.forEach((field) => {
+    fields.filter(isInputField).forEach((field) => {
       const value = formData[field.id];
 
       if (field.required) {
@@ -126,7 +126,7 @@ export function PublicFormPage() {
     try {
       const processedData: Record<string, unknown> = {};
 
-      for (const field of fields) {
+      for (const field of fields.filter(isInputField)) {
         const fieldId = field.id;
         const value = formData[fieldId];
         if (value instanceof File) {
@@ -189,18 +189,19 @@ export function PublicFormPage() {
     );
   }
 
-  const filledFields = fields.filter((field) => {
+  const inputFields = fields.filter(isInputField);
+  const filledFields = inputFields.filter((field) => {
     const value = formData[field.id];
     return field.type === 'checkbox' ? value === true : value && String(value).trim() !== '';
   }).length;
-  const progress = fields.length > 0 ? (filledFields / fields.length) * 100 : 0;
+  const progress = inputFields.length > 0 ? (filledFields / inputFields.length) * 100 : 0;
 
   return (
     <PublicFormShell
       backgroundColor={backgroundColor}
       primaryColor={primaryColor}
       progress={progress}
-      showProgress={fields.length > 1}
+      showProgress={inputFields.length > 1}
     >
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:py-16">
         <div className="w-full max-w-2xl">
@@ -236,12 +237,12 @@ export function PublicFormPage() {
                 ) : null}
               </div>
 
-              {fields.length > 1 ? (
+              {inputFields.length > 1 ? (
                 <div className="flex justify-center mb-6">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-600">
                     <span className="font-semibold" style={{ color: primaryColor }}>{filledFields}</span>
                     <span>/</span>
-                    <span>{fields.length}</span>
+                    <span>{inputFields.length}</span>
                     <span>{t('publicForm.progressCompleted')}</span>
                   </span>
                 </div>
