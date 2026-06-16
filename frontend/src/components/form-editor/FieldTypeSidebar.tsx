@@ -10,6 +10,8 @@ import {
   CheckSquare,
   Calendar,
   GripVertical,
+  Heading1,
+  Minus,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -97,6 +99,10 @@ function FieldTypeIcon({ iconName, className }: { iconName: string; className?: 
       return <CheckSquare className={className} />;
     case 'Calendar':
       return <Calendar className={className} />;
+    case 'Heading1':
+      return <Heading1 className={className} />;
+    case 'Minus':
+      return <Minus className={className} />;
     default:
       return <Type className={className} />;
   }

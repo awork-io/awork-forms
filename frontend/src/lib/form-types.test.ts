@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { createField, FIELD_TYPES, type FieldType } from './form-types';
+import { createField, FIELD_TYPES, isInputField, type FieldType } from './form-types';
 
 describe('FIELD_TYPES', () => {
   it('should contain all expected field types', () => {
-    const expectedTypes: FieldType[] = ['text', 'email', 'number', 'textarea', 'select', 'checkbox', 'date', 'file'];
+    const expectedTypes: FieldType[] = ['text', 'email', 'number', 'textarea', 'select', 'checkbox', 'date', 'file', 'section', 'divider'];
     const actualTypes = FIELD_TYPES.map(f => f.type);
 
     expect(actualTypes).toEqual(expectedTypes);
@@ -17,8 +17,8 @@ describe('FIELD_TYPES', () => {
     });
   });
 
-  it('should have 8 field types', () => {
-    expect(FIELD_TYPES).toHaveLength(8);
+  it('should have 10 field types', () => {
+    expect(FIELD_TYPES).toHaveLength(10);
   });
 });
 
@@ -81,6 +81,22 @@ describe('createField', () => {
     expect(field.options![1]).toEqual({ label: 'Option 2', value: 'option2' });
   });
 
+  it('should create a section block with correct defaults', () => {
+    const field = createField('section');
+
+    expect(field.type).toBe('section');
+    expect(field.label).toBe('Section title');
+    expect(field.required).toBe(false);
+  });
+
+  it('should create a divider block with correct defaults', () => {
+    const field = createField('divider');
+
+    expect(field.type).toBe('divider');
+    expect(field.label).toBe('Divider');
+    expect(field.required).toBe(false);
+  });
+
   it('should generate unique IDs for each field', () => {
     const field1 = createField('text');
     const field2 = createField('text');
@@ -93,5 +109,16 @@ describe('createField', () => {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
     expect(field.id).toMatch(uuidRegex);
+  });
+});
+
+describe('isInputField', () => {
+  it('returns false for display-only blocks', () => {
+    expect(isInputField(createField('section'))).toBe(false);
+    expect(isInputField(createField('divider'))).toBe(false);
+  });
+
+  it('returns true for submitted fields', () => {
+    expect(isInputField(createField('text'))).toBe(true);
   });
 });

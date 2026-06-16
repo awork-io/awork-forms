@@ -21,6 +21,7 @@ import {
   type FormField,
   type SelectOption,
   getFieldTypeLabel,
+  isInputField,
 } from '@/lib/form-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,7 +108,8 @@ export function FieldConfigDialog({
 
   const showTaskMapping = aworkConfig.actionType === 'task' || aworkConfig.actionType === 'both';
   const showProjectMapping = aworkConfig.actionType === 'project' || aworkConfig.actionType === 'both';
-  const showAworkMapping = showTaskMapping || showProjectMapping;
+  const inputField = isInputField(field);
+  const showAworkMapping = inputField && (showTaskMapping || showProjectMapping);
 
   const getTaskMapping = () => {
     const mapping = aworkConfig.taskFieldMappings.find((item) => item.formFieldId === field.id);
@@ -193,13 +195,13 @@ export function FieldConfigDialog({
           />
 
           {/* Placeholder (not for checkbox) */}
-          {field.type !== 'checkbox' && (
+          {field.type !== 'checkbox' && field.type !== 'divider' && (
             <InputField
-              label={t('fieldConfigDialog.placeholder')}
+              label={field.type === 'section' ? t('fieldConfigDialog.body') : t('fieldConfigDialog.placeholder')}
               id="field-placeholder"
               value={field.placeholder || ''}
               onChange={(e) => handleUpdate({ placeholder: e.target.value })}
-              placeholder={t('fieldConfigDialog.placeholderOptional')}
+              placeholder={field.type === 'section' ? t('fieldConfigDialog.bodyOptional') : t('fieldConfigDialog.placeholderOptional')}
             />
           )}
 
@@ -254,18 +256,20 @@ export function FieldConfigDialog({
           )}
 
           {/* Required Toggle */}
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <Label className="text-base">{t('fieldConfigDialog.required')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('fieldConfigDialog.requiredDescription')}
-              </p>
+          {inputField && (
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <Label className="text-base">{t('fieldConfigDialog.required')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('fieldConfigDialog.requiredDescription')}
+                </p>
+              </div>
+              <Switch
+                checked={field.required}
+                onCheckedChange={(required) => handleUpdate({ required })}
+              />
             </div>
-            <Switch
-              checked={field.required}
-              onCheckedChange={(required) => handleUpdate({ required })}
-            />
-          </div>
+          )}
 
           {/* File field settings */}
           {field.type === 'file' && (

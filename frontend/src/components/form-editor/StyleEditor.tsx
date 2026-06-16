@@ -343,23 +343,36 @@ export function StyleEditor({
                   {fields.length > 0 ? (
                     fields.slice(0, 3).map((field) => (
                       <div key={field.id} className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">
-                          {field.label}
-                          {field.required && (
-                            <span className="text-red-500 ml-1">*</span>
-                          )}
-                        </label>
-                        {field.type === 'textarea' ? (
-                          <div className="w-full h-20 rounded-md border border-gray-300 bg-white" />
-                        ) : field.type === 'checkbox' ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded border border-gray-300 bg-white" />
-                            <span className="text-sm text-gray-600">
-                              {field.placeholder || t('styleEditor.checkboxOption')}
-                            </span>
+                        {field.type === 'section' ? (
+                          <div>
+                            <h3 className="text-base font-semibold text-gray-900">{field.label}</h3>
+                            {field.placeholder ? (
+                              <p className="mt-1 text-xs text-gray-500">{field.placeholder}</p>
+                            ) : null}
                           </div>
+                        ) : field.type === 'divider' ? (
+                          <div className="h-px bg-gray-200" />
                         ) : (
-                          <div className="w-full h-10 rounded-md border border-gray-300 bg-white" />
+                          <>
+                            <label className="text-sm font-medium text-gray-700">
+                              {field.label}
+                              {field.required && (
+                                <span className="text-red-500 ml-1">*</span>
+                              )}
+                            </label>
+                            {field.type === 'textarea' ? (
+                              <div className="w-full h-20 rounded-md border border-gray-300 bg-white" />
+                            ) : field.type === 'checkbox' ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded border border-gray-300 bg-white" />
+                                <span className="text-sm text-gray-600">
+                                  {field.placeholder || t('styleEditor.checkboxOption')}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="w-full h-10 rounded-md border border-gray-300 bg-white" />
+                            )}
+                          </>
                         )}
                       </div>
                     ))

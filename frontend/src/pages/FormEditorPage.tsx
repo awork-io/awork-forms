@@ -23,6 +23,7 @@ import {
   type FieldType,
   createField,
   getFieldTypeLabel,
+  isInputField,
 } from '@/lib/form-types';
 import { FieldCard } from '@/components/form-editor/FieldCard';
 import { FieldConfigDialog } from '@/components/form-editor/FieldConfigDialog';
@@ -357,6 +358,7 @@ export function FormEditorPage() {
   };
 
   const selectedField = fields.find((f) => f.id === selectedFieldId);
+  const inputFields = fields.filter(isInputField);
   const defaultTranslationLanguage = getSupportedLanguage(i18n.resolvedLanguage || i18n.language);
   const showTaskMappings = aworkConfig.actionType === 'task' || aworkConfig.actionType === 'both';
   const showProjectMappings = aworkConfig.actionType === 'project' || aworkConfig.actionType === 'both';
@@ -445,7 +447,7 @@ export function FormEditorPage() {
             {/* awork Integration Settings */}
             <div className="mb-6">
               <AworkIntegrationSettings
-                formFields={fields}
+                formFields={inputFields}
                 config={aworkConfig}
                 onChange={setAworkConfig}
                 onCustomFieldsChange={setAworkCustomFields}
