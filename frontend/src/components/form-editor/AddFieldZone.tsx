@@ -13,6 +13,7 @@ import {
   AlignLeft,
   ChevronDown,
   CheckSquare,
+  ListChecks,
   Calendar,
   Paperclip,
   Heading1,
@@ -99,6 +100,8 @@ function FieldTypeIcon({ iconName, className }: { iconName: string; className?: 
       return <ChevronDown className={className} />;
     case 'CheckSquare':
       return <CheckSquare className={className} />;
+    case 'ListChecks':
+      return <ListChecks className={className} />;
     case 'Calendar':
       return <Calendar className={className} />;
     case 'Paperclip':

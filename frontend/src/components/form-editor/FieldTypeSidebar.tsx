@@ -8,6 +8,7 @@ import {
   AlignLeft,
   ChevronDown,
   CheckSquare,
+  ListChecks,
   Calendar,
   GripVertical,
   Heading1,
@@ -97,6 +98,8 @@ function FieldTypeIcon({ iconName, className }: { iconName: string; className?: 
       return <ChevronDown className={className} />;
     case 'CheckSquare':
       return <CheckSquare className={className} />;
+    case 'ListChecks':
+      return <ListChecks className={className} />;
     case 'Calendar':
       return <Calendar className={className} />;
     case 'Heading1':

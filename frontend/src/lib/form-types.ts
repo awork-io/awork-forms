@@ -7,6 +7,7 @@ export type FieldType =
   | 'number'
   | 'textarea'
   | 'select'
+  | 'multiselect'
   | 'checkbox'
   | 'date'
   | 'file'
@@ -80,6 +81,12 @@ export const FIELD_TYPES: FieldTypeInfo[] = [
     description: 'Select from options',
   },
   {
+    type: 'multiselect',
+    label: 'Multi Select',
+    icon: 'ListChecks',
+    description: 'Select multiple options',
+  },
+  {
     type: 'checkbox',
     label: 'Checkbox',
     icon: 'CheckSquare',
@@ -140,6 +147,11 @@ const FIELD_TYPE_TRANSLATION_KEYS: Record<
     descriptionKey: 'fieldTypes.select.description',
     defaultLabelKey: 'fieldDefaults.select',
   },
+  multiselect: {
+    labelKey: 'fieldTypes.multiselect.label',
+    descriptionKey: 'fieldTypes.multiselect.description',
+    defaultLabelKey: 'fieldDefaults.multiselect',
+  },
   checkbox: {
     labelKey: 'fieldTypes.checkbox.label',
     descriptionKey: 'fieldTypes.checkbox.description',
@@ -195,6 +207,11 @@ const FIELD_TYPE_FALLBACKS: Record<
     label: 'Dropdown',
     description: 'Select from options',
     defaultLabel: 'Select Option',
+  },
+  multiselect: {
+    label: 'Multi Select',
+    description: 'Select multiple options',
+    defaultLabel: 'Select Options',
   },
   checkbox: {
     label: 'Checkbox',
@@ -264,7 +281,7 @@ export function createField(type: FieldType, t?: TFunction): FormField {
     placeholder: '',
   };
 
-  if (type === 'select') {
+  if (type === 'select' || type === 'multiselect') {
     return {
       ...baseField,
       options: [
@@ -301,6 +318,8 @@ function getDefaultLabel(type: FieldType, t?: TFunction): string {
       return 'Description';
     case 'select':
       return 'Select Option';
+    case 'multiselect':
+      return 'Select Options';
     case 'checkbox':
       return 'I agree';
     case 'date':

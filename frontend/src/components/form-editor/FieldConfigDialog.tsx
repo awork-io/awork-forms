@@ -302,7 +302,7 @@ export function FieldConfigDialog({
           )}
 
           {/* Select Options */}
-          {field.type === 'select' && (
+          {(field.type === 'select' || field.type === 'multiselect') && (
             <>
               <Separator />
               <SelectOptionsEditor
@@ -589,7 +589,7 @@ function FieldTranslationsEditor({ field, onUpdate }: FieldTranslationsEditorPro
                     />
                   </div>
                 )}
-                {field.type === 'select' && (field.options?.length || 0) > 0 && (
+                {(field.type === 'select' || field.type === 'multiselect') && (field.options?.length || 0) > 0 && (
                   <div className="space-y-2">
                     <Label>{t('fieldConfigDialog.optionTranslations')}</Label>
                     <div className="space-y-2">

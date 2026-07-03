@@ -433,6 +433,7 @@ public class SubmissionProcessor
         if (!formData.TryGetValue(fieldId, out var value) || value == null) return null;
 
         string? mappedValue;
+        List<string>? mappedValues = null;
         if (value is JsonElement jsonElement)
         {
             mappedValue = jsonElement.ValueKind switch
@@ -441,12 +442,22 @@ public class SubmissionProcessor
                 JsonValueKind.Number => jsonElement.GetRawText(),
                 JsonValueKind.True => "Yes",
                 JsonValueKind.False => "No",
+                JsonValueKind.Array => string.Join(", ", jsonElement.EnumerateArray().Select(GetJsonElementDisplayValue).Where(v => !string.IsNullOrEmpty(v))),
                 _ => jsonElement.GetRawText()
             };
+            if (jsonElement.ValueKind == JsonValueKind.Array)
+            {
+                mappedValues = jsonElement.EnumerateArray().Select(GetJsonElementDisplayValue).Where(v => !string.IsNullOrEmpty(v)).ToList();
+            }
         }
         else
         {
             mappedValue = value.ToString();
+            if (value is IEnumerable<string> values)
+            {
+                mappedValues = values.Where(v => !string.IsNullOrEmpty(v)).ToList();
+                mappedValue = string.Join(", ", mappedValues);
+            }
         }
 
         if (string.IsNullOrEmpty(mappedValue))
@@ -456,12 +467,34 @@ public class SubmissionProcessor
             return mappedValue;
 
         var formField = formFields.FirstOrDefault(f => f.Id == fieldId);
-        if (formField?.Type != "select" || formField.Options == null || formField.Options.Count == 0)
+        if ((formField?.Type != "select" && formField?.Type != "multiselect") || formField.Options == null || formField.Options.Count == 0)
             return mappedValue;
 
-        // For select fields we map the stable option value back to the primary label.
-        var matchedOption = formField.Options.FirstOrDefault(o => o.Value == mappedValue);
-        return !string.IsNullOrWhiteSpace(matchedOption?.Label) ? matchedOption.Label : mappedValue;
+        if (formField.Type == "multiselect" && mappedValues != null)
+        {
+            return string.Join(", ", mappedValues.Select(v => MapOptionValueToLabel(formField.Options, v)));
+        }
+
+        // For option fields we map the stable option value back to the primary label.
+        return MapOptionValueToLabel(formField.Options, mappedValue);
+    }
+
+    private static string GetJsonElementDisplayValue(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString() ?? string.Empty,
+            JsonValueKind.Number => element.GetRawText(),
+            JsonValueKind.True => "Yes",
+            JsonValueKind.False => "No",
+            _ => element.GetRawText()
+        };
+    }
+
+    private static string MapOptionValueToLabel(List<FormFieldOptionInfo> options, string value)
+    {
+        var matchedOption = options.FirstOrDefault(o => o.Value == value);
+        return !string.IsNullOrWhiteSpace(matchedOption?.Label) ? matchedOption.Label : value;
     }
 
     private static List<FieldMapping> GetCustomFieldMappings(List<FieldMapping> mappings)

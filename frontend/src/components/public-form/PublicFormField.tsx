@@ -96,6 +96,14 @@ export function PublicFormField({
     onFocus: () => setIsFocused(true),
     onBlur: () => setIsFocused(false),
   };
+  const selectedValues = Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+  const toggleMultiSelectValue = (optionValue: string) => {
+    onChange(
+      selectedValues.includes(optionValue)
+        ? selectedValues.filter((item) => item !== optionValue)
+        : [...selectedValues, optionValue]
+    );
+  };
 
   return (
     <div
@@ -194,6 +202,68 @@ export function PublicFormField({
               ))}
             </SelectContent>
           </Select>
+        ) : null}
+
+        {field.type === 'multiselect' ? (
+          <div
+            className={cn(
+              'space-y-2 transition-all duration-300',
+              hasError && 'rounded-xl'
+            )}
+            onFocus={() => setIsFocused(true)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                setIsFocused(false);
+              }
+            }}
+          >
+            {field.options?.map((option, optionIndex) => {
+              const checked = selectedValues.includes(option.value);
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={checked}
+                  onClick={() => toggleMultiSelectValue(option.value)}
+                  className={cn(
+                    'w-full min-h-12 rounded-xl border-2 bg-white px-3 py-3 text-left transition-all duration-200',
+                    'flex items-center gap-3 text-base outline-none',
+                    checked
+                      ? 'border-blue-500 bg-blue-50 text-blue-950 shadow-[0_0_0_3px_rgba(77,154,255,0.12)]'
+                      : 'border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50/40',
+                    'focus-visible:border-blue-500 focus-visible:shadow-[0_0_0_3px_rgba(77,154,255,0.16)]',
+                    hasError && !checked && 'border-red-300'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'flex h-6 min-w-6 items-center justify-center rounded-md border text-xs font-semibold',
+                      checked
+                        ? 'border-blue-500 bg-blue-500 text-white'
+                        : 'border-gray-300 bg-gray-50 text-gray-500'
+                    )}
+                  >
+                    {String.fromCharCode(65 + optionIndex)}
+                  </span>
+                  <span className="flex-1">
+                    {fieldTranslation?.options?.[option.value] || option.label}
+                  </span>
+                  <span
+                    className={cn(
+                      'flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all',
+                      checked ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                    )}
+                  >
+                    {checked ? (
+                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : null}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         ) : null}
 
         {field.type === 'checkbox' ? (

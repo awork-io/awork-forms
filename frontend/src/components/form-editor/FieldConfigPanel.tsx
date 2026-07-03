@@ -71,7 +71,7 @@ export function FieldConfigPanel({
       </div>
 
       {/* Select Options */}
-      {field.type === 'select' && (
+      {(field.type === 'select' || field.type === 'multiselect') && (
         <>
           <Separator />
           <SelectOptionsEditor
