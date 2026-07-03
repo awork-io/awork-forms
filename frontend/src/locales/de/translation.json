@@ -220,6 +220,10 @@
       "label": "Auswahl",
       "description": "Aus Optionen wählen"
     },
+    "multiselect": {
+      "label": "Mehrfachauswahl",
+      "description": "Mehrere Optionen wählen"
+    },
     "checkbox": {
       "label": "Checkbox",
       "description": "Ja/Nein-Checkbox"
@@ -247,6 +251,7 @@
     "number": "Zahl",
     "textarea": "Beschreibung",
     "select": "Auswahl",
+    "multiselect": "Mehrfachauswahl",
     "checkbox": "Ich stimme zu",
     "date": "Datum",
     "file": "Anhang",
@@ -260,6 +265,7 @@
     "enterEmail": "E-Mail eingeben",
     "enterNumber": "Zahl eingeben",
     "selectOption": "Option auswählen",
+    "selectOptions": "Optionen auswählen",
     "selectDate": "Datum auswählen"
   },
   "fieldCard": {
@@ -306,6 +312,7 @@
     "number": "Numerische Eingabe nur für Zahlen",
     "textarea": "Mehrzeiliges Textfeld für längere Antworten",
     "select": "Dropdown-Menü zur Auswahl einer Option",
+    "multiselect": "Checkbox-Liste zur Auswahl mehrerer Optionen",
     "checkbox": "Checkbox für Ja/Nein oder Zustimmung",
     "date": "Datumsauswahl",
     "default": "Benutzerdefinierter Feldtyp"

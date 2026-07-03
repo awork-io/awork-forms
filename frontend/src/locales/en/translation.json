@@ -220,6 +220,10 @@
       "label": "Dropdown",
       "description": "Select from options"
     },
+    "multiselect": {
+      "label": "Multi Select",
+      "description": "Select multiple options"
+    },
     "checkbox": {
       "label": "Checkbox",
       "description": "Yes/No checkbox"
@@ -247,6 +251,7 @@
     "number": "Number",
     "textarea": "Description",
     "select": "Select Option",
+    "multiselect": "Select Options",
     "checkbox": "I agree",
     "date": "Date",
     "file": "Attachment",
@@ -260,6 +265,7 @@
     "enterEmail": "Enter email",
     "enterNumber": "Enter number",
     "selectOption": "Select an option",
+    "selectOptions": "Select options",
     "selectDate": "Select a date"
   },
   "fieldCard": {
@@ -306,6 +312,7 @@
     "number": "Numeric input for numbers only",
     "textarea": "Multi-line text area for longer responses",
     "select": "Dropdown menu for selecting one option",
+    "multiselect": "Checkbox list for selecting multiple options",
     "checkbox": "Checkbox for yes/no or agreement",
     "date": "Date picker for selecting a date",
     "default": "Custom field type"

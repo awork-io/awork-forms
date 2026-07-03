@@ -46,7 +46,11 @@ export function PublicFormPage() {
 
         const initialData: Record<string, unknown> = {};
         parsedFields.filter(isInputField).forEach((field) => {
-          initialData[field.id] = field.type === 'checkbox' ? false : '';
+          initialData[field.id] = field.type === 'checkbox'
+            ? false
+            : field.type === 'multiselect'
+              ? []
+              : '';
         });
         setFormData(initialData);
       } catch (err) {
@@ -81,7 +85,11 @@ export function PublicFormPage() {
           if (!value) {
             errors[field.id] = t('publicForm.requiredError');
           }
-        } else if (!value || (typeof value === 'string' && value.trim() === '')) {
+        } else if (
+          !value ||
+          (typeof value === 'string' && value.trim() === '') ||
+          (Array.isArray(value) && value.length === 0)
+        ) {
           errors[field.id] = t('publicForm.requiredError');
         }
       }
@@ -192,6 +200,9 @@ export function PublicFormPage() {
   const inputFields = fields.filter(isInputField);
   const filledFields = inputFields.filter((field) => {
     const value = formData[field.id];
+    if (field.type === 'multiselect') {
+      return Array.isArray(value) && value.length > 0;
+    }
     return field.type === 'checkbox' ? value === true : value && String(value).trim() !== '';
   }).length;
   const progress = inputFields.length > 0 ? (filledFields / inputFields.length) * 100 : 0;

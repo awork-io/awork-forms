@@ -16,6 +16,7 @@ import {
   ChevronDown,
   CheckSquare,
   Calendar,
+  ListChecks,
   GripVertical,
   MoreVertical,
   Copy,
@@ -94,7 +95,7 @@ export function FieldCard({
                 </span>
               )}
             </p>
-            {field.type === 'select' && field.options && (
+            {(field.type === 'select' || field.type === 'multiselect') && field.options && (
               <p className="text-xs text-muted-foreground mt-1">
                 {t('common.optionsCount', { count: field.options.length })}
               </p>
@@ -164,6 +165,8 @@ function FieldIcon({ type, className }: { type: string; className?: string }) {
       return <AlignLeft className={className} />;
     case 'select':
       return <ChevronDown className={className} />;
+    case 'multiselect':
+      return <ListChecks className={className} />;
     case 'checkbox':
       return <CheckSquare className={className} />;
     case 'date':
@@ -204,6 +207,22 @@ function FieldPreview({ field }: { field: FormField }) {
         <div className="h-9 rounded-md border bg-muted/50 px-3 flex items-center justify-between text-sm text-muted-foreground">
           <span>{t('fieldPreview.selectOption')}</span>
           <ChevronDown className="w-4 h-4" />
+        </div>
+      );
+    case 'multiselect':
+      return (
+        <div className="rounded-md border bg-muted/50 px-3 py-2 space-y-1.5 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <CheckSquare className="w-4 h-4" />
+            <span>{t('fieldPreview.selectOptions')}</span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {(field.options || []).slice(0, 3).map((option) => (
+              <Badge key={option.value} variant="secondary" className="text-[10px]">
+                {option.label}
+              </Badge>
+            ))}
+          </div>
         </div>
       );
     case 'checkbox':

@@ -3,7 +3,7 @@ import { createField, FIELD_TYPES, isInputField, type FieldType } from './form-t
 
 describe('FIELD_TYPES', () => {
   it('should contain all expected field types', () => {
-    const expectedTypes: FieldType[] = ['text', 'email', 'number', 'textarea', 'select', 'checkbox', 'date', 'file', 'section', 'divider'];
+    const expectedTypes: FieldType[] = ['text', 'email', 'number', 'textarea', 'select', 'multiselect', 'checkbox', 'date', 'file', 'section', 'divider'];
     const actualTypes = FIELD_TYPES.map(f => f.type);
 
     expect(actualTypes).toEqual(expectedTypes);
@@ -17,8 +17,8 @@ describe('FIELD_TYPES', () => {
     });
   });
 
-  it('should have 10 field types', () => {
-    expect(FIELD_TYPES).toHaveLength(10);
+  it('should have 11 field types', () => {
+    expect(FIELD_TYPES).toHaveLength(11);
   });
 });
 
@@ -75,6 +75,17 @@ describe('createField', () => {
 
     expect(field.type).toBe('select');
     expect(field.label).toBe('Select Option');
+    expect(field.options).toBeDefined();
+    expect(field.options).toHaveLength(2);
+    expect(field.options![0]).toEqual({ label: 'Option 1', value: 'option1' });
+    expect(field.options![1]).toEqual({ label: 'Option 2', value: 'option2' });
+  });
+
+  it('should create a multiselect field with default options', () => {
+    const field = createField('multiselect');
+
+    expect(field.type).toBe('multiselect');
+    expect(field.label).toBe('Select Options');
     expect(field.options).toBeDefined();
     expect(field.options).toHaveLength(2);
     expect(field.options![0]).toEqual({ label: 'Option 1', value: 'option1' });
