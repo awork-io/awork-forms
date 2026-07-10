@@ -142,6 +142,12 @@ public class SubmissionProcessor
                             await _aworkService.AddTagsToTask(userId.Value, task.Id, tags.Distinct().ToList());
                         }
 
+                        var checklistItems = GetChecklistItemsFromMappings(formData, formFields, fieldMappings.TaskFieldMappings);
+                        if (checklistItems.Count > 0)
+                        {
+                            await _aworkService.AddChecklistItemsToTask(userId.Value, task.Id, checklistItems);
+                        }
+
                         await AttachFilesToTask(userId.Value, task.Id, formData, formFields);
                     }
                 }
@@ -373,6 +379,7 @@ public class SubmissionProcessor
                     break;
                 case "typeOfWork":
                 case "tags":
+                case "checklist":
                     // Handled via dedicated processing paths.
                     break;
             }
@@ -752,6 +759,27 @@ public class SubmissionProcessor
         }
 
         return tags.Distinct().ToList();
+    }
+
+    private static List<string> GetChecklistItemsFromMappings(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings)
+    {
+        var items = new List<string>();
+
+        foreach (var mapping in mappings.Where(m => string.Equals(m.AworkField, "checklist", StringComparison.OrdinalIgnoreCase)))
+        {
+            var values = GetMappedValues(formData, formFields, mapping.FormFieldId, mapSelectToLabel: true);
+            if (values == null || values.Count == 0)
+                continue;
+
+            // Prefix each item with the question label so the origin stays visible on the task.
+            var label = formFields.FirstOrDefault(f => f.Id == mapping.FormFieldId)?.Label?.Trim();
+            items.AddRange(values
+                .Select(v => v.Trim())
+                .Where(v => !string.IsNullOrEmpty(v))
+                .Select(v => string.IsNullOrEmpty(label) ? v : $"{label}: {v}"));
+        }
+
+        return items.Distinct().ToList();
     }
 }
 

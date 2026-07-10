@@ -212,6 +212,30 @@ public class AworkApiService
     }
 
     /// <summary>
+    /// Adds checklist items to a task. The awork API accepts one item per request.
+    /// </summary>
+    public async Task<bool> AddChecklistItemsToTask(Guid userId, Guid taskId, List<string> items)
+    {
+        if (items.Count == 0) return true;
+
+        var allSucceeded = true;
+        for (var i = 0; i < items.Count; i++)
+        {
+            try
+            {
+                var body = new { name = items[i].Trim(), isDone = false, order = (double)i };
+                await MakeAworkPostRequest<object>(userId, $"tasks/{taskId}/checklistitems", body);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to add checklist item to task {taskId}: {ex.Message}");
+                allSucceeded = false;
+            }
+        }
+        return allSucceeded;
+    }
+
+    /// <summary>
     /// Assigns a user to a task.
     /// </summary>
     public async Task<bool> AssignUserToTask(Guid userId, Guid taskId, Guid assigneeUserId)
