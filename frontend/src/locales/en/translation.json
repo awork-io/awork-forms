@@ -468,7 +468,8 @@
       "startOn": "Start Date",
       "plannedDuration": "Planned Duration (hours)",
       "typeOfWork": "Type of work",
-      "tags": "Tags (comma-separated)"
+      "tags": "Tags (comma-separated)",
+      "checklist": "Checklist items"
     },
     "projectFields": {
       "name": "Project Name",

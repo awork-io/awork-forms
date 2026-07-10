@@ -317,6 +317,77 @@ public class SubmissionProcessingTests
     }
 
     [Fact]
+    public async Task SubmitForm_ChecklistMapping_CreatesOneChecklistItemPerSelectedOption()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new object[]
+        {
+            new
+            {
+                id = "field-services",
+                type = "multiselect",
+                label = "Gewünschte Leistungen",
+                options = new[]
+                {
+                    new { label = "Option 1", value = "opt1" },
+                    new { label = "Option 2", value = "opt2" },
+                    new { label = "Option 3", value = "opt3" }
+                }
+            },
+            new { id = "field-note", type = "text", label = "Notiz" }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = new[]
+            {
+                new { formFieldId = "field-services", aworkField = "checklist" },
+                new { formFieldId = "field-note", aworkField = "checklist" }
+            },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Checklist Mapping Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var submitDto = new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-services"] = new[] { "opt1", "opt2" },
+                ["field-note"] = "Bitte Rückruf"
+            }
+        };
+
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", submitDto);
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var checklistBodies = await GetAworkRequestBodiesAsync("/api/v1/tasks/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/checklistitems");
+        Assert.Equal(3, checklistBodies.Count);
+        var names = checklistBodies.Select(body => GetJsonStringProperty(body, "name")).ToList();
+        Assert.Contains("Gewünschte Leistungen: Option 1", names);
+        Assert.Contains("Gewünschte Leistungen: Option 2", names);
+        Assert.DoesNotContain(names, name => name?.Contains("Option 3") == true);
+        Assert.Contains("Notiz: Bitte Rückruf", names);
+    }
+
+    [Fact]
     public async Task SubmitForm_MultipleDescriptionMappings_AppendsStructuredSections()
     {
         var (_, token) = await _factory.SeedUserAsync();

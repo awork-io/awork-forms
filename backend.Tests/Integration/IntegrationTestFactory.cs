@@ -334,6 +334,12 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
             request = new { method = "POST", urlPath = $"/api/v1/tasks/{AworkCreatedTaskId}/addtags" },
             response = new { status = 200, jsonBody = new { ok = true } }
         });
+
+        await RegisterAworkMappingAsync(client, new
+        {
+            request = new { method = "POST", urlPath = $"/api/v1/tasks/{AworkCreatedTaskId}/checklistitems" },
+            response = new { status = 200, jsonBody = new { ok = true } }
+        });
     }
 
     private void EnsureContainersStarted()
