@@ -64,7 +64,11 @@ vi.mock('@/components/form-editor/FormEditorMetaPanel', () => ({
 }));
 
 vi.mock('@/components/form-editor/FormCanvas', () => ({
-  FormCanvas: () => <div />,
+  FormCanvas: ({ onFieldDuplicate }: { onFieldDuplicate: (fieldId: string) => void }) => (
+    <button type="button" onClick={() => onFieldDuplicate('field-1')}>
+      duplicate-field
+    </button>
+  ),
 }));
 
 vi.mock('@/components/form-editor/FieldCard', () => ({
@@ -246,5 +250,39 @@ describe('FormEditorPage save payload', () => {
         fieldMappingsJson: null,
       })
     );
+  });
+
+  it('copies awork mappings when duplicating a field', async () => {
+    mocks.getFormMock.mockResolvedValue({
+      ...baseForm,
+      fieldsJson: JSON.stringify([{ id: 'field-1', type: 'text', label: 'Source', required: false }]),
+      fieldMappingsJson: JSON.stringify({
+        taskFieldMappings: [{ formFieldId: 'field-1', aworkField: 'description', aworkFieldLabel: 'Description' }],
+        projectFieldMappings: [{ formFieldId: 'field-1', aworkField: 'name', aworkFieldLabel: 'Project Name' }],
+      }),
+    });
+    mocks.updateFormMock.mockResolvedValueOnce(baseForm);
+    const user = userEvent.setup();
+
+    renderPage();
+
+    await waitFor(() => expect(mocks.getFormMock).toHaveBeenCalledWith(42));
+    await user.click(screen.getByRole('button', { name: 'duplicate-field' }));
+    await user.click(screen.getByRole('button', { name: 'save' }));
+
+    await waitFor(() => expect(mocks.updateFormMock).toHaveBeenCalledTimes(1));
+    const payload = mocks.updateFormMock.mock.calls[0][1];
+    const mappings = JSON.parse(payload.fieldMappingsJson);
+    const duplicatedField = JSON.parse(payload.fieldsJson).find((field: { id: string }) => field.id !== 'field-1');
+
+    expect(duplicatedField).toMatchObject({ label: 'Source (formEditor.copySuffix)' });
+    expect(mappings.taskFieldMappings).toEqual(expect.arrayContaining([
+      { formFieldId: 'field-1', aworkField: 'description', aworkFieldLabel: 'Description' },
+      { formFieldId: duplicatedField.id, aworkField: 'description', aworkFieldLabel: 'Description' },
+    ]));
+    expect(mappings.projectFieldMappings).toEqual(expect.arrayContaining([
+      { formFieldId: 'field-1', aworkField: 'name', aworkFieldLabel: 'Project Name' },
+      { formFieldId: duplicatedField.id, aworkField: 'name', aworkFieldLabel: 'Project Name' },
+    ]));
   });
 });
