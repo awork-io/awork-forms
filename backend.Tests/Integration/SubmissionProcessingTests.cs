@@ -454,6 +454,70 @@ public class SubmissionProcessingTests
     }
 
     [Fact]
+    public async Task SubmitForm_RatingMapping_AppendsScaleToDescriptionButKeepsRawNumberForNumberCustomField()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new object[]
+        {
+            new { id = "field-name", type = "text", label = "Name" },
+            new { id = "field-rating", type = "rating", label = "Zufriedenheit", ratingMax = 5, ratingStyle = "stars" }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = new[]
+            {
+                new { formFieldId = "field-name", aworkField = "name" },
+                new { formFieldId = "field-rating", aworkField = "description" },
+                new { formFieldId = "field-rating", aworkField = $"custom:{IntegrationTestFactory.AworkNumberCustomFieldId}" }
+            },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Rating Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var submitDto = new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-name"] = "Feedback",
+                ["field-rating"] = 4
+            }
+        };
+
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", submitDto);
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var taskBodies = await GetAworkRequestBodiesAsync("/api/v1/tasks", "POST");
+        var taskBody = Assert.Single(taskBodies, body => body.Contains("\"name\":\"Feedback\""));
+        var description = GetJsonStringProperty(taskBody, "description");
+
+        Assert.Equal("4/5", description);
+
+        var customFieldBodies = await GetAworkRequestBodiesAsync($"/api/v1/tasks/{IntegrationTestFactory.AworkCreatedTaskId}/setcustomfields", "POST");
+        Assert.Contains(customFieldBodies, body =>
+            body.Contains($"\"customFieldDefinitionId\":\"{IntegrationTestFactory.AworkNumberCustomFieldId}\"") &&
+            body.Contains("\"numberValue\":4"));
+    }
+
+    [Fact]
     public async Task SubmitForm_MultipleProjectDescriptionMappings_AppendsStructuredSections()
     {
         var (_, token) = await _factory.SeedUserAsync();

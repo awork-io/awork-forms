@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { X, Plus, Trash2, GripVertical } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { RatingSettingsEditor } from '@/components/form-editor/RatingSettingsEditor';
 
 interface FieldConfigPanelProps {
   field: FormField;
@@ -44,7 +45,7 @@ export function FieldConfigPanel({
           />
         </div>
 
-        {field.type !== 'checkbox' && (
+        {field.type !== 'checkbox' && field.type !== 'rating' && (
           <div className="space-y-2">
             <Label htmlFor="field-placeholder">{t('fieldConfigDialog.placeholder')}</Label>
             <Input
@@ -78,6 +79,14 @@ export function FieldConfigPanel({
             options={field.options || []}
             onUpdate={(options) => onUpdate({ options })}
           />
+        </>
+      )}
+
+      {/* Rating settings */}
+      {field.type === 'rating' && (
+        <>
+          <Separator />
+          <RatingSettingsEditor field={field} onUpdate={onUpdate} />
         </>
       )}
 

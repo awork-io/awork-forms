@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { createField, FIELD_TYPES, isInputField, type FieldType } from './form-types';
+import { createField, FIELD_TYPES, getRatingMax, isInputField, type FieldType } from './form-types';
 
 describe('FIELD_TYPES', () => {
   it('should contain all expected field types', () => {
-    const expectedTypes: FieldType[] = ['text', 'email', 'number', 'textarea', 'select', 'multiselect', 'checkbox', 'date', 'file', 'section', 'divider'];
+    const expectedTypes: FieldType[] = ['text', 'email', 'number', 'textarea', 'select', 'multiselect', 'rating', 'checkbox', 'date', 'file', 'section', 'divider'];
     const actualTypes = FIELD_TYPES.map(f => f.type);
 
     expect(actualTypes).toEqual(expectedTypes);
@@ -17,8 +17,8 @@ describe('FIELD_TYPES', () => {
     });
   });
 
-  it('should have 11 field types', () => {
-    expect(FIELD_TYPES).toHaveLength(11);
+  it('should have 12 field types', () => {
+    expect(FIELD_TYPES).toHaveLength(12);
   });
 });
 
@@ -92,6 +92,16 @@ describe('createField', () => {
     expect(field.options![1]).toEqual({ label: 'Option 2', value: 'option2' });
   });
 
+  it('should create a rating field with a 5-step star scale', () => {
+    const field = createField('rating');
+
+    expect(field.type).toBe('rating');
+    expect(field.label).toBe('How satisfied are you?');
+    expect(field.ratingMax).toBe(5);
+    expect(field.ratingStyle).toBe('stars');
+    expect(field.options).toBeUndefined();
+  });
+
   it('should create a section block with correct defaults', () => {
     const field = createField('section');
 
@@ -131,5 +141,19 @@ describe('isInputField', () => {
 
   it('returns true for submitted fields', () => {
     expect(isInputField(createField('text'))).toBe(true);
+  });
+});
+
+describe('getRatingMax', () => {
+  it('falls back to 5 when the scale is missing or invalid', () => {
+    expect(getRatingMax({})).toBe(5);
+    expect(getRatingMax({ ratingMax: Number.NaN })).toBe(5);
+    expect(getRatingMax({ ratingMax: 4.5 })).toBe(5);
+  });
+
+  it('clamps the scale to the supported 3-10 range', () => {
+    expect(getRatingMax({ ratingMax: 1 })).toBe(3);
+    expect(getRatingMax({ ratingMax: 7 })).toBe(7);
+    expect(getRatingMax({ ratingMax: 50 })).toBe(10);
   });
 });

@@ -1,4 +1,4 @@
-import { type FormField, getFieldTypeLabel } from '@/lib/form-types';
+import { type FormField, getFieldTypeLabel, getRatingMax } from '@/lib/form-types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ import {
   CheckSquare,
   Calendar,
   ListChecks,
+  Star,
   GripVertical,
   MoreVertical,
   Copy,
@@ -167,6 +168,8 @@ function FieldIcon({ type, className }: { type: string; className?: string }) {
       return <ChevronDown className={className} />;
     case 'multiselect':
       return <ListChecks className={className} />;
+    case 'rating':
+      return <Star className={className} />;
     case 'checkbox':
       return <CheckSquare className={className} />;
     case 'date':
@@ -225,6 +228,33 @@ function FieldPreview({ field }: { field: FormField }) {
           </div>
         </div>
       );
+    case 'rating': {
+      const ratingMax = getRatingMax(field);
+      return (
+        <div className="rounded-md border bg-muted/50 px-3 py-2 space-y-1.5 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-1">
+            {Array.from({ length: ratingMax }, (_, index) =>
+              field.ratingStyle === 'numbers' ? (
+                <span
+                  key={index}
+                  className="flex h-6 min-w-6 items-center justify-center rounded-md border bg-background px-1 text-xs"
+                >
+                  {index + 1}
+                </span>
+              ) : (
+                <Star key={index} className="w-4 h-4" />
+              )
+            )}
+          </div>
+          {(field.ratingMinLabel || field.ratingMaxLabel) && (
+            <div className="flex justify-between text-[10px]">
+              <span>{field.ratingMinLabel}</span>
+              <span>{field.ratingMaxLabel}</span>
+            </div>
+          )}
+        </div>
+      );
+    }
     case 'checkbox':
       return (
         <div className="flex items-center gap-2">

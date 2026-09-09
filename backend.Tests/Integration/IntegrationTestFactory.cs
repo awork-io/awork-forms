@@ -37,6 +37,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
     public static readonly Guid AworkWorkflowId = Guid.Parse("67676767-6767-6767-6767-676767676767");
     public static readonly Guid AworkCustomFieldId = Guid.Parse("77777777-7777-7777-7777-777777777777");
     public static readonly Guid AworkSelectCustomFieldId = Guid.Parse("7f7f7f7f-7f7f-7f7f-7f7f-7f7f7f7f7f7f");
+    public static readonly Guid AworkNumberCustomFieldId = Guid.Parse("7e7e7e7e-7e7e-7e7e-7e7e-7e7e7e7e7e7e");
     public static readonly Guid AworkSelectOptionId = Guid.Parse("8f8f8f8f-8f8f-8f8f-8f8f-8f8f8f8f8f8f");
     public static readonly Guid AworkUserId = Guid.Parse("88888888-8888-8888-8888-888888888888");
     public static readonly Guid AworkCreatedProjectId = Guid.Parse("99999999-9999-9999-9999-999999999999");
@@ -238,6 +239,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
                 jsonBody = new object[]
                 {
                     new { id = AworkCustomFieldId, name = "Severity", type = "text", entity = "task", isRequired = false, isArchived = false },
+                    new { id = AworkNumberCustomFieldId, name = "Score", type = "number", entity = "task", isRequired = false, isArchived = false },
                     new
                     {
                         id = AworkSelectCustomFieldId,

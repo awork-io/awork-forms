@@ -474,6 +474,9 @@ public class SubmissionProcessor
             return mappedValue;
 
         var formField = formFields.FirstOrDefault(f => f.Id == fieldId);
+        if (formField?.Type == "rating")
+            return FormatRatingDisplayValue(formField, mappedValue);
+
         if ((formField?.Type != "select" && formField?.Type != "multiselect") || formField.Options == null || formField.Options.Count == 0)
             return mappedValue;
 
@@ -484,6 +487,15 @@ public class SubmissionProcessor
 
         // For option fields we map the stable option value back to the primary label.
         return MapOptionValueToLabel(formField.Options, mappedValue);
+    }
+
+    // Ratings are stored as plain numbers; for human-readable targets we add the scale ("4/5").
+    private static string FormatRatingDisplayValue(FormFieldInfo formField, string rawValue)
+    {
+        if (formField.RatingMax is not int ratingMax || ratingMax <= 0)
+            return rawValue;
+
+        return $"{rawValue}/{ratingMax}";
     }
 
     private static string GetJsonElementDisplayValue(JsonElement element)
@@ -528,6 +540,9 @@ public class SubmissionProcessor
             return mappedValues;
 
         var formField = formFields.FirstOrDefault(f => f.Id == fieldId);
+        if (formField?.Type == "rating")
+            return mappedValues.Select(v => FormatRatingDisplayValue(formField, v)).ToList();
+
         if ((formField?.Type != "select" && formField?.Type != "multiselect") || formField.Options == null || formField.Options.Count == 0)
             return mappedValues;
 
@@ -789,6 +804,7 @@ internal class FormFieldInfo
     public string Type { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
     public List<FormFieldOptionInfo>? Options { get; set; }
+    public int? RatingMax { get; set; }
 }
 
 internal class FormFieldOptionInfo
