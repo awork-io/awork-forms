@@ -40,6 +40,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
     public static readonly Guid AworkNumberCustomFieldId = Guid.Parse("7e7e7e7e-7e7e-7e7e-7e7e-7e7e7e7e7e7e");
     public static readonly Guid AworkSelectOptionId = Guid.Parse("8f8f8f8f-8f8f-8f8f-8f8f-8f8f8f8f8f8f");
     public static readonly Guid AworkUserId = Guid.Parse("88888888-8888-8888-8888-888888888888");
+    public static readonly Guid AworkSecondUserId = Guid.Parse("89898989-8989-8989-8989-898989898989");
     public static readonly Guid AworkCreatedProjectId = Guid.Parse("99999999-9999-9999-9999-999999999999");
     public static readonly Guid AworkCreatedTaskId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     public static readonly Guid AworkCreatedTypeOfWorkId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");

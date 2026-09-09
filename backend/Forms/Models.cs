@@ -39,7 +39,7 @@ public class FormDetailDto
     public Guid? AworkTaskListId { get; set; }
     public Guid? AworkTaskStatusId { get; set; }
     public Guid? AworkTypeOfWorkId { get; set; }
-    public Guid? AworkAssigneeId { get; set; }
+    public List<Guid> AworkAssigneeIds { get; set; } = new();
     public bool? AworkTaskIsPriority { get; set; }
     [JsonPropertyName("aworkTaskTag")]
     [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
@@ -67,7 +67,7 @@ public class CreateFormDto
     public Guid? AworkTaskListId { get; set; }
     public Guid? AworkTaskStatusId { get; set; }
     public Guid? AworkTypeOfWorkId { get; set; }
-    public Guid? AworkAssigneeId { get; set; }
+    public List<Guid> AworkAssigneeIds { get; set; } = new();
     public bool? AworkTaskIsPriority { get; set; }
     [JsonPropertyName("aworkTaskTag")]
     public string? AworkTaskTag { get; set; }
@@ -91,7 +91,7 @@ public class UpdateFormDto
     public Guid? AworkTaskListId { get; set; }
     public Guid? AworkTaskStatusId { get; set; }
     public Guid? AworkTypeOfWorkId { get; set; }
-    public Guid? AworkAssigneeId { get; set; }
+    public List<Guid> AworkAssigneeIds { get; set; } = new();
     public bool? AworkTaskIsPriority { get; set; }
     [JsonPropertyName("aworkTaskTag")]
     public string? AworkTaskTag { get; set; }

@@ -51,7 +51,7 @@ public class FormsEndpointsTests
             AworkTaskListId = created.AworkTaskListId,
             AworkTaskStatusId = created.AworkTaskStatusId,
             AworkTypeOfWorkId = created.AworkTypeOfWorkId,
-            AworkAssigneeId = created.AworkAssigneeId,
+            AworkAssigneeIds = created.AworkAssigneeIds,
             AworkTaskTag = "updated-tag",
             AworkTaskIsPriority = true,
             FieldMappingsJson = created.FieldMappingsJson,
@@ -81,7 +81,7 @@ public class FormsEndpointsTests
     }
 
     [Fact]
-    public async Task UpdateForm_WhenAssigneeCleared_PersistsNullAssignee()
+    public async Task UpdateForm_WhenAssigneesCleared_PersistsEmptyList()
     {
         var (_, token) = await _factory.SeedUserAsync();
         using var client = _factory.CreateAuthenticatedClient(token);
@@ -92,12 +92,12 @@ public class FormsEndpointsTests
             ActionType = "task",
             FieldsJson = "[]",
             AworkTypeOfWorkId = Guid.NewGuid(),
-            AworkAssigneeId = Guid.NewGuid()
+            AworkAssigneeIds = [Guid.NewGuid(), Guid.NewGuid()]
         });
         createResponse.EnsureSuccessStatusCode();
         var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
         Assert.NotNull(created);
-        Assert.NotNull(created!.AworkAssigneeId);
+        Assert.Equal(2, created!.AworkAssigneeIds.Count);
 
         var updateResponse = await client.PutAsJsonAsync($"/api/forms/{created.Id}", new UpdateFormDto
         {
@@ -112,7 +112,7 @@ public class FormsEndpointsTests
             AworkTaskListId = created.AworkTaskListId,
             AworkTaskStatusId = created.AworkTaskStatusId,
             AworkTypeOfWorkId = created.AworkTypeOfWorkId,
-            AworkAssigneeId = null,
+            AworkAssigneeIds = [],
             AworkTaskIsPriority = created.AworkTaskIsPriority,
             AworkTaskTag = created.AworkTaskTag,
             FieldMappingsJson = created.FieldMappingsJson,
@@ -125,11 +125,11 @@ public class FormsEndpointsTests
         updateResponse.EnsureSuccessStatusCode();
         var updated = await updateResponse.Content.ReadFromJsonAsync<FormDetailDto>();
         Assert.NotNull(updated);
-        Assert.Null(updated!.AworkAssigneeId);
+        Assert.Empty(updated!.AworkAssigneeIds);
 
         var fetched = await client.GetFromJsonAsync<FormDetailDto>($"/api/forms/{created.Id}");
         Assert.NotNull(fetched);
-        Assert.Null(fetched!.AworkAssigneeId);
+        Assert.Empty(fetched!.AworkAssigneeIds);
     }
 
     [Fact]

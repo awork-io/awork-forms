@@ -238,7 +238,7 @@ public class AworkApiService
     /// <summary>
     /// Assigns a user to a task.
     /// </summary>
-    public async Task<bool> AssignUserToTask(Guid userId, Guid taskId, Guid assigneeUserId)
+    public async Task<bool> AssignUsersToTask(Guid userId, Guid taskId, IReadOnlyCollection<Guid> assigneeUserIds)
     {
         try
         {
@@ -247,7 +247,7 @@ public class AworkApiService
                 return false;
 
             // awork API expects an array of user ID strings
-            var body = new[] { assigneeUserId.ToString() };
+            var body = assigneeUserIds.Select(id => id.ToString()).ToArray();
             var jsonBody = JsonSerializer.Serialize(body);
             using var response = await SendAuthorizedRequest(userId, token =>
             {
@@ -260,7 +260,7 @@ public class AworkApiService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to assign user {assigneeUserId} to task {taskId}: {ex.Message}");
+            Console.WriteLine($"Failed to assign users {string.Join(", ", assigneeUserIds)} to task {taskId}: {ex.Message}");
             return false;
         }
     }
