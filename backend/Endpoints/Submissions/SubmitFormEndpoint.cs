@@ -19,6 +19,14 @@ public class SubmitFormEndpoint : IEndpoint
             if (form == null) return Results.NotFound(new { error = "Form not found" });
             if (!form.IsActive) return Results.BadRequest(new { error = "This form is no longer accepting submissions" });
 
+            // Ratings feed number custom fields; reject anything outside the configured scale.
+            foreach (var field in SubmissionProcessor.ParseFormFields(form.FieldsJson ?? "[]").Where(f => f.Type == "rating"))
+            {
+                if (!dto.Data.TryGetValue(field.Id, out var value)) continue;
+                var validationError = RatingScale.Validate(field, value);
+                if (validationError != null) return Results.BadRequest(new { error = validationError });
+            }
+
             var dataJson = JsonSerializer.Serialize(dto.Data);
             var submission = formsService.CreateSubmission(form.Id, dataJson);
             var result = await processor.ProcessSubmission(submission.Id);

@@ -224,6 +224,10 @@
       "label": "Mehrfachauswahl",
       "description": "Mehrere Optionen wählen"
     },
+    "rating": {
+      "label": "Bewertung",
+      "description": "Bewertungsskala mit Sternen oder Zahlen"
+    },
     "checkbox": {
       "label": "Checkbox",
       "description": "Ja/Nein-Checkbox"
@@ -252,6 +256,7 @@
     "textarea": "Beschreibung",
     "select": "Auswahl",
     "multiselect": "Mehrfachauswahl",
+    "rating": "Wie zufrieden bist du?",
     "checkbox": "Ich stimme zu",
     "date": "Datum",
     "file": "Anhang",
@@ -300,7 +305,22 @@
     "noAworkFieldsFound": "Keine awork-Felder gefunden.",
     "add": "Hinzufügen",
     "deleteField": "Feld löschen",
-    "done": "Fertig"
+    "done": "Fertig",
+    "ratingSettings": "Bewertungsskala",
+    "ratingScale": "Stufen",
+    "ratingScaleOption": "1 bis {{max}}",
+    "ratingStyle": "Darstellung",
+    "ratingStyleStars": "Sterne",
+    "ratingStyleNumbers": "Zahlen",
+    "ratingMinLabel": "Beschriftung niedrigster Wert",
+    "ratingMaxLabel": "Beschriftung höchster Wert",
+    "ratingMinLabelPlaceholder": "z. B. Sehr unzufrieden",
+    "ratingMaxLabelPlaceholder": "z. B. Sehr zufrieden",
+    "ratingLabelOptional": "Optional",
+    "ratingLabelsHelp": "Optionale Beschriftungen, die unter der Skala angezeigt werden.",
+    "ratingMin": "Niedrigster Wert",
+    "ratingMinOne": "1",
+    "ratingMinZero": "0 (z. B. NPS 0-10)"
   },
   "fieldConfigPanel": {
     "title": "Feldeinstellungen",
@@ -313,6 +333,7 @@
     "textarea": "Mehrzeiliges Textfeld für längere Antworten",
     "select": "Dropdown-Menü zur Auswahl einer Option",
     "multiselect": "Checkbox-Liste zur Auswahl mehrerer Optionen",
+    "rating": "Visuelle Bewertungsskala mit Sternen oder Zahlen, z. B. für Zufriedenheitsfragen",
     "checkbox": "Checkbox für Ja/Nein oder Zustimmung",
     "date": "Datumsauswahl",
     "default": "Benutzerdefinierter Feldtyp"
@@ -610,6 +631,9 @@
     "submitting": "Wird gesendet...",
     "poweredByPrefix": "Bereitgestellt von",
     "submitAnother": "Weitere Einreichung",
-    "closeTab": "Tab schließen"
+    "closeTab": "Tab schließen",
+    "rating": {
+      "optionLabel": "{{value}} von {{max}}"
+    }
   }
 }

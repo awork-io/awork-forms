@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { TFunction } from 'i18next';
 import type { FormField } from '@/lib/form-types';
+import { RatingInput } from '@/components/public-form/RatingInput';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -123,6 +124,7 @@ export function PublicFormField({
         {field.type !== 'checkbox' ? (
           <Label
             htmlFor={field.id}
+            id={`${field.id}-label`}
             className={cn(
               'block text-base font-semibold mb-2 transition-colors duration-200',
               isFocused ? 'text-blue-600' : 'text-gray-700'
@@ -263,6 +265,28 @@ export function PublicFormField({
                 </button>
               );
             })}
+          </div>
+        ) : null}
+
+        {field.type === 'rating' ? (
+          <div
+            onFocus={() => setIsFocused(true)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                setIsFocused(false);
+              }
+            }}
+          >
+            <RatingInput
+              field={field}
+              value={value}
+              onChange={onChange}
+              hasError={hasError}
+              labelId={`${field.id}-label`}
+              minLabel={fieldTranslation?.ratingMinLabel || field.ratingMinLabel}
+              maxLabel={fieldTranslation?.ratingMaxLabel || field.ratingMaxLabel}
+              t={t}
+            />
           </div>
         ) : null}
 

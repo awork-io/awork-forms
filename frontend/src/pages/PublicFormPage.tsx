@@ -86,7 +86,7 @@ export function PublicFormPage() {
             errors[field.id] = t('publicForm.requiredError');
           }
         } else if (
-          !value ||
+          (typeof value !== 'number' && !value) ||
           (typeof value === 'string' && value.trim() === '') ||
           (Array.isArray(value) && value.length === 0)
         ) {
@@ -202,6 +202,10 @@ export function PublicFormPage() {
     const value = formData[field.id];
     if (field.type === 'multiselect') {
       return Array.isArray(value) && value.length > 0;
+    }
+    if (field.type === 'rating') {
+      // 0 is a valid selection on 0-based numeric scales
+      return typeof value === 'number';
     }
     return field.type === 'checkbox' ? value === true : value && String(value).trim() !== '';
   }).length;

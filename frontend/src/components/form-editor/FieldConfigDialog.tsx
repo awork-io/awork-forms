@@ -23,6 +23,7 @@ import {
   getFieldTypeLabel,
   isInputField,
 } from '@/lib/form-types';
+import { RatingSettingsEditor } from '@/components/form-editor/RatingSettingsEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -194,8 +195,8 @@ export function FieldConfigDialog({
             autoFocus
           />
 
-          {/* Placeholder (not for checkbox) */}
-          {field.type !== 'checkbox' && field.type !== 'divider' && (
+          {/* Placeholder (not for checkbox or rating) */}
+          {field.type !== 'checkbox' && field.type !== 'divider' && field.type !== 'rating' && (
             <InputField
               label={field.type === 'section' ? t('fieldConfigDialog.body') : t('fieldConfigDialog.placeholder')}
               id="field-placeholder"
@@ -309,6 +310,14 @@ export function FieldConfigDialog({
                 options={field.options || []}
                 onUpdate={(options) => handleUpdate({ options })}
               />
+            </>
+          )}
+
+          {/* Rating settings */}
+          {field.type === 'rating' && (
+            <>
+              <Separator />
+              <RatingSettingsEditor field={field} onUpdate={handleUpdate} />
             </>
           )}
         </div>
@@ -579,7 +588,7 @@ function FieldTranslationsEditor({ field, onUpdate }: FieldTranslationsEditorPro
                     {t('fieldConfigDialog.translationOptional')}
                   </p>
                 </div>
-                {field.type !== 'checkbox' && (
+                {field.type !== 'checkbox' && field.type !== 'rating' && (
                   <div className="space-y-2">
                     <Label>{t('fieldConfigDialog.translationPlaceholder')}</Label>
                     <Input
@@ -587,6 +596,26 @@ function FieldTranslationsEditor({ field, onUpdate }: FieldTranslationsEditorPro
                       onChange={(e) => updateTranslation(language.code, { placeholder: e.target.value })}
                       placeholder={field.placeholder || t('fieldConfigDialog.placeholderOptional')}
                     />
+                  </div>
+                )}
+                {field.type === 'rating' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                      <Label>{t('fieldConfigDialog.ratingMinLabel')}</Label>
+                      <Input
+                        value={translation?.ratingMinLabel || ''}
+                        onChange={(e) => updateTranslation(language.code, { ratingMinLabel: e.target.value })}
+                        placeholder={field.ratingMinLabel || t('fieldConfigDialog.ratingLabelOptional')}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t('fieldConfigDialog.ratingMaxLabel')}</Label>
+                      <Input
+                        value={translation?.ratingMaxLabel || ''}
+                        onChange={(e) => updateTranslation(language.code, { ratingMaxLabel: e.target.value })}
+                        placeholder={field.ratingMaxLabel || t('fieldConfigDialog.ratingLabelOptional')}
+                      />
+                    </div>
                   </div>
                 )}
                 {(field.type === 'select' || field.type === 'multiselect') && (field.options?.length || 0) > 0 && (
@@ -631,6 +660,12 @@ function normalizeTranslations(
       }
       if (value.placeholder && value.placeholder.length > 0) {
         next.placeholder = value.placeholder;
+      }
+      if (value.ratingMinLabel && value.ratingMinLabel.length > 0) {
+        next.ratingMinLabel = value.ratingMinLabel;
+      }
+      if (value.ratingMaxLabel && value.ratingMaxLabel.length > 0) {
+        next.ratingMaxLabel = value.ratingMaxLabel;
       }
       if (value.options) {
         const cleanedOptions = Object.entries(value.options)
