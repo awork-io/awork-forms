@@ -455,18 +455,19 @@
       "typeOfWorkHelp": "Pflichtfeld. Kann auch über eine Feldzuordnung gesetzt werden.",
       "assignTo": "Zuweisen an",
       "loadingUsers": "Benutzer werden geladen...",
-      "selectAssignee": "Zuständigen auswählen",
+      "selectAssignee": "Zuständige auswählen",
       "searchUsers": "Benutzer suchen...",
       "noUsersFound": "Keine Benutzer gefunden.",
       "configuredAssigneeUnavailable": "Konfigurierter Zuständiger nicht verfügbar",
-      "assigneeAccessHint": "Der gespeicherte Zuständige ist für dein awork-Konto nicht verfügbar.",
+      "assigneeAccessHint": "Mindestens ein gespeicherter Zuständiger ist für dein awork-Konto nicht verfügbar.",
       "unassigned": "Nicht zugewiesen",
       "priority": "Als Priorität markieren",
       "priorityHelp": "Erstellte Aufgaben werden als hohe Priorität markiert",
       "mapFields": "Formularfelder der Aufgabe zuordnen",
       "mappedCount": "{{count}} zugeordnet",
       "mappedCount_other": "{{count}} zugeordnet",
-      "notMapped": "Nicht zugeordnet"
+      "notMapped": "Nicht zugeordnet",
+      "removeAssignee": "Zuständigen entfernen"
     },
     "project": {
       "badge": "Projekt",

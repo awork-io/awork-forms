@@ -65,7 +65,7 @@ public class SubmissionProcessingTests
             AworkTaskStatusId = IntegrationTestFactory.AworkTaskStatusId,
             AworkTaskListId = IntegrationTestFactory.AworkTaskListId,
             AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
-            AworkAssigneeId = IntegrationTestFactory.AworkUserId,
+            AworkAssigneeIds = [IntegrationTestFactory.AworkUserId, IntegrationTestFactory.AworkSecondUserId],
             AworkTaskTag = "form-tag",
             IsActive = true
         };
@@ -97,6 +97,12 @@ public class SubmissionProcessingTests
         Assert.True(payload.AworkTaskId.HasValue, raw);
         Assert.Equal(IntegrationTestFactory.AworkCreatedProjectId, payload.AworkProjectId.Value);
         Assert.Equal(IntegrationTestFactory.AworkCreatedTaskId, payload.AworkTaskId.Value);
+
+        // All configured assignees are sent in a single setassignees call.
+        var assigneeBodies = await GetAworkRequestBodiesAsync($"/api/v1/tasks/{IntegrationTestFactory.AworkCreatedTaskId}/setassignees", "POST");
+        var assigneeBody = Assert.Single(assigneeBodies);
+        Assert.Contains(IntegrationTestFactory.AworkUserId.ToString(), assigneeBody);
+        Assert.Contains(IntegrationTestFactory.AworkSecondUserId.ToString(), assigneeBody);
     }
 
     [Fact]
@@ -152,7 +158,7 @@ public class SubmissionProcessingTests
             AworkTaskListId = created.AworkTaskListId,
             AworkTaskStatusId = created.AworkTaskStatusId,
             AworkTypeOfWorkId = created.AworkTypeOfWorkId,
-            AworkAssigneeId = created.AworkAssigneeId,
+            AworkAssigneeIds = created.AworkAssigneeIds,
             AworkTaskIsPriority = created.AworkTaskIsPriority,
             AworkTaskTag = created.AworkTaskTag,
             FieldMappingsJson = created.FieldMappingsJson,

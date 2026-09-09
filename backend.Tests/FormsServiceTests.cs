@@ -161,14 +161,15 @@ public class FormsServiceTests : IDisposable
     }
 
     [Fact]
-    public void UpdateForm_CanClearAworkAssigneeWhenPropertyIsExplicitlyPresent()
+    public void UpdateForm_CanClearAworkAssignees()
     {
-        var assigneeId = Guid.NewGuid();
+        var assigneeIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
         var created = _formsService.CreateForm(new CreateFormDto
         {
             Name = "Assignee Form",
-            AworkAssigneeId = assigneeId
+            AworkAssigneeIds = assigneeIds
         }, _testUserId);
+        Assert.Equal(assigneeIds, created.AworkAssigneeIds);
 
         var result = _formsService.UpdateForm(
             created.Id,
@@ -185,7 +186,7 @@ public class FormsServiceTests : IDisposable
                 AworkTaskListId = created.AworkTaskListId,
                 AworkTaskStatusId = created.AworkTaskStatusId,
                 AworkTypeOfWorkId = created.AworkTypeOfWorkId,
-                AworkAssigneeId = null,
+                AworkAssigneeIds = [],
                 AworkTaskIsPriority = created.AworkTaskIsPriority,
                 AworkTaskTag = created.AworkTaskTag,
                 FieldMappingsJson = created.FieldMappingsJson,
@@ -195,11 +196,10 @@ public class FormsServiceTests : IDisposable
                 IsSharedWithWorkspace = created.IsSharedWithWorkspace,
                 IsActive = created.IsActive
             },
-            _testUserId,
-            hasAworkAssigneeId: true);
+            _testUserId);
 
         Assert.NotNull(result);
-        Assert.Null(result.AworkAssigneeId);
+        Assert.Empty(result.AworkAssigneeIds);
     }
 
     [Fact]
@@ -332,7 +332,7 @@ public class FormsServiceTests : IDisposable
             AworkTaskListId = Guid.NewGuid(),
             AworkTaskStatusId = Guid.NewGuid(),
             AworkTypeOfWorkId = Guid.NewGuid(),
-            AworkAssigneeId = Guid.NewGuid(),
+            AworkAssigneeIds = [Guid.NewGuid()],
             AworkTaskIsPriority = true,
             AworkTaskTag = "support",
             FieldMappingsJson = "{\"taskFieldMappings\":[{\"formFieldId\":\"field-1\",\"aworkField\":\"tags\"}]}",
@@ -358,7 +358,7 @@ public class FormsServiceTests : IDisposable
         Assert.Equal(created.AworkTaskListId, duplicated.AworkTaskListId);
         Assert.Equal(created.AworkTaskStatusId, duplicated.AworkTaskStatusId);
         Assert.Equal(created.AworkTypeOfWorkId, duplicated.AworkTypeOfWorkId);
-        Assert.Equal(created.AworkAssigneeId, duplicated.AworkAssigneeId);
+        Assert.Equal(created.AworkAssigneeIds, duplicated.AworkAssigneeIds);
         Assert.Equal(created.AworkTaskIsPriority, duplicated.AworkTaskIsPriority);
         Assert.Equal(created.AworkTaskTag, duplicated.AworkTaskTag);
         Assert.Equal(created.FieldMappingsJson, duplicated.FieldMappingsJson);

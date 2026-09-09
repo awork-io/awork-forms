@@ -77,7 +77,7 @@ export function FormEditorPage() {
     taskListId: null,
     taskStatusId: null,
     typeOfWorkId: null,
-    assigneeId: null,
+    assigneeIds: [],
     isPriority: false,
     taskTag: null,
     taskFieldMappings: [],
@@ -135,7 +135,7 @@ export function FormEditorPage() {
         data.aworkTaskListId,
         data.aworkTaskStatusId,
         data.aworkTypeOfWorkId,
-        data.aworkAssigneeId,
+        data.aworkAssigneeIds,
         data.aworkTaskIsPriority,
         data.aworkTaskTag,
         data.fieldMappingsJson

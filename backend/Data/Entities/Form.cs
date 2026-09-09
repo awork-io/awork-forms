@@ -18,7 +18,7 @@ public class Form
     public Guid? AworkTaskListId { get; set; }
     public Guid? AworkTaskStatusId { get; set; }
     public Guid? AworkTypeOfWorkId { get; set; }
-    public Guid? AworkAssigneeId { get; set; }
+    public List<Guid> AworkAssigneeIds { get; set; } = new();
     public bool? AworkTaskIsPriority { get; set; }
     public string? AworkTaskTag { get; set; }
     public string? FieldMappingsJson { get; set; }

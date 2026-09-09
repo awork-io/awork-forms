@@ -119,9 +119,9 @@ public class SubmissionProcessor
                         result.AworkTaskId = task.Id;
 
                         // Assign user to task (separate API call)
-                        if (form.AworkAssigneeId != null)
+                        if (form.AworkAssigneeIds.Count > 0)
                         {
-                            await _aworkService.AssignUserToTask(userId.Value, task.Id, form.AworkAssigneeId.Value);
+                            await _aworkService.AssignUsersToTask(userId.Value, task.Id, form.AworkAssigneeIds);
                         }
 
                         // Set custom field values

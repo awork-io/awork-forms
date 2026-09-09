@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
+import { MultiSearchableSelect } from '@/components/ui/multi-searchable-select';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -45,7 +46,7 @@ export interface AworkIntegrationConfig {
   taskListId: string | null;
   taskStatusId: string | null;
   typeOfWorkId: string | null;
-  assigneeId: string | null;
+  assigneeIds: string[];
   isPriority: boolean;
   taskTag: string | null;
   taskFieldMappings: FieldMapping[];
@@ -187,7 +188,7 @@ export function AworkIntegrationSettings({
       taskListId: null,
       taskStatusId: null,
       typeOfWorkId: null,
-      assigneeId: null,
+      assigneeIds: [],
       isPriority: false,
       taskTag: null,
       taskFieldMappings: [],
@@ -233,10 +234,10 @@ export function AworkIntegrationSettings({
     }));
   };
 
-  const handleAssigneeChange = (assigneeId: string) => {
+  const handleAssigneesChange = (assigneeIds: string[]) => {
     onChange((prev) => ({
       ...prev,
-      assigneeId: assigneeId === 'none' ? null : assigneeId,
+      assigneeIds,
     }));
   };
 
@@ -282,9 +283,9 @@ export function AworkIntegrationSettings({
   const typeOfWorkMissing = Boolean(config.typeOfWorkId) &&
     !isLoadingTaskData &&
     !typesOfWork.some((typeOfWork) => typeOfWork.id === config.typeOfWorkId);
-  const assigneeMissing = Boolean(config.assigneeId) &&
+  const assigneeMissing = config.assigneeIds.length > 0 &&
     !isLoadingTaskData &&
-    !users.some((user) => user.id === config.assigneeId);
+    config.assigneeIds.some((assigneeId) => !users.some((user) => user.id === assigneeId));
 
   const hasLimitedAworkAccess =
     projectMissing ||
@@ -373,7 +374,7 @@ export function AworkIntegrationSettings({
         </div>
       ),
     })),
-    config.assigneeId,
+    config.assigneeIds,
     t('aworkIntegration.task.configuredAssigneeUnavailable'),
     t('aworkIntegration.unavailableSelection')
   );
@@ -563,14 +564,14 @@ export function AworkIntegrationSettings({
                       {t('aworkIntegration.task.loadingUsers')}
                     </div>
                 ) : (
-                  <SearchableSelect
+                  <MultiSearchableSelect
                       options={assigneeOptions}
-                      value={config.assigneeId}
-                      onValueChange={handleAssigneeChange}
+                      values={config.assigneeIds}
+                      onValuesChange={handleAssigneesChange}
                       placeholder={t('aworkIntegration.task.selectAssignee')}
                       searchPlaceholder={t('aworkIntegration.task.searchUsers')}
                       emptyText={t('aworkIntegration.task.noUsersFound')}
-                      clearable
+                      removeLabel={t('aworkIntegration.task.removeAssignee')}
                     />
                   )}
                   {assigneeMissing && (
@@ -709,21 +710,25 @@ function getAworkLoadIssue(error: Error): AworkLoadIssue {
 
 function withConfiguredFallback(
   options: SearchableSelectOption[],
-  selectedValue: string | null,
+  selectedValue: string | string[] | null,
   fallbackLabel: string,
   fallbackSecondaryLabel: string
 ) {
-  if (!selectedValue || options.some((option) => option.value === selectedValue)) {
+  const selectedValues = (Array.isArray(selectedValue) ? selectedValue : [selectedValue]).filter(
+    (value): value is string => Boolean(value)
+  );
+  const missingValues = selectedValues.filter((value) => !options.some((option) => option.value === value));
+  if (missingValues.length === 0) {
     return options;
   }
 
   return [
     ...options,
-    {
-      value: selectedValue,
+    ...missingValues.map((value) => ({
+      value,
       label: fallbackLabel,
       secondaryLabel: fallbackSecondaryLabel,
-    },
+    })),
   ];
 }
 
@@ -735,7 +740,7 @@ export function parseAworkConfig(
   taskListId: string | null | undefined,
   taskStatusId: string | null | undefined,
   typeOfWorkId: string | null | undefined,
-  assigneeId: string | null | undefined,
+  assigneeIds: string[] | null | undefined,
   isPriority: boolean | null | undefined,
   taskTag: string | null | undefined,
   fieldMappingsJson: string | null | undefined
@@ -760,7 +765,7 @@ export function parseAworkConfig(
     taskListId: taskListId || null,
     taskStatusId: taskStatusId || null,
     typeOfWorkId: typeOfWorkId || null,
-    assigneeId: assigneeId || null,
+    assigneeIds: assigneeIds ?? [],
     isPriority: isPriority || false,
     taskTag: taskTag ?? null,
     taskFieldMappings,
@@ -776,7 +781,7 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
   aworkTaskListId: string | null;
   aworkTaskStatusId: string | null;
   aworkTypeOfWorkId: string | null;
-  aworkAssigneeId: string | null;
+  aworkAssigneeIds: string[];
   aworkTaskIsPriority: boolean | null;
   aworkTaskTag: string | null;
   fieldMappingsJson: string | null;
@@ -792,7 +797,7 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
     aworkTaskListId: config.taskListId,
     aworkTaskStatusId: config.taskStatusId,
     aworkTypeOfWorkId: config.typeOfWorkId,
-    aworkAssigneeId: config.assigneeId,
+    aworkAssigneeIds: config.assigneeIds,
     aworkTaskIsPriority: config.isPriority ?? null,
     aworkTaskTag: normalizedTaskTag ? normalizedTaskTag : null,
     fieldMappingsJson: (hasTaskMappings || hasProjectMappings)
