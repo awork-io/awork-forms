@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { TFunction } from 'i18next';
-import { type FormField, getRatingMax } from '@/lib/form-types';
-import { Star } from 'lucide-react';
+import type { FormField } from '@/lib/form-types';
+import { RatingInput } from '@/components/public-form/RatingInput';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -28,7 +28,6 @@ export function PublicFormField({
   t,
 }: PublicFormFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
-  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fieldTranslation = getFieldTranslation(field, languageKeys);
   const fieldLabel = fieldTranslation?.label || field.label;
@@ -105,14 +104,6 @@ export function PublicFormField({
         ? selectedValues.filter((item) => item !== optionValue)
         : [...selectedValues, optionValue]
     );
-  };
-  const ratingMax = getRatingMax(field);
-  const ratingValue = typeof value === 'number' && Number.isInteger(value) ? value : 0;
-  const ratingMinLabel = fieldTranslation?.ratingMinLabel || field.ratingMinLabel;
-  const ratingMaxLabel = fieldTranslation?.ratingMaxLabel || field.ratingMaxLabel;
-  const selectRating = (rating: number) => {
-    // Clicking the current rating clears it again (optional fields can be reset)
-    onChange(rating === ratingValue ? '' : rating);
   };
 
   return (
@@ -279,7 +270,6 @@ export function PublicFormField({
 
         {field.type === 'rating' ? (
           <div
-            className="space-y-2"
             onFocus={() => setIsFocused(true)}
             onBlur={(event) => {
               if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -287,73 +277,16 @@ export function PublicFormField({
               }
             }}
           >
-            <div
-              role="radiogroup"
-              aria-labelledby={`${field.id}-label`}
-              className={cn(
-                'flex flex-wrap gap-1.5 rounded-xl border-2 border-transparent p-1 transition-all duration-200',
-                hasError && 'border-red-300'
-              )}
-              onMouseLeave={() => setHoveredRating(null)}
-            >
-              {Array.from({ length: ratingMax }, (_, index) => index + 1).map((rating) => {
-                const isSelected = rating === ratingValue;
-                const isActive = hoveredRating !== null ? rating <= hoveredRating : rating <= ratingValue;
-                const ariaLabel = t('publicForm.rating.optionLabel', { value: rating, max: ratingMax });
-                if (field.ratingStyle === 'numbers') {
-                  return (
-                    <button
-                      key={rating}
-                      type="button"
-                      role="radio"
-                      aria-checked={isSelected}
-                      aria-label={ariaLabel}
-                      onClick={() => selectRating(rating)}
-                      onMouseEnter={() => setHoveredRating(rating)}
-                      className={cn(
-                        'flex h-11 min-w-11 flex-1 items-center justify-center rounded-xl border-2 px-2 text-base font-semibold transition-all duration-200 outline-none',
-                        isSelected
-                          ? 'border-blue-500 bg-blue-500 text-white shadow-[0_0_0_3px_rgba(77,154,255,0.16)]'
-                          : isActive
-                            ? 'border-blue-300 bg-blue-50 text-blue-700'
-                            : 'border-gray-200 bg-white text-gray-600 hover:border-blue-300',
-                        'focus-visible:border-blue-500 focus-visible:shadow-[0_0_0_3px_rgba(77,154,255,0.16)]'
-                      )}
-                    >
-                      {rating}
-                    </button>
-                  );
-                }
-                return (
-                  <button
-                    key={rating}
-                    type="button"
-                    role="radio"
-                    aria-checked={isSelected}
-                    aria-label={ariaLabel}
-                    onClick={() => selectRating(rating)}
-                    onMouseEnter={() => setHoveredRating(rating)}
-                    className={cn(
-                      'rounded-lg p-1 transition-transform duration-150 outline-none hover:scale-110',
-                      'focus-visible:shadow-[0_0_0_3px_rgba(77,154,255,0.25)]'
-                    )}
-                  >
-                    <Star
-                      className={cn(
-                        'h-8 w-8 transition-colors duration-150',
-                        isActive ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-gray-300'
-                      )}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-            {ratingMinLabel || ratingMaxLabel ? (
-              <div className="flex justify-between gap-4 px-1 text-xs text-gray-500">
-                <span>{ratingMinLabel}</span>
-                <span className="text-right">{ratingMaxLabel}</span>
-              </div>
-            ) : null}
+            <RatingInput
+              field={field}
+              value={value}
+              onChange={onChange}
+              hasError={hasError}
+              labelId={`${field.id}-label`}
+              minLabel={fieldTranslation?.ratingMinLabel || field.ratingMinLabel}
+              maxLabel={fieldTranslation?.ratingMaxLabel || field.ratingMaxLabel}
+              t={t}
+            />
           </div>
         ) : null}
 

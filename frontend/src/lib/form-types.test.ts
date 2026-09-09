@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createField, FIELD_TYPES, getRatingMax, isInputField, type FieldType } from './form-types';
+import { createField, FIELD_TYPES, getRatingMax, getRatingMin, getRatingSteps, isInputField, type FieldType } from './form-types';
 
 describe('FIELD_TYPES', () => {
   it('should contain all expected field types', () => {
@@ -155,5 +155,19 @@ describe('getRatingMax', () => {
     expect(getRatingMax({ ratingMax: 1 })).toBe(3);
     expect(getRatingMax({ ratingMax: 7 })).toBe(7);
     expect(getRatingMax({ ratingMax: 50 })).toBe(10);
+  });
+});
+
+describe('getRatingMin / getRatingSteps', () => {
+  it('starts at 1 by default and for star scales even when 0 is configured', () => {
+    expect(getRatingMin({})).toBe(1);
+    expect(getRatingMin({ ratingStyle: 'stars', ratingMin: 0 })).toBe(1);
+    expect(getRatingSteps({ ratingMax: 5 })).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it('supports a 0-based numeric scale (NPS)', () => {
+    expect(getRatingMin({ ratingStyle: 'numbers', ratingMin: 0 })).toBe(0);
+    expect(getRatingSteps({ ratingStyle: 'numbers', ratingMin: 0, ratingMax: 10 })).toHaveLength(11);
+    expect(getRatingSteps({ ratingStyle: 'numbers', ratingMin: 0, ratingMax: 10 })[0]).toBe(0);
   });
 });

@@ -41,6 +41,18 @@ export function getRatingMax(field: Pick<FormField, 'ratingMax'>): number {
   return Math.min(RATING_MAX_SCALE, Math.max(RATING_MIN_SCALE, value));
 }
 
+// Numeric scales may start at 0 (e.g. NPS 0-10); star scales always start at 1.
+// The backend mirrors this rule when validating submissions.
+export function getRatingMin(field: Pick<FormField, 'ratingMin' | 'ratingStyle'>): 0 | 1 {
+  return field.ratingStyle === 'numbers' && field.ratingMin === 0 ? 0 : 1;
+}
+
+export function getRatingSteps(field: Pick<FormField, 'ratingMax' | 'ratingMin' | 'ratingStyle'>): number[] {
+  const min = getRatingMin(field);
+  const max = getRatingMax(field);
+  return Array.from({ length: max - min + 1 }, (_, index) => min + index);
+}
+
 export interface FormField {
   id: string;
   type: FieldType;
@@ -51,7 +63,8 @@ export interface FormField {
   options?: SelectOption[]; // For select fields
   acceptedFileTypes?: string; // For file fields (e.g., ".pdf,.doc,.docx")
   maxFileSizeMB?: number; // For file fields
-  ratingMax?: number; // For rating fields (number of steps, 3-10)
+  ratingMax?: number; // For rating fields (highest value, 3-10)
+  ratingMin?: 0 | 1; // For rating fields (lowest value; 0 only for numeric style)
   ratingStyle?: RatingStyle; // For rating fields (stars or numeric scale)
   ratingMinLabel?: string; // For rating fields (label for lowest value)
   ratingMaxLabel?: string; // For rating fields (label for highest value)

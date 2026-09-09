@@ -1,4 +1,4 @@
-import { type FormField, getFieldTypeLabel, getRatingMax } from '@/lib/form-types';
+import { type FormField, getFieldTypeLabel, getRatingSteps } from '@/lib/form-types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -228,21 +228,20 @@ function FieldPreview({ field }: { field: FormField }) {
           </div>
         </div>
       );
-    case 'rating': {
-      const ratingMax = getRatingMax(field);
+    case 'rating':
       return (
         <div className="rounded-md border bg-muted/50 px-3 py-2 space-y-1.5 text-sm text-muted-foreground">
           <div className="flex flex-wrap items-center gap-1">
-            {Array.from({ length: ratingMax }, (_, index) =>
+            {getRatingSteps(field).map((step) =>
               field.ratingStyle === 'numbers' ? (
                 <span
-                  key={index}
+                  key={step}
                   className="flex h-6 min-w-6 items-center justify-center rounded-md border bg-background px-1 text-xs"
                 >
-                  {index + 1}
+                  {step}
                 </span>
               ) : (
-                <Star key={index} className="w-4 h-4" />
+                <Star key={step} className="w-4 h-4" />
               )
             )}
           </div>
@@ -254,7 +253,6 @@ function FieldPreview({ field }: { field: FormField }) {
           )}
         </div>
       );
-    }
     case 'checkbox':
       return (
         <div className="flex items-center gap-2">

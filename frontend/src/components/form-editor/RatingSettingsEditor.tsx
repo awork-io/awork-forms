@@ -4,6 +4,7 @@ import {
   RATING_MAX_SCALE,
   RATING_MIN_SCALE,
   getRatingMax,
+  getRatingMin,
 } from '@/lib/form-types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +25,7 @@ export function RatingSettingsEditor({ field, onUpdate }: RatingSettingsEditorPr
   const { t } = useTranslation();
   const ratingMax = getRatingMax(field);
   const ratingStyle: RatingStyle = field.ratingStyle === 'numbers' ? 'numbers' : 'stars';
+  const ratingMin = getRatingMin(field);
 
   return (
     <div className="space-y-4">
@@ -57,6 +59,23 @@ export function RatingSettingsEditor({ field, onUpdate }: RatingSettingsEditorPr
           </Select>
         </div>
       </div>
+      {ratingStyle === 'numbers' && (
+        <div className="space-y-2">
+          <Label htmlFor="rating-min">{t('fieldConfigDialog.ratingMin')}</Label>
+          <Select
+            value={String(ratingMin)}
+            onValueChange={(value) => onUpdate({ ratingMin: value === '0' ? 0 : 1 })}
+          >
+            <SelectTrigger id="rating-min">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">{t('fieldConfigDialog.ratingMinOne')}</SelectItem>
+              <SelectItem value="0">{t('fieldConfigDialog.ratingMinZero')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="rating-min-label">{t('fieldConfigDialog.ratingMinLabel')}</Label>

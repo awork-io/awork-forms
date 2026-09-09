@@ -317,7 +317,10 @@
     "ratingMinLabelPlaceholder": "z. B. Sehr unzufrieden",
     "ratingMaxLabelPlaceholder": "z. B. Sehr zufrieden",
     "ratingLabelOptional": "Optional",
-    "ratingLabelsHelp": "Optionale Beschriftungen, die unter der Skala angezeigt werden."
+    "ratingLabelsHelp": "Optionale Beschriftungen, die unter der Skala angezeigt werden.",
+    "ratingMin": "Niedrigster Wert",
+    "ratingMinOne": "1",
+    "ratingMinZero": "0 (z. B. NPS 0-10)"
   },
   "fieldConfigPanel": {
     "title": "Feldeinstellungen",

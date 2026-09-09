@@ -517,6 +517,102 @@ public class SubmissionProcessingTests
             body.Contains("\"numberValue\":4"));
     }
 
+    [Theory]
+    [InlineData("999")]
+    [InlineData("4.5")]
+    [InlineData("\"oops\"")]
+    [InlineData("0")]
+    public async Task SubmitForm_RatingOutsideConfiguredScale_ReturnsBadRequest(string ratingJson)
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new object[]
+        {
+            new { id = "field-rating", type = "rating", label = "Zufriedenheit", ratingMax = 5, ratingStyle = "stars" }
+        };
+
+        var createDto = new CreateFormDto
+        {
+            Name = "Rating Validation Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(new { taskFieldMappings = Array.Empty<object>(), projectFieldMappings = Array.Empty<object>() }),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var payload = new StringContent($"{{\"data\":{{\"field-rating\":{ratingJson}}}}}", System.Text.Encoding.UTF8, "application/json");
+        var submitResponse = await publicClient.PostAsync($"/api/f/{created!.PublicId}/submit", payload);
+
+        Assert.Equal(HttpStatusCode.BadRequest, submitResponse.StatusCode);
+        var body = await submitResponse.Content.ReadAsStringAsync();
+        Assert.Contains("between 1 and 5", body);
+    }
+
+    [Fact]
+    public async Task SubmitForm_ZeroBasedNumericRating_AcceptsZero()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new object[]
+        {
+            new { id = "field-name", type = "text", label = "Name" },
+            new { id = "field-nps", type = "rating", label = "NPS", ratingMin = 0, ratingMax = 10, ratingStyle = "numbers" }
+        };
+
+        var mappings = new
+        {
+            taskFieldMappings = new[]
+            {
+                new { formFieldId = "field-name", aworkField = "name" },
+                new { formFieldId = "field-nps", aworkField = "description" }
+            },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createDto = new CreateFormDto
+        {
+            Name = "NPS Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        using var publicClient = _factory.CreateClient();
+        var submitDto = new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object>
+            {
+                ["field-name"] = "NPS Antwort",
+                ["field-nps"] = 0
+            }
+        };
+
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", submitDto);
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var taskBodies = await GetAworkRequestBodiesAsync("/api/v1/tasks", "POST");
+        var taskBody = Assert.Single(taskBodies, body => body.Contains("\"name\":\"NPS Antwort\""));
+        Assert.Equal("0/10", GetJsonStringProperty(taskBody, "description"));
+    }
+
     [Fact]
     public async Task SubmitForm_MultipleProjectDescriptionMappings_AppendsStructuredSections()
     {

@@ -317,7 +317,10 @@
     "ratingMinLabelPlaceholder": "e.g. Very dissatisfied",
     "ratingMaxLabelPlaceholder": "e.g. Very satisfied",
     "ratingLabelOptional": "Optional",
-    "ratingLabelsHelp": "Optional labels shown below the scale."
+    "ratingLabelsHelp": "Optional labels shown below the scale.",
+    "ratingMin": "Lowest value",
+    "ratingMinOne": "1",
+    "ratingMinZero": "0 (e.g. NPS 0-10)"
   },
   "fieldConfigPanel": {
     "title": "Field Settings",

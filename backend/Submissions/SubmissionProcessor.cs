@@ -279,7 +279,7 @@ public class SubmissionProcessor
         catch { return new(); }
     }
 
-    private static List<FormFieldInfo> ParseFormFields(string fieldsJson)
+    internal static List<FormFieldInfo> ParseFormFields(string fieldsJson)
     {
         try
         {
@@ -475,7 +475,7 @@ public class SubmissionProcessor
 
         var formField = formFields.FirstOrDefault(f => f.Id == fieldId);
         if (formField?.Type == "rating")
-            return FormatRatingDisplayValue(formField, mappedValue);
+            return RatingScale.FormatDisplayValue(formField, mappedValue);
 
         if ((formField?.Type != "select" && formField?.Type != "multiselect") || formField.Options == null || formField.Options.Count == 0)
             return mappedValue;
@@ -487,15 +487,6 @@ public class SubmissionProcessor
 
         // For option fields we map the stable option value back to the primary label.
         return MapOptionValueToLabel(formField.Options, mappedValue);
-    }
-
-    // Ratings are stored as plain numbers; for human-readable targets we add the scale ("4/5").
-    private static string FormatRatingDisplayValue(FormFieldInfo formField, string rawValue)
-    {
-        if (formField.RatingMax is not int ratingMax || ratingMax <= 0)
-            return rawValue;
-
-        return $"{rawValue}/{ratingMax}";
     }
 
     private static string GetJsonElementDisplayValue(JsonElement element)
@@ -541,7 +532,7 @@ public class SubmissionProcessor
 
         var formField = formFields.FirstOrDefault(f => f.Id == fieldId);
         if (formField?.Type == "rating")
-            return mappedValues.Select(v => FormatRatingDisplayValue(formField, v)).ToList();
+            return mappedValues.Select(v => RatingScale.FormatDisplayValue(formField, v)).ToList();
 
         if ((formField?.Type != "select" && formField?.Type != "multiselect") || formField.Options == null || formField.Options.Count == 0)
             return mappedValues;
@@ -805,6 +796,8 @@ internal class FormFieldInfo
     public string Label { get; set; } = string.Empty;
     public List<FormFieldOptionInfo>? Options { get; set; }
     public int? RatingMax { get; set; }
+    public int? RatingMin { get; set; }
+    public string? RatingStyle { get; set; }
 }
 
 internal class FormFieldOptionInfo
