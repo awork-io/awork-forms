@@ -364,6 +364,10 @@ export function isFileValue(value: unknown): value is FileValue {
   );
 }
 
+export function isFileValueArray(value: unknown): value is FileValue[] {
+  return Array.isArray(value) && value.every(isFileValue);
+}
+
 // Format file size for display
 export function formatFileSize(bytes?: number): string {
   if (!bytes) return '';
