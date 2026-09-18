@@ -624,8 +624,10 @@
       "fileTypes": "PNG, JPG, PDF up to 10MB",
       "anyType": "Any supported file type",
       "maxSizeHint": "(max {{maxSizeMb}} MB)",
+      "maxFilesHint": "Up to {{maxFiles}} files",
       "invalidTypeError": "This file type is not allowed for this field.",
-      "maxSizeError": "The file is too large. Maximum allowed: {{maxSizeMb}} MB."
+      "maxSizeError": "The file is too large. Maximum allowed: {{maxSizeMb}} MB.",
+      "maxFilesError": "You can upload up to {{maxFiles}} files."
     },
     "logoAlt": "Logo",
     "submit": "Submit",

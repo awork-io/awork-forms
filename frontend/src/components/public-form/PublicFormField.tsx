@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { TFunction } from 'i18next';
-import type { FormField } from '@/lib/form-types';
+import { MAX_FILES_PER_FIELD, type FormField } from '@/lib/form-types';
 import { RatingInput } from '@/components/public-form/RatingInput';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -40,6 +40,9 @@ export function PublicFormField({
     : '';
   const maxFileSizeHint = field.type === 'file'
     ? t('publicForm.fileUpload.maxSizeHint', { maxSizeMb: field.maxFileSizeMB || 10 })
+    : '';
+  const maxFilesHint = field.type === 'file'
+    ? t('publicForm.fileUpload.maxFilesHint', { maxFiles: MAX_FILES_PER_FIELD })
     : '';
   const selectedFiles = field.type === 'file'
     ? Array.isArray(value)
@@ -409,7 +412,7 @@ export function PublicFormField({
                 <span className="font-medium text-blue-600">{t('publicForm.fileUpload.clickToUpload')}</span>{' '}
                 {t('publicForm.fileUpload.dragAndDrop')}
               </p>
-              <p className="text-xs text-gray-400">{fileTypesHint} {maxFileSizeHint}</p>
+              <p className="text-xs text-gray-400">{fileTypesHint} {maxFileSizeHint} {maxFilesHint}</p>
             </div>
           </div>
         ) : null}

@@ -564,6 +564,45 @@ public class SubmissionProcessingTests
     }
 
     [Fact]
+    public async Task SubmitForm_MoreThanTwentyFiles_ReturnsBadRequest()
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+
+        var fields = new object[]
+        {
+            new { id = "field-files", type = "file", label = "Attachments" }
+        };
+        var createDto = new CreateFormDto
+        {
+            Name = "File Count Validation Form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(new { taskFieldMappings = Array.Empty<object>(), projectFieldMappings = Array.Empty<object>() }),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            IsActive = true
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(created);
+
+        var files = Enumerable.Range(1, 21)
+            .Select(index => new { fileName = $"file-{index}.pdf", fileUrl = $"/api/files/{Guid.NewGuid()}", fileSize = 10 })
+            .ToArray();
+        using var publicClient = _factory.CreateClient();
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{created!.PublicId}/submit", new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object> { ["field-files"] = files }
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, submitResponse.StatusCode);
+        Assert.Contains("at most 20 files", await submitResponse.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task SubmitForm_ZeroBasedNumericRating_AcceptsZero()
     {
         var (_, token) = await _factory.SeedUserAsync();

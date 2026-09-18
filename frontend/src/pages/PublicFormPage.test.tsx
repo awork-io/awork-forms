@@ -72,4 +72,26 @@ describe('PublicFormPage file uploads', () => {
       ],
     });
   });
+
+  it('rejects more files than the public rate limit safely supports', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <MemoryRouter initialEntries={['/f/form-id']}>
+        <Routes>
+          <Route path="/f/:publicId" element={<PublicFormPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByText('Briefing');
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const files = Array.from({ length: 21 }, (_, index) => new File(['file'], `file-${index}.pdf`));
+
+    await user.upload(input, files);
+    await user.click(screen.getByRole('button', { name: 'publicForm.submit' }));
+
+    expect(await screen.findByText('publicForm.fileUpload.maxFilesError')).toBeInTheDocument();
+    expect(mocks.uploadPublicFile).not.toHaveBeenCalled();
+    expect(mocks.submitPublicForm).not.toHaveBeenCalled();
+  });
 });

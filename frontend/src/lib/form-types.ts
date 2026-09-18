@@ -411,6 +411,8 @@ export interface FileValue {
   fileSize?: number;
 }
 
+export const MAX_FILES_PER_FIELD = 20;
+
 // Check if a value is a file object (uploaded file metadata)
 export function isFileValue(value: unknown): value is FileValue {
   return (

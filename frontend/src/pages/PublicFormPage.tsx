@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { PublicForm, SubmissionResponse } from '@/lib/api';
-import { isInputField, type FormField } from '@/lib/form-types';
+import { isInputField, MAX_FILES_PER_FIELD, type FormField } from '@/lib/form-types';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -102,6 +102,11 @@ export function PublicFormPage() {
       }
 
       if (field.type === 'file' && Array.isArray(value)) {
+        if (value.length > MAX_FILES_PER_FIELD) {
+          errors[field.id] = t('publicForm.fileUpload.maxFilesError', { maxFiles: MAX_FILES_PER_FIELD });
+          return;
+        }
+
         const maxFileSizeMb = field.maxFileSizeMB || 10;
         if (value.some((file) => file instanceof File && file.size > maxFileSizeMb * 1024 * 1024)) {
           errors[field.id] = t('publicForm.fileUpload.maxSizeError', { maxSizeMb: maxFileSizeMb });

@@ -29,6 +29,10 @@ export function SubmissionDetailDialog({
   const { t } = useTranslation();
 
   const renderFieldValue = (value: unknown): ReactNode => {
+    if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
+      return <span className="text-muted-foreground italic">{t('submissions.emptyValue')}</span>;
+    }
+
     if (isFileValueArray(value)) {
       return <div className="space-y-2">{value.map((file) => <div key={file.fileUrl}>{renderFieldValue(file)}</div>)}</div>;
     }
@@ -73,10 +77,6 @@ export function SubmissionDetailDialog({
           {value ? t('common.yes') : t('common.no')}
         </span>
       );
-    }
-
-    if (value === null || value === undefined || value === '') {
-      return <span className="text-muted-foreground italic">{t('submissions.emptyValue')}</span>;
     }
 
     if (Array.isArray(value)) {
