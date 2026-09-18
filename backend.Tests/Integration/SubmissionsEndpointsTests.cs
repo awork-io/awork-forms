@@ -125,7 +125,7 @@ public class SubmissionsEndpointsTests
             AworkTaskListId = created.AworkTaskListId,
             AworkTaskStatusId = created.AworkTaskStatusId,
             AworkTypeOfWorkId = created.AworkTypeOfWorkId,
-            AworkAssigneeId = created.AworkAssigneeId,
+            AworkAssigneeIds = created.AworkAssigneeIds,
             AworkTaskIsPriority = created.AworkTaskIsPriority,
             AworkTaskTag = created.AworkTaskTag,
             FieldMappingsJson = JsonSerializer.Serialize(updatedMappings),

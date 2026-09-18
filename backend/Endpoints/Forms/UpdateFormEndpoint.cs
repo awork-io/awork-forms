@@ -17,11 +17,10 @@ public class UpdateFormEndpoint : IEndpoint
             try
             {
                 using var requestBody = await JsonDocument.ParseAsync(context.Request.Body);
-                var hasAworkAssigneeId = requestBody.RootElement.TryGetProperty("aworkAssigneeId", out _);
                 var dto = requestBody.RootElement.Deserialize<UpdateFormDto>(RequestJsonOptions);
                 if (dto == null) return Results.BadRequest(new { error = "Invalid request body" });
 
-                var form = formsService.UpdateForm(id, dto, userId.Value, hasAworkAssigneeId);
+                var form = formsService.UpdateForm(id, dto, userId.Value);
                 if (form == null) return Results.NotFound(new { error = "Form not found" });
                 return Results.Ok(form);
             }

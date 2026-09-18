@@ -85,7 +85,7 @@ public class FormsService
             AworkTaskListId = dto.AworkTaskListId,
             AworkTaskStatusId = dto.AworkTaskStatusId,
             AworkTypeOfWorkId = dto.AworkTypeOfWorkId,
-            AworkAssigneeId = dto.AworkAssigneeId,
+            AworkAssigneeIds = NormalizeAssigneeIds(dto.AworkAssigneeIds),
             AworkTaskIsPriority = dto.AworkTaskIsPriority,
             AworkTaskTag = dto.AworkTaskTag,
             FieldMappingsJson = dto.FieldMappingsJson,
@@ -133,7 +133,7 @@ public class FormsService
             AworkTaskListId = source.AworkTaskListId,
             AworkTaskStatusId = source.AworkTaskStatusId,
             AworkTypeOfWorkId = source.AworkTypeOfWorkId,
-            AworkAssigneeId = source.AworkAssigneeId,
+            AworkAssigneeIds = source.AworkAssigneeIds.ToList(),
             AworkTaskIsPriority = source.AworkTaskIsPriority,
             AworkTaskTag = source.AworkTaskTag,
             FieldMappingsJson = source.FieldMappingsJson,
@@ -174,9 +174,8 @@ public class FormsService
         return $"{baseName} {counter}";
     }
 
-    public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId, bool hasAworkAssigneeId = false)
+    public FormDetailDto? UpdateForm(int formId, UpdateFormDto dto, Guid userId)
     {
-        _ = hasAworkAssigneeId;
         using var db = _dbFactory.CreateDbContext();
         var workspaceId = GetWorkspaceId(db, userId);
         if (workspaceId == null) return null;
@@ -198,7 +197,7 @@ public class FormsService
         form.AworkTaskListId = dto.AworkTaskListId;
         form.AworkTaskStatusId = dto.AworkTaskStatusId;
         form.AworkTypeOfWorkId = dto.AworkTypeOfWorkId;
-        form.AworkAssigneeId = dto.AworkAssigneeId;
+        form.AworkAssigneeIds = NormalizeAssigneeIds(dto.AworkAssigneeIds);
         form.AworkTaskIsPriority = dto.AworkTaskIsPriority;
         form.AworkTaskTag = string.IsNullOrWhiteSpace(dto.AworkTaskTag) ? null : dto.AworkTaskTag.Trim();
         form.FieldMappingsJson = string.IsNullOrWhiteSpace(dto.FieldMappingsJson) ? null : dto.FieldMappingsJson;
@@ -374,7 +373,7 @@ public class FormsService
         AworkTaskListId = form.AworkTaskListId,
         AworkTaskStatusId = form.AworkTaskStatusId,
         AworkTypeOfWorkId = form.AworkTypeOfWorkId,
-        AworkAssigneeId = form.AworkAssigneeId,
+        AworkAssigneeIds = form.AworkAssigneeIds.ToList(),
         AworkTaskIsPriority = form.AworkTaskIsPriority,
         AworkTaskTag = form.AworkTaskTag,
         FieldMappingsJson = form.FieldMappingsJson,
@@ -513,5 +512,10 @@ public class FormsService
         {
             return "Type of work is required when creating tasks. Set a default or map a form field to it.";
         }
+    }
+
+    private static List<Guid> NormalizeAssigneeIds(IEnumerable<Guid>? assigneeIds)
+    {
+        return (assigneeIds ?? []).Where(id => id != Guid.Empty).Distinct().ToList();
     }
 }

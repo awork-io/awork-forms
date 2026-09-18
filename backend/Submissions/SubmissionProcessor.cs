@@ -119,9 +119,9 @@ public class SubmissionProcessor
                         result.AworkTaskId = task.Id;
 
                         // Assign user to task (separate API call)
-                        if (form.AworkAssigneeId != null)
+                        if (form.AworkAssigneeIds.Count > 0)
                         {
-                            await _aworkService.AssignUserToTask(userId.Value, task.Id, form.AworkAssigneeId.Value);
+                            await _aworkService.AssignUsersToTask(userId.Value, task.Id, form.AworkAssigneeIds);
                         }
 
                         // Set custom field values
@@ -140,6 +140,12 @@ public class SubmissionProcessor
                         if (tags.Count > 0)
                         {
                             await _aworkService.AddTagsToTask(userId.Value, task.Id, tags.Distinct().ToList());
+                        }
+
+                        var checklistItems = GetChecklistItemsFromMappings(formData, formFields, fieldMappings.TaskFieldMappings);
+                        if (checklistItems.Count > 0)
+                        {
+                            await _aworkService.AddChecklistItemsToTask(userId.Value, task.Id, checklistItems);
                         }
 
                         await AttachFilesToTask(userId.Value, task.Id, formData, formFields);
@@ -273,7 +279,7 @@ public class SubmissionProcessor
         catch { return new(); }
     }
 
-    private static List<FormFieldInfo> ParseFormFields(string fieldsJson)
+    internal static List<FormFieldInfo> ParseFormFields(string fieldsJson)
     {
         try
         {
@@ -373,6 +379,7 @@ public class SubmissionProcessor
                     break;
                 case "typeOfWork":
                 case "tags":
+                case "checklist":
                     // Handled via dedicated processing paths.
                     break;
             }
@@ -467,6 +474,9 @@ public class SubmissionProcessor
             return mappedValue;
 
         var formField = formFields.FirstOrDefault(f => f.Id == fieldId);
+        if (formField?.Type == "rating")
+            return RatingScale.FormatDisplayValue(formField, mappedValue);
+
         if ((formField?.Type != "select" && formField?.Type != "multiselect") || formField.Options == null || formField.Options.Count == 0)
             return mappedValue;
 
@@ -521,6 +531,9 @@ public class SubmissionProcessor
             return mappedValues;
 
         var formField = formFields.FirstOrDefault(f => f.Id == fieldId);
+        if (formField?.Type == "rating")
+            return mappedValues.Select(v => RatingScale.FormatDisplayValue(formField, v)).ToList();
+
         if ((formField?.Type != "select" && formField?.Type != "multiselect") || formField.Options == null || formField.Options.Count == 0)
             return mappedValues;
 
@@ -753,6 +766,27 @@ public class SubmissionProcessor
 
         return tags.Distinct().ToList();
     }
+
+    private static List<string> GetChecklistItemsFromMappings(Dictionary<string, object?> formData, List<FormFieldInfo> formFields, List<FieldMapping> mappings)
+    {
+        var items = new List<string>();
+
+        foreach (var mapping in mappings.Where(m => string.Equals(m.AworkField, "checklist", StringComparison.OrdinalIgnoreCase)))
+        {
+            var values = GetMappedValues(formData, formFields, mapping.FormFieldId, mapSelectToLabel: true);
+            if (values == null || values.Count == 0)
+                continue;
+
+            // Prefix each item with the question label so the origin stays visible on the task.
+            var label = formFields.FirstOrDefault(f => f.Id == mapping.FormFieldId)?.Label?.Trim();
+            items.AddRange(values
+                .Select(v => v.Trim())
+                .Where(v => !string.IsNullOrEmpty(v))
+                .Select(v => string.IsNullOrEmpty(label) ? v : $"{label}: {v}"));
+        }
+
+        return items.Distinct().ToList();
+    }
 }
 
 internal class FormFieldInfo
@@ -761,6 +795,9 @@ internal class FormFieldInfo
     public string Type { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
     public List<FormFieldOptionInfo>? Options { get; set; }
+    public int? RatingMax { get; set; }
+    public int? RatingMin { get; set; }
+    public string? RatingStyle { get; set; }
 }
 
 internal class FormFieldOptionInfo

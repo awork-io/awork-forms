@@ -77,7 +77,7 @@ export function FormEditorPage() {
     taskListId: null,
     taskStatusId: null,
     typeOfWorkId: null,
-    assigneeId: null,
+    assigneeIds: [],
     isPriority: false,
     taskTag: null,
     taskFieldMappings: [],
@@ -135,7 +135,7 @@ export function FormEditorPage() {
         data.aworkTaskListId,
         data.aworkTaskStatusId,
         data.aworkTypeOfWorkId,
-        data.aworkAssigneeId,
+        data.aworkAssigneeIds,
         data.aworkTaskIsPriority,
         data.aworkTaskTag,
         data.fieldMappingsJson
@@ -336,15 +336,31 @@ export function FormEditorPage() {
   const handleFieldDuplicate = (fieldId: string) => {
     const field = fields.find((f) => f.id === fieldId);
     if (field) {
+      const duplicatedFieldId = crypto.randomUUID();
       const newField = {
         ...field,
-        id: crypto.randomUUID(),
+        id: duplicatedFieldId,
         label: `${field.label} (${t('formEditor.copySuffix')})`,
       };
       const index = fields.findIndex((f) => f.id === fieldId);
       const newFields = [...fields];
       newFields.splice(index + 1, 0, newField);
       setFields(newFields);
+      setAworkConfig((prev) => ({
+        ...prev,
+        taskFieldMappings: [
+          ...prev.taskFieldMappings,
+          ...prev.taskFieldMappings
+            .filter((mapping) => mapping.formFieldId === fieldId)
+            .map((mapping) => ({ ...mapping, formFieldId: duplicatedFieldId })),
+        ],
+        projectFieldMappings: [
+          ...prev.projectFieldMappings,
+          ...prev.projectFieldMappings
+            .filter((mapping) => mapping.formFieldId === fieldId)
+            .map((mapping) => ({ ...mapping, formFieldId: duplicatedFieldId })),
+        ],
+      }));
       setSelectedFieldId(newField.id);
     }
   };

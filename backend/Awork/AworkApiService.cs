@@ -212,9 +212,33 @@ public class AworkApiService
     }
 
     /// <summary>
+    /// Adds checklist items to a task. The awork API accepts one item per request.
+    /// </summary>
+    public async Task<bool> AddChecklistItemsToTask(Guid userId, Guid taskId, List<string> items)
+    {
+        if (items.Count == 0) return true;
+
+        var allSucceeded = true;
+        for (var i = 0; i < items.Count; i++)
+        {
+            try
+            {
+                var body = new { name = items[i].Trim(), isDone = false, order = (double)i };
+                await MakeAworkPostRequest<object>(userId, $"tasks/{taskId}/checklistitems", body);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to add checklist item to task {taskId}: {ex.Message}");
+                allSucceeded = false;
+            }
+        }
+        return allSucceeded;
+    }
+
+    /// <summary>
     /// Assigns a user to a task.
     /// </summary>
-    public async Task<bool> AssignUserToTask(Guid userId, Guid taskId, Guid assigneeUserId)
+    public async Task<bool> AssignUsersToTask(Guid userId, Guid taskId, IReadOnlyCollection<Guid> assigneeUserIds)
     {
         try
         {
@@ -223,7 +247,7 @@ public class AworkApiService
                 return false;
 
             // awork API expects an array of user ID strings
-            var body = new[] { assigneeUserId.ToString() };
+            var body = assigneeUserIds.Select(id => id.ToString()).ToArray();
             var jsonBody = JsonSerializer.Serialize(body);
             using var response = await SendAuthorizedRequest(userId, token =>
             {
@@ -236,7 +260,7 @@ public class AworkApiService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to assign user {assigneeUserId} to task {taskId}: {ex.Message}");
+            Console.WriteLine($"Failed to assign users {string.Join(", ", assigneeUserIds)} to task {taskId}: {ex.Message}");
             return false;
         }
     }

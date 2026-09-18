@@ -8,6 +8,7 @@ export type FieldType =
   | 'textarea'
   | 'select'
   | 'multiselect'
+  | 'rating'
   | 'checkbox'
   | 'date'
   | 'file'
@@ -23,6 +24,33 @@ export interface FieldTranslation {
   label?: string;
   placeholder?: string;
   options?: Record<string, string>;
+  ratingMinLabel?: string;
+  ratingMaxLabel?: string;
+}
+
+export type RatingStyle = 'stars' | 'numbers';
+
+export const RATING_MIN_SCALE = 3;
+export const RATING_MAX_SCALE = 10;
+export const RATING_DEFAULT_SCALE = 5;
+
+// Clamp the configured rating scale to a supported range (fallback: 5 steps)
+export function getRatingMax(field: Pick<FormField, 'ratingMax'>): number {
+  const value = Number(field.ratingMax);
+  if (!Number.isInteger(value)) return RATING_DEFAULT_SCALE;
+  return Math.min(RATING_MAX_SCALE, Math.max(RATING_MIN_SCALE, value));
+}
+
+// Numeric scales may start at 0 (e.g. NPS 0-10); star scales always start at 1.
+// The backend mirrors this rule when validating submissions.
+export function getRatingMin(field: Pick<FormField, 'ratingMin' | 'ratingStyle'>): 0 | 1 {
+  return field.ratingStyle === 'numbers' && field.ratingMin === 0 ? 0 : 1;
+}
+
+export function getRatingSteps(field: Pick<FormField, 'ratingMax' | 'ratingMin' | 'ratingStyle'>): number[] {
+  const min = getRatingMin(field);
+  const max = getRatingMax(field);
+  return Array.from({ length: max - min + 1 }, (_, index) => min + index);
 }
 
 export interface FormField {
@@ -35,6 +63,11 @@ export interface FormField {
   options?: SelectOption[]; // For select fields
   acceptedFileTypes?: string; // For file fields (e.g., ".pdf,.doc,.docx")
   maxFileSizeMB?: number; // For file fields
+  ratingMax?: number; // For rating fields (highest value, 3-10)
+  ratingMin?: 0 | 1; // For rating fields (lowest value; 0 only for numeric style)
+  ratingStyle?: RatingStyle; // For rating fields (stars or numeric scale)
+  ratingMinLabel?: string; // For rating fields (label for lowest value)
+  ratingMaxLabel?: string; // For rating fields (label for highest value)
 }
 
 export interface FormFieldWithPosition extends FormField {
@@ -85,6 +118,12 @@ export const FIELD_TYPES: FieldTypeInfo[] = [
     label: 'Multi Select',
     icon: 'ListChecks',
     description: 'Select multiple options',
+  },
+  {
+    type: 'rating',
+    label: 'Rating',
+    icon: 'Star',
+    description: 'Star or numeric rating scale',
   },
   {
     type: 'checkbox',
@@ -152,6 +191,11 @@ const FIELD_TYPE_TRANSLATION_KEYS: Record<
     descriptionKey: 'fieldTypes.multiselect.description',
     defaultLabelKey: 'fieldDefaults.multiselect',
   },
+  rating: {
+    labelKey: 'fieldTypes.rating.label',
+    descriptionKey: 'fieldTypes.rating.description',
+    defaultLabelKey: 'fieldDefaults.rating',
+  },
   checkbox: {
     labelKey: 'fieldTypes.checkbox.label',
     descriptionKey: 'fieldTypes.checkbox.description',
@@ -212,6 +256,11 @@ const FIELD_TYPE_FALLBACKS: Record<
     label: 'Multi Select',
     description: 'Select multiple options',
     defaultLabel: 'Select Options',
+  },
+  rating: {
+    label: 'Rating',
+    description: 'Star or numeric rating scale',
+    defaultLabel: 'How satisfied are you?',
   },
   checkbox: {
     label: 'Checkbox',
@@ -291,6 +340,14 @@ export function createField(type: FieldType, t?: TFunction): FormField {
     };
   }
 
+  if (type === 'rating') {
+    return {
+      ...baseField,
+      ratingMax: RATING_DEFAULT_SCALE,
+      ratingStyle: 'stars',
+    };
+  }
+
   if (type === 'file') {
     return {
       ...baseField,
@@ -320,6 +377,8 @@ function getDefaultLabel(type: FieldType, t?: TFunction): string {
       return 'Select Option';
     case 'multiselect':
       return 'Select Options';
+    case 'rating':
+      return 'How satisfied are you?';
     case 'checkbox':
       return 'I agree';
     case 'date':

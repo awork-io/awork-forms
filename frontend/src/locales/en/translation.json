@@ -224,6 +224,10 @@
       "label": "Multi Select",
       "description": "Select multiple options"
     },
+    "rating": {
+      "label": "Rating",
+      "description": "Star or numeric rating scale"
+    },
     "checkbox": {
       "label": "Checkbox",
       "description": "Yes/No checkbox"
@@ -252,6 +256,7 @@
     "textarea": "Description",
     "select": "Select Option",
     "multiselect": "Select Options",
+    "rating": "How satisfied are you?",
     "checkbox": "I agree",
     "date": "Date",
     "file": "Attachment",
@@ -300,7 +305,22 @@
     "noAworkFieldsFound": "No awork fields found.",
     "add": "Add",
     "deleteField": "Delete Field",
-    "done": "Done"
+    "done": "Done",
+    "ratingSettings": "Rating scale",
+    "ratingScale": "Steps",
+    "ratingScaleOption": "1 to {{max}}",
+    "ratingStyle": "Display",
+    "ratingStyleStars": "Stars",
+    "ratingStyleNumbers": "Numbers",
+    "ratingMinLabel": "Label for lowest value",
+    "ratingMaxLabel": "Label for highest value",
+    "ratingMinLabelPlaceholder": "e.g. Very dissatisfied",
+    "ratingMaxLabelPlaceholder": "e.g. Very satisfied",
+    "ratingLabelOptional": "Optional",
+    "ratingLabelsHelp": "Optional labels shown below the scale.",
+    "ratingMin": "Lowest value",
+    "ratingMinOne": "1",
+    "ratingMinZero": "0 (e.g. NPS 0-10)"
   },
   "fieldConfigPanel": {
     "title": "Field Settings",
@@ -313,6 +333,7 @@
     "textarea": "Multi-line text area for longer responses",
     "select": "Dropdown menu for selecting one option",
     "multiselect": "Checkbox list for selecting multiple options",
+    "rating": "Visual rating scale with stars or numbers, e.g. for satisfaction questions",
     "checkbox": "Checkbox for yes/no or agreement",
     "date": "Date picker for selecting a date",
     "default": "Custom field type"
@@ -434,18 +455,19 @@
       "typeOfWorkHelp": "Required. Can also be set via field mapping.",
       "assignTo": "Assign to",
       "loadingUsers": "Loading users...",
-      "selectAssignee": "Select assignee",
+      "selectAssignee": "Select assignees",
       "searchUsers": "Search users...",
       "noUsersFound": "No users found.",
       "configuredAssigneeUnavailable": "Configured assignee unavailable",
-      "assigneeAccessHint": "The saved assignee is not available to your awork account.",
+      "assigneeAccessHint": "At least one saved assignee is not available to your awork account.",
       "unassigned": "Unassigned",
       "priority": "Mark as priority",
       "priorityHelp": "Created tasks will be marked as high priority",
       "mapFields": "Map form fields to task",
       "mappedCount": "{{count}} mapped",
       "mappedCount_other": "{{count}} mapped",
-      "notMapped": "Not mapped"
+      "notMapped": "Not mapped",
+      "removeAssignee": "Remove assignee"
     },
     "project": {
       "badge": "Project",
@@ -468,7 +490,8 @@
       "startOn": "Start Date",
       "plannedDuration": "Planned Duration (hours)",
       "typeOfWork": "Type of work",
-      "tags": "Tags (comma-separated)"
+      "tags": "Tags (comma-separated)",
+      "checklist": "Checklist items"
     },
     "projectFields": {
       "name": "Project Name",
@@ -609,6 +632,9 @@
     "submitting": "Submitting...",
     "poweredByPrefix": "Powered by",
     "submitAnother": "Submit Another Response",
-    "closeTab": "Close this tab"
+    "closeTab": "Close this tab",
+    "rating": {
+      "optionLabel": "{{value}} of {{max}}"
+    }
   }
 }

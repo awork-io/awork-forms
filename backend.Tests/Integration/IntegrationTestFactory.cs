@@ -37,8 +37,10 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
     public static readonly Guid AworkWorkflowId = Guid.Parse("67676767-6767-6767-6767-676767676767");
     public static readonly Guid AworkCustomFieldId = Guid.Parse("77777777-7777-7777-7777-777777777777");
     public static readonly Guid AworkSelectCustomFieldId = Guid.Parse("7f7f7f7f-7f7f-7f7f-7f7f-7f7f7f7f7f7f");
+    public static readonly Guid AworkNumberCustomFieldId = Guid.Parse("7e7e7e7e-7e7e-7e7e-7e7e-7e7e7e7e7e7e");
     public static readonly Guid AworkSelectOptionId = Guid.Parse("8f8f8f8f-8f8f-8f8f-8f8f-8f8f8f8f8f8f");
     public static readonly Guid AworkUserId = Guid.Parse("88888888-8888-8888-8888-888888888888");
+    public static readonly Guid AworkSecondUserId = Guid.Parse("89898989-8989-8989-8989-898989898989");
     public static readonly Guid AworkCreatedProjectId = Guid.Parse("99999999-9999-9999-9999-999999999999");
     public static readonly Guid AworkCreatedTaskId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     public static readonly Guid AworkCreatedTypeOfWorkId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
@@ -238,6 +240,7 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
                 jsonBody = new object[]
                 {
                     new { id = AworkCustomFieldId, name = "Severity", type = "text", entity = "task", isRequired = false, isArchived = false },
+                    new { id = AworkNumberCustomFieldId, name = "Score", type = "number", entity = "task", isRequired = false, isArchived = false },
                     new
                     {
                         id = AworkSelectCustomFieldId,
@@ -332,6 +335,12 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
         await RegisterAworkMappingAsync(client, new
         {
             request = new { method = "POST", urlPath = $"/api/v1/tasks/{AworkCreatedTaskId}/addtags" },
+            response = new { status = 200, jsonBody = new { ok = true } }
+        });
+
+        await RegisterAworkMappingAsync(client, new
+        {
+            request = new { method = "POST", urlPath = $"/api/v1/tasks/{AworkCreatedTaskId}/checklistitems" },
             response = new { status = 200, jsonBody = new { ok = true } }
         });
     }

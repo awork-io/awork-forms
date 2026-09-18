@@ -53,7 +53,7 @@ const emptyAworkConfig: AworkIntegrationConfig = {
   taskListId: null,
   taskStatusId: null,
   typeOfWorkId: null,
-  assigneeId: null,
+  assigneeIds: [],
   isPriority: false,
   taskTag: null,
   taskFieldMappings: [],

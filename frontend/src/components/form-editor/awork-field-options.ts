@@ -27,6 +27,7 @@ export const AWORK_TASK_FIELDS: AworkFieldOption[] = [
   { value: 'plannedDuration', labelKey: 'aworkIntegration.taskFields.plannedDuration', fallbackLabel: 'Planned Duration (hours)' },
   { value: 'typeOfWork', labelKey: 'aworkIntegration.taskFields.typeOfWork', fallbackLabel: 'Type of work' },
   { value: 'tags', labelKey: 'aworkIntegration.taskFields.tags', fallbackLabel: 'Tags (comma-separated)' },
+  { value: 'checklist', labelKey: 'aworkIntegration.taskFields.checklist', fallbackLabel: 'Checklist items' },
 ];
 
 export function resolveTaskMappingLabel(

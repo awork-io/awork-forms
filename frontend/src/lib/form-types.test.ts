@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { createField, FIELD_TYPES, isFileValueArray, isInputField, type FieldType } from './form-types';
+import { createField, FIELD_TYPES, getRatingMax, getRatingMin, getRatingSteps, isFileValueArray, isInputField, type FieldType } from './form-types';
 
 describe('FIELD_TYPES', () => {
   it('should contain all expected field types', () => {
-    const expectedTypes: FieldType[] = ['text', 'email', 'number', 'textarea', 'select', 'multiselect', 'checkbox', 'date', 'file', 'section', 'divider'];
+    const expectedTypes: FieldType[] = ['text', 'email', 'number', 'textarea', 'select', 'multiselect', 'rating', 'checkbox', 'date', 'file', 'section', 'divider'];
     const actualTypes = FIELD_TYPES.map(f => f.type);
 
     expect(actualTypes).toEqual(expectedTypes);
@@ -17,8 +17,8 @@ describe('FIELD_TYPES', () => {
     });
   });
 
-  it('should have 11 field types', () => {
-    expect(FIELD_TYPES).toHaveLength(11);
+  it('should have 12 field types', () => {
+    expect(FIELD_TYPES).toHaveLength(12);
   });
 });
 
@@ -92,6 +92,16 @@ describe('createField', () => {
     expect(field.options![1]).toEqual({ label: 'Option 2', value: 'option2' });
   });
 
+  it('should create a rating field with a 5-step star scale', () => {
+    const field = createField('rating');
+
+    expect(field.type).toBe('rating');
+    expect(field.label).toBe('How satisfied are you?');
+    expect(field.ratingMax).toBe(5);
+    expect(field.ratingStyle).toBe('stars');
+    expect(field.options).toBeUndefined();
+  });
+
   it('should create a section block with correct defaults', () => {
     const field = createField('section');
 
@@ -144,5 +154,33 @@ describe('isFileValueArray', () => {
 
   it('rejects arrays containing non-file values', () => {
     expect(isFileValueArray([{ fileName: 'brief.pdf' }])).toBe(false);
+  });
+});
+
+describe('getRatingMax', () => {
+  it('falls back to 5 when the scale is missing or invalid', () => {
+    expect(getRatingMax({})).toBe(5);
+    expect(getRatingMax({ ratingMax: Number.NaN })).toBe(5);
+    expect(getRatingMax({ ratingMax: 4.5 })).toBe(5);
+  });
+
+  it('clamps the scale to the supported 3-10 range', () => {
+    expect(getRatingMax({ ratingMax: 1 })).toBe(3);
+    expect(getRatingMax({ ratingMax: 7 })).toBe(7);
+    expect(getRatingMax({ ratingMax: 50 })).toBe(10);
+  });
+});
+
+describe('getRatingMin / getRatingSteps', () => {
+  it('starts at 1 by default and for star scales even when 0 is configured', () => {
+    expect(getRatingMin({})).toBe(1);
+    expect(getRatingMin({ ratingStyle: 'stars', ratingMin: 0 })).toBe(1);
+    expect(getRatingSteps({ ratingMax: 5 })).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it('supports a 0-based numeric scale (NPS)', () => {
+    expect(getRatingMin({ ratingStyle: 'numbers', ratingMin: 0 })).toBe(0);
+    expect(getRatingSteps({ ratingStyle: 'numbers', ratingMin: 0, ratingMax: 10 })).toHaveLength(11);
+    expect(getRatingSteps({ ratingStyle: 'numbers', ratingMin: 0, ratingMax: 10 })[0]).toBe(0);
   });
 });

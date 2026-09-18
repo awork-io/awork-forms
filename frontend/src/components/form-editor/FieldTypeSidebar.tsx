@@ -9,6 +9,7 @@ import {
   ChevronDown,
   CheckSquare,
   ListChecks,
+  Star,
   Calendar,
   GripVertical,
   Heading1,
@@ -100,6 +101,8 @@ function FieldTypeIcon({ iconName, className }: { iconName: string; className?: 
       return <CheckSquare className={className} />;
     case 'ListChecks':
       return <ListChecks className={className} />;
+    case 'Star':
+      return <Star className={className} />;
     case 'Calendar':
       return <Calendar className={className} />;
     case 'Heading1':
