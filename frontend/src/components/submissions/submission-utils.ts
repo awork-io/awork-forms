@@ -1,4 +1,4 @@
-import { isFileValue } from '@/lib/form-types';
+import { isFileValue, isFileValueArray } from '@/lib/form-types';
 
 export function parseSubmissionData(dataJson: string): Record<string, unknown> {
   try {
@@ -15,6 +15,7 @@ export function getSubmissionPreview(dataJson: string): string {
 
   const preview = entries.slice(0, 2).map(([, value]) => {
     if (isFileValue(value)) return value.fileName;
+    if (isFileValueArray(value)) return value.map((file) => file.fileName).join(', ');
     const strValue = String(value);
     return strValue.length > 25 ? `${strValue.substring(0, 25)}...` : strValue;
   });

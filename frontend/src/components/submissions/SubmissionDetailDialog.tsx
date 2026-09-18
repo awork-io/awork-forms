@@ -1,9 +1,10 @@
 import type { Submission } from '@/lib/api';
+import type { ReactNode } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Calendar, Check, Download, FileText, Paperclip, X } from 'lucide-react';
-import { isFileValue, formatFileSize } from '@/lib/form-types';
+import { isFileValue, isFileValueArray, formatFileSize } from '@/lib/form-types';
 import { SubmissionAworkLinks } from '@/components/submissions/SubmissionAworkLinks';
 import { SubmissionStatusBadge } from '@/components/submissions/SubmissionStatusBadge';
 import { parseSubmissionData } from '@/components/submissions/submission-utils';
@@ -27,7 +28,15 @@ export function SubmissionDetailDialog({
 }: SubmissionDetailDialogProps) {
   const { t } = useTranslation();
 
-  const renderFieldValue = (value: unknown) => {
+  const renderFieldValue = (value: unknown): ReactNode => {
+    if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
+      return <span className="text-muted-foreground italic">{t('submissions.emptyValue')}</span>;
+    }
+
+    if (isFileValueArray(value)) {
+      return <div className="space-y-2">{value.map((file) => <div key={file.fileUrl}>{renderFieldValue(file)}</div>)}</div>;
+    }
+
     if (isFileValue(value)) {
       const fileSize = formatFileSize(value.fileSize);
       return (
@@ -68,10 +77,6 @@ export function SubmissionDetailDialog({
           {value ? t('common.yes') : t('common.no')}
         </span>
       );
-    }
-
-    if (value === null || value === undefined || value === '') {
-      return <span className="text-muted-foreground italic">{t('submissions.emptyValue')}</span>;
     }
 
     if (Array.isArray(value)) {

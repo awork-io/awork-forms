@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createField, FIELD_TYPES, getRatingMax, getRatingMin, getRatingSteps, isInputField, type FieldType } from './form-types';
+import { createField, FIELD_TYPES, getRatingMax, getRatingMin, getRatingSteps, isFileValueArray, isInputField, type FieldType } from './form-types';
 
 describe('FIELD_TYPES', () => {
   it('should contain all expected field types', () => {
@@ -141,6 +141,19 @@ describe('isInputField', () => {
 
   it('returns true for submitted fields', () => {
     expect(isInputField(createField('text'))).toBe(true);
+  });
+});
+
+describe('isFileValueArray', () => {
+  it('accepts submitted file metadata arrays', () => {
+    expect(isFileValueArray([
+      { fileName: 'brief.pdf', fileUrl: '/api/files/one', fileSize: 123 },
+      { fileName: 'image.png', fileUrl: '/api/files/two' },
+    ])).toBe(true);
+  });
+
+  it('rejects arrays containing non-file values', () => {
+    expect(isFileValueArray([{ fileName: 'brief.pdf' }])).toBe(false);
   });
 });
 

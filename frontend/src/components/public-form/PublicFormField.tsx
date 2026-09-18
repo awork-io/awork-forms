@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { TFunction } from 'i18next';
-import type { FormField } from '@/lib/form-types';
+import { MAX_FILES_PER_FIELD, type FormField } from '@/lib/form-types';
 import { RatingInput } from '@/components/public-form/RatingInput';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -41,6 +41,19 @@ export function PublicFormField({
   const maxFileSizeHint = field.type === 'file'
     ? t('publicForm.fileUpload.maxSizeHint', { maxSizeMb: field.maxFileSizeMB || 10 })
     : '';
+  const maxFilesHint = field.type === 'file'
+    ? t('publicForm.fileUpload.maxFilesHint', { maxFiles: MAX_FILES_PER_FIELD })
+    : '';
+  const selectedFiles = field.type === 'file'
+    ? Array.isArray(value)
+      ? value.filter((item): item is File => item instanceof File)
+      : value instanceof File
+        ? [value]
+        : []
+    : [];
+  const addFiles = (files: FileList) => {
+    onChange([...selectedFiles, ...Array.from(files)]);
+  };
 
   useEffect(() => {
     if (field.type !== 'textarea' || !textareaRef.current) {
@@ -344,7 +357,7 @@ export function PublicFormField({
               setIsFocused(false);
               const files = event.dataTransfer.files;
               if (files.length > 0) {
-                onChange(files[0]);
+                addFiles(files);
               }
             }}
             onClick={() => document.getElementById(`file-${field.id}`)?.click()}
@@ -353,47 +366,54 @@ export function PublicFormField({
               id={`file-${field.id}`}
               type="file"
               className="sr-only"
+              multiple
               accept={field.acceptedFileTypes || undefined}
               onChange={(event) => {
                 const files = event.target.files;
                 if (files && files.length > 0) {
-                  onChange(files[0]);
+                  addFiles(files);
+                  event.target.value = '';
                 }
               }}
             />
-            {value instanceof File ? (
-              <div className="flex items-center justify-center gap-2 text-gray-700">
-                <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-sm font-medium">{value.name}</span>
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onChange(null);
-                  }}
-                  className="ml-2 text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2">
+            <div className="space-y-3">
+              {selectedFiles.length > 0 ? (
+                <div className="space-y-2 text-left">
+                  {selectedFiles.map((file, fileIndex) => (
+                    <div key={`${file.name}-${file.size}-${file.lastModified}-${fileIndex}`} className="flex items-center gap-2 text-gray-700">
+                      <svg className="w-5 h-5 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium">{file.name}</span>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${file.name}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onChange(selectedFiles.filter((_, index) => index !== fileIndex));
+                        }}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
                 <div className="mx-auto w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
                   <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                 </div>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium text-blue-600">{t('publicForm.fileUpload.clickToUpload')}</span>{' '}
-                  {t('publicForm.fileUpload.dragAndDrop')}
-                </p>
-                <p className="text-xs text-gray-400">{fileTypesHint} {maxFileSizeHint}</p>
-              </div>
-            )}
+              )}
+              <p className="text-sm text-gray-600">
+                <span className="font-medium text-blue-600">{t('publicForm.fileUpload.clickToUpload')}</span>{' '}
+                {t('publicForm.fileUpload.dragAndDrop')}
+              </p>
+              <p className="text-xs text-gray-400">{fileTypesHint} {maxFileSizeHint} {maxFilesHint}</p>
+            </div>
           </div>
         ) : null}
 

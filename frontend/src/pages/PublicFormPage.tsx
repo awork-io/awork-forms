@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { PublicForm, SubmissionResponse } from '@/lib/api';
-import { isInputField, type FormField } from '@/lib/form-types';
+import { isInputField, MAX_FILES_PER_FIELD, type FormField } from '@/lib/form-types';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -48,7 +48,7 @@ export function PublicFormPage() {
         parsedFields.filter(isInputField).forEach((field) => {
           initialData[field.id] = field.type === 'checkbox'
             ? false
-            : field.type === 'multiselect'
+            : field.type === 'multiselect' || field.type === 'file'
               ? []
               : '';
         });
@@ -101,17 +101,26 @@ export function PublicFormPage() {
         }
       }
 
-      if (field.type === 'file' && value instanceof File) {
+      if (field.type === 'file' && Array.isArray(value)) {
+        if (value.length > MAX_FILES_PER_FIELD) {
+          errors[field.id] = t('publicForm.fileUpload.maxFilesError', { maxFiles: MAX_FILES_PER_FIELD });
+          return;
+        }
+
         const maxFileSizeMb = field.maxFileSizeMB || 10;
-        if (value.size > maxFileSizeMb * 1024 * 1024) {
+        if (value.some((file) => file instanceof File && file.size > maxFileSizeMb * 1024 * 1024)) {
           errors[field.id] = t('publicForm.fileUpload.maxSizeError', { maxSizeMb: maxFileSizeMb });
           return;
         }
 
         const acceptedExtensions = parseAcceptedExtensions(field.acceptedFileTypes);
         if (acceptedExtensions.size > 0) {
-          const fileExtension = `.${value.name.split('.').pop()?.toLowerCase() || ''}`;
-          if (!acceptedExtensions.has(fileExtension)) {
+          const hasInvalidFileType = value.some((file) => {
+            if (!(file instanceof File)) return false;
+            const fileExtension = `.${file.name.split('.').pop()?.toLowerCase() || ''}`;
+            return !acceptedExtensions.has(fileExtension);
+          });
+          if (hasInvalidFileType) {
             errors[field.id] = t('publicForm.fileUpload.invalidTypeError');
           }
         }
@@ -137,13 +146,19 @@ export function PublicFormPage() {
       for (const field of fields.filter(isInputField)) {
         const fieldId = field.id;
         const value = formData[fieldId];
-        if (value instanceof File) {
-          const uploadResult = await api.uploadPublicFile(publicId, value, fieldId);
-          processedData[fieldId] = {
-            fileName: uploadResult.fileName,
-            fileUrl: uploadResult.fileUrl,
-            fileSize: uploadResult.fileSize,
-          };
+        if (field.type === 'file' && Array.isArray(value)) {
+          processedData[fieldId] = await Promise.all(
+            value
+              .filter((file): file is File => file instanceof File)
+              .map(async (file) => {
+                const uploadResult = await api.uploadPublicFile(publicId, file, fieldId);
+                return {
+                  fileName: uploadResult.fileName,
+                  fileUrl: uploadResult.fileUrl,
+                  fileSize: uploadResult.fileSize,
+                };
+              })
+          );
         } else {
           processedData[fieldId] = value;
         }

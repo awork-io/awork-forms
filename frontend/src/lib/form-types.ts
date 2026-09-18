@@ -411,6 +411,8 @@ export interface FileValue {
   fileSize?: number;
 }
 
+export const MAX_FILES_PER_FIELD = 20;
+
 // Check if a value is a file object (uploaded file metadata)
 export function isFileValue(value: unknown): value is FileValue {
   return (
@@ -421,6 +423,10 @@ export function isFileValue(value: unknown): value is FileValue {
     typeof (value as Record<string, unknown>).fileName === 'string' &&
     typeof (value as Record<string, unknown>).fileUrl === 'string'
   );
+}
+
+export function isFileValueArray(value: unknown): value is FileValue[] {
+  return Array.isArray(value) && value.every(isFileValue);
 }
 
 // Format file size for display
