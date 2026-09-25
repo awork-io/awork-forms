@@ -16,10 +16,22 @@ function SelectGroup({
   return <SelectPrimitive.Group data-slot="select-group" {...props} />
 }
 
+// Radix moves selected item content into the value; an element keeps translated text nodes
+// from being removed directly by React when the selection changes.
 function SelectValue({
+  placeholder,
+  children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Value>) {
-  return <SelectPrimitive.Value data-slot="select-value" {...props} />
+  return (
+    <SelectPrimitive.Value
+      data-slot="select-value"
+      placeholder={placeholder === undefined ? undefined : <span>{placeholder}</span>}
+      {...props}
+    >
+      {children === undefined ? undefined : <span>{children}</span>}
+    </SelectPrimitive.Value>
+  )
 }
 
 function SelectTrigger({
@@ -120,7 +132,7 @@ function SelectItem({
           <CheckIcon className="size-4 text-[#006dfa]" />
         </SelectPrimitive.ItemIndicator>
       </span>
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemText><span>{children}</span></SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   )
 }
