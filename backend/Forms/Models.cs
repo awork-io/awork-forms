@@ -41,6 +41,7 @@ public class FormDetailDto
     public Guid? AworkTypeOfWorkId { get; set; }
     public List<Guid> AworkAssigneeIds { get; set; } = new();
     public bool? AworkTaskIsPriority { get; set; }
+    public bool SkipCreatorAsWatcher { get; set; }
     [JsonPropertyName("aworkTaskTag")]
     [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
     public string? AworkTaskTag { get; set; }
@@ -69,6 +70,7 @@ public class CreateFormDto
     public Guid? AworkTypeOfWorkId { get; set; }
     public List<Guid> AworkAssigneeIds { get; set; } = new();
     public bool? AworkTaskIsPriority { get; set; }
+    public bool SkipCreatorAsWatcher { get; set; }
     [JsonPropertyName("aworkTaskTag")]
     public string? AworkTaskTag { get; set; }
     public string? FieldMappingsJson { get; set; }
@@ -93,6 +95,7 @@ public class UpdateFormDto
     public Guid? AworkTypeOfWorkId { get; set; }
     public List<Guid> AworkAssigneeIds { get; set; } = new();
     public bool? AworkTaskIsPriority { get; set; }
+    public bool SkipCreatorAsWatcher { get; set; }
     [JsonPropertyName("aworkTaskTag")]
     public string? AworkTaskTag { get; set; }
     public string? FieldMappingsJson { get; set; }

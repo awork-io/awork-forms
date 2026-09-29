@@ -53,6 +53,7 @@ export interface FormDetail extends Form {
   aworkTypeOfWorkId?: string;
   aworkAssigneeIds?: string[];
   aworkTaskIsPriority?: boolean;
+  skipCreatorAsWatcher?: boolean;
   aworkTaskTag?: string;
   fieldMappingsJson?: string;
   primaryColor?: string;
@@ -74,6 +75,7 @@ export interface CreateFormDto {
   aworkTypeOfWorkId?: string;
   aworkAssigneeIds?: string[];
   aworkTaskIsPriority?: boolean;
+  skipCreatorAsWatcher?: boolean;
   aworkTaskTag?: string;
   fieldMappingsJson?: string;
   primaryColor?: string;
@@ -96,6 +98,7 @@ export interface UpdateFormDto {
   aworkTypeOfWorkId: string | null;
   aworkAssigneeIds: string[];
   aworkTaskIsPriority: boolean | null;
+  skipCreatorAsWatcher: boolean;
   aworkTaskTag: string | null;
   fieldMappingsJson: string | null;
   primaryColor: string | null;

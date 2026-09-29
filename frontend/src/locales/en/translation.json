@@ -463,6 +463,8 @@
       "unassigned": "Unassigned",
       "priority": "Mark as priority",
       "priorityHelp": "Created tasks will be marked as high priority",
+      "skipCreatorAsWatcher": "Do not add the form owner as a watcher",
+      "skipCreatorAsWatcherHelp": "The form owner will not receive watcher notifications for tasks created from this form.",
       "mapFields": "Map form fields to task",
       "mappedCount": "{{count}} mapped",
       "mappedCount_other": "{{count}} mapped",

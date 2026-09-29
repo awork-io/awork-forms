@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { serializeAworkConfig, type AworkIntegrationConfig } from './AworkIntegrationSettings';
+import { parseAworkConfig, serializeAworkConfig, type AworkIntegrationConfig } from './AworkIntegrationSettings';
 
 describe('serializeAworkConfig', () => {
   it('serializes cleared awork fields as null for full PUT', () => {
@@ -12,6 +12,7 @@ describe('serializeAworkConfig', () => {
       typeOfWorkId: null,
       assigneeIds: [],
       isPriority: false,
+      skipCreatorAsWatcher: false,
       taskTag: null,
       taskFieldMappings: [],
       projectFieldMappings: [],
@@ -26,6 +27,7 @@ describe('serializeAworkConfig', () => {
       aworkTypeOfWorkId: null,
       aworkAssigneeIds: [],
       aworkTaskIsPriority: false,
+      skipCreatorAsWatcher: false,
       aworkTaskTag: null,
       fieldMappingsJson: null,
     });
@@ -41,6 +43,7 @@ describe('serializeAworkConfig', () => {
       typeOfWorkId: '55555555-5555-5555-5555-555555555555',
       assigneeIds: ['66666666-6666-6666-6666-666666666666', '77777777-7777-7777-7777-777777777777'],
       isPriority: true,
+      skipCreatorAsWatcher: true,
       taskTag: 'vip',
       taskFieldMappings: [{ formFieldId: 'a', aworkField: 'name', aworkFieldLabel: 'Name' }],
       projectFieldMappings: [{ formFieldId: 'b', aworkField: 'description', aworkFieldLabel: 'Description' }],
@@ -55,11 +58,19 @@ describe('serializeAworkConfig', () => {
       aworkTypeOfWorkId: '55555555-5555-5555-5555-555555555555',
       aworkAssigneeIds: ['66666666-6666-6666-6666-666666666666', '77777777-7777-7777-7777-777777777777'],
       aworkTaskIsPriority: true,
+      skipCreatorAsWatcher: true,
       aworkTaskTag: 'vip',
       fieldMappingsJson: JSON.stringify({
         taskFieldMappings: [{ formFieldId: 'a', aworkField: 'name', aworkFieldLabel: 'Name' }],
         projectFieldMappings: [{ formFieldId: 'b', aworkField: 'description', aworkFieldLabel: 'Description' }],
       }),
     });
+  });
+});
+
+describe('parseAworkConfig', () => {
+  it('defaults the watcher opt-out to unchecked for existing forms', () => {
+    const config = parseAworkConfig('task', null, null, null, null, null, [], false, undefined, null, null);
+    expect(config.skipCreatorAsWatcher).toBe(false);
   });
 });

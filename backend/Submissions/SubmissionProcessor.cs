@@ -112,7 +112,7 @@ public class SubmissionProcessor
                         targetProjectId.Value, form.AworkTaskStatusId, resolvedTypeOfWorkId, form.AworkTaskListId,
                         form.AworkTaskIsPriority ?? false);
 
-                    var task = await _aworkService.CreateTask(userId.Value, targetProjectId.Value, taskRequest);
+                    var task = await _aworkService.CreateTask(userId.Value, targetProjectId.Value, taskRequest, form.SkipCreatorAsWatcher);
                     if (task != null)
                     {
                         createdTaskId = task.Id;

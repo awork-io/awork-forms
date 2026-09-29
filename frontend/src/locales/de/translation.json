@@ -463,6 +463,8 @@
       "unassigned": "Nicht zugewiesen",
       "priority": "Als Priorität markieren",
       "priorityHelp": "Erstellte Aufgaben werden als hohe Priorität markiert",
+      "skipCreatorAsWatcher": "Formularbesitzer nicht als Beobachter hinzufügen",
+      "skipCreatorAsWatcherHelp": "Der Formularbesitzer erhält keine Beobachter-Benachrichtigungen für Aufgaben aus diesem Formular.",
       "mapFields": "Formularfelder der Aufgabe zuordnen",
       "mappedCount": "{{count}} zugeordnet",
       "mappedCount_other": "{{count}} zugeordnet",

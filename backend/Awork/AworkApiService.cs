@@ -144,11 +144,12 @@ public class AworkApiService
     /// <summary>
     /// Creates an awork task in the given project.
     /// </summary>
-    public async Task<AworkCreateTaskResponse?> CreateTask(Guid userId, Guid projectId, AworkCreateTaskRequest request)
+    public async Task<AworkCreateTaskResponse?> CreateTask(Guid userId, Guid projectId, AworkCreateTaskRequest request, bool skipCreatorAsWatcher)
     {
         request.EntityId = projectId;
         request.BaseType = "projecttask";
-        return await MakeAworkPostRequest<AworkCreateTaskResponse>(userId, "tasks", request);
+        var endpoint = skipCreatorAsWatcher ? "tasks?skipCreatorAsWatcher=true" : "tasks";
+        return await MakeAworkPostRequest<AworkCreateTaskResponse>(userId, endpoint, request);
     }
 
     /// <summary>

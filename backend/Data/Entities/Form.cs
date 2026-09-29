@@ -20,6 +20,7 @@ public class Form
     public Guid? AworkTypeOfWorkId { get; set; }
     public List<Guid> AworkAssigneeIds { get; set; } = new();
     public bool? AworkTaskIsPriority { get; set; }
+    public bool SkipCreatorAsWatcher { get; set; }
     public string? AworkTaskTag { get; set; }
     public string? FieldMappingsJson { get; set; }
     public string? PrimaryColor { get; set; }

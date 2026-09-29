@@ -87,6 +87,7 @@ public class FormsService
             AworkTypeOfWorkId = dto.AworkTypeOfWorkId,
             AworkAssigneeIds = NormalizeAssigneeIds(dto.AworkAssigneeIds),
             AworkTaskIsPriority = dto.AworkTaskIsPriority,
+            SkipCreatorAsWatcher = dto.SkipCreatorAsWatcher,
             AworkTaskTag = dto.AworkTaskTag,
             FieldMappingsJson = dto.FieldMappingsJson,
             PrimaryColor = dto.PrimaryColor,
@@ -135,6 +136,7 @@ public class FormsService
             AworkTypeOfWorkId = source.AworkTypeOfWorkId,
             AworkAssigneeIds = source.AworkAssigneeIds.ToList(),
             AworkTaskIsPriority = source.AworkTaskIsPriority,
+            SkipCreatorAsWatcher = source.SkipCreatorAsWatcher,
             AworkTaskTag = source.AworkTaskTag,
             FieldMappingsJson = source.FieldMappingsJson,
             PrimaryColor = source.PrimaryColor,
@@ -199,6 +201,7 @@ public class FormsService
         form.AworkTypeOfWorkId = dto.AworkTypeOfWorkId;
         form.AworkAssigneeIds = NormalizeAssigneeIds(dto.AworkAssigneeIds);
         form.AworkTaskIsPriority = dto.AworkTaskIsPriority;
+        form.SkipCreatorAsWatcher = dto.SkipCreatorAsWatcher;
         form.AworkTaskTag = string.IsNullOrWhiteSpace(dto.AworkTaskTag) ? null : dto.AworkTaskTag.Trim();
         form.FieldMappingsJson = string.IsNullOrWhiteSpace(dto.FieldMappingsJson) ? null : dto.FieldMappingsJson;
         form.PrimaryColor = string.IsNullOrWhiteSpace(dto.PrimaryColor) ? null : dto.PrimaryColor;
@@ -375,6 +378,7 @@ public class FormsService
         AworkTypeOfWorkId = form.AworkTypeOfWorkId,
         AworkAssigneeIds = form.AworkAssigneeIds.ToList(),
         AworkTaskIsPriority = form.AworkTaskIsPriority,
+        SkipCreatorAsWatcher = form.SkipCreatorAsWatcher,
         AworkTaskTag = form.AworkTaskTag,
         FieldMappingsJson = form.FieldMappingsJson,
         PrimaryColor = form.PrimaryColor,
