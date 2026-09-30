@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Link2, AlertCircle } from 'lucide-react';
 import {
   api,
@@ -48,6 +49,7 @@ export interface AworkIntegrationConfig {
   typeOfWorkId: string | null;
   assigneeIds: string[];
   isPriority: boolean;
+  skipCreatorAsWatcher: boolean;
   taskTag: string | null;
   taskFieldMappings: FieldMapping[];
   projectFieldMappings: FieldMapping[];
@@ -598,6 +600,23 @@ export function AworkIntegrationSettings({
                 </div>
               )}
 
+              {/* Task creator watcher */}
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="skip-creator-as-watcher"
+                  checked={config.skipCreatorAsWatcher}
+                  onCheckedChange={(checked) =>
+                    onChange((prev) => ({ ...prev, skipCreatorAsWatcher: checked === true }))
+                  }
+                />
+                <div className="space-y-1">
+                  <Label htmlFor="skip-creator-as-watcher">{t('aworkIntegration.task.skipCreatorAsWatcher')}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t('aworkIntegration.task.skipCreatorAsWatcherHelp')}
+                  </p>
+                </div>
+              </div>
+
               {/* Task Tag */}
               {config.projectId && (
                 <div className="space-y-2">
@@ -742,6 +761,7 @@ export function parseAworkConfig(
   typeOfWorkId: string | null | undefined,
   assigneeIds: string[] | null | undefined,
   isPriority: boolean | null | undefined,
+  skipCreatorAsWatcher: boolean | null | undefined,
   taskTag: string | null | undefined,
   fieldMappingsJson: string | null | undefined
 ): AworkIntegrationConfig {
@@ -767,6 +787,7 @@ export function parseAworkConfig(
     typeOfWorkId: typeOfWorkId || null,
     assigneeIds: assigneeIds ?? [],
     isPriority: isPriority || false,
+    skipCreatorAsWatcher: skipCreatorAsWatcher ?? false,
     taskTag: taskTag ?? null,
     taskFieldMappings,
     projectFieldMappings,
@@ -783,6 +804,7 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
   aworkTypeOfWorkId: string | null;
   aworkAssigneeIds: string[];
   aworkTaskIsPriority: boolean | null;
+  skipCreatorAsWatcher: boolean;
   aworkTaskTag: string | null;
   fieldMappingsJson: string | null;
 } {
@@ -799,6 +821,7 @@ export function serializeAworkConfig(config: AworkIntegrationConfig): {
     aworkTypeOfWorkId: config.typeOfWorkId,
     aworkAssigneeIds: config.assigneeIds,
     aworkTaskIsPriority: config.isPriority ?? null,
+    skipCreatorAsWatcher: config.skipCreatorAsWatcher,
     aworkTaskTag: normalizedTaskTag ? normalizedTaskTag : null,
     fieldMappingsJson: (hasTaskMappings || hasProjectMappings)
       ? JSON.stringify({

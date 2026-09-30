@@ -89,6 +89,26 @@ public class FormsServiceTests : IDisposable
     }
 
     [Fact]
+    public void WatcherOptOut_DefaultsToFalseAndSurvivesUpdateAndDuplication()
+    {
+        var created = _formsService.CreateForm(new CreateFormDto { Name = "Watcher Form" }, _testUserId);
+        Assert.False(created.SkipCreatorAsWatcher);
+
+        var updated = _formsService.UpdateForm(created.Id, new UpdateFormDto
+        {
+            Name = created.Name,
+            SkipCreatorAsWatcher = true
+        }, _testUserId);
+        Assert.NotNull(updated);
+        Assert.True(updated.SkipCreatorAsWatcher);
+        Assert.True(_formsService.GetFormById(created.Id, _testUserId)!.SkipCreatorAsWatcher);
+
+        var duplicate = _formsService.DuplicateForm(created.Id, _testUserId);
+        Assert.NotNull(duplicate);
+        Assert.True(duplicate.SkipCreatorAsWatcher);
+    }
+
+    [Fact]
     public void GetFormById_WithExistingForm_ReturnsForm()
     {
         var created = _formsService.CreateForm(new CreateFormDto { Name = "Test Form" }, _testUserId);

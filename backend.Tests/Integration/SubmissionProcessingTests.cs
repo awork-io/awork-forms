@@ -27,6 +27,47 @@ public class SubmissionProcessingTests
         public Guid? AworkTaskId { get; set; }
     }
 
+    [Theory]
+    [InlineData(false, "/api/v1/tasks")]
+    [InlineData(true, "/api/v1/tasks?skipCreatorAsWatcher=true")]
+    public async Task SubmitForm_OnlyAddsWatcherOptOutWhenEnabled(bool skipCreatorAsWatcher, string expectedTaskPath)
+    {
+        var (_, token) = await _factory.SeedUserAsync();
+        using var authedClient = _factory.CreateAuthenticatedClient(token);
+        var taskName = $"Watcher setting {Guid.NewGuid():N}";
+        var fields = new[] { new { id = "task-name", type = "text", label = "Name" } };
+        var mappings = new
+        {
+            taskFieldMappings = new[] { new { formFieldId = "task-name", aworkField = "name" } },
+            projectFieldMappings = Array.Empty<object>()
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/forms", new CreateFormDto
+        {
+            Name = "Watcher form",
+            FieldsJson = JsonSerializer.Serialize(fields),
+            FieldMappingsJson = JsonSerializer.Serialize(mappings),
+            ActionType = "task",
+            AworkProjectId = IntegrationTestFactory.AworkProjectId,
+            AworkTypeOfWorkId = IntegrationTestFactory.AworkTypeOfWorkId,
+            SkipCreatorAsWatcher = skipCreatorAsWatcher
+        });
+        createResponse.EnsureSuccessStatusCode();
+        var form = await createResponse.Content.ReadFromJsonAsync<FormDetailDto>();
+        Assert.NotNull(form);
+        Assert.Equal(skipCreatorAsWatcher, form.SkipCreatorAsWatcher);
+
+        using var publicClient = _factory.CreateClient();
+        var submitResponse = await publicClient.PostAsJsonAsync($"/api/f/{form.PublicId}/submit", new CreateSubmissionDto
+        {
+            Data = new Dictionary<string, object> { ["task-name"] = taskName }
+        });
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+
+        var requests = await GetAworkRequestsAsync(expectedTaskPath);
+        Assert.Single(requests, request => request.Body.Contains(taskName, StringComparison.Ordinal));
+    }
+
     [Fact]
     public async Task SubmitForm_ActionBoth_CreatesProjectAndTask()
     {

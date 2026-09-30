@@ -79,6 +79,7 @@ export function FormEditorPage() {
     typeOfWorkId: null,
     assigneeIds: [],
     isPriority: false,
+    skipCreatorAsWatcher: false,
     taskTag: null,
     taskFieldMappings: [],
     projectFieldMappings: [],
@@ -137,6 +138,7 @@ export function FormEditorPage() {
         data.aworkTypeOfWorkId,
         data.aworkAssigneeIds,
         data.aworkTaskIsPriority,
+        data.skipCreatorAsWatcher,
         data.aworkTaskTag,
         data.fieldMappingsJson
       ));
