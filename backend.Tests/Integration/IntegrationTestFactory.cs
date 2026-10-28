@@ -17,14 +17,12 @@ public sealed class IntegrationTestFactory : WebApplicationFactory<Program>, IAs
 {
     private const string JwtSecret = "integration-tests-secret-should-be-32-bytes-min";
     private const int WireMockPort = 8080;
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:16-alpine")
         .WithDatabase("awork_forms")
         .WithUsername("postgres")
         .WithPassword("postgres")
         .Build();
-    private readonly IContainer _aworkContainer = new ContainerBuilder()
-        .WithImage("wiremock/wiremock:3.5.2")
+    private readonly IContainer _aworkContainer = new ContainerBuilder("wiremock/wiremock:3.5.2")
         .WithPortBinding(WireMockPort, true)
         .Build();
 
