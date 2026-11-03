@@ -84,12 +84,18 @@ export function SearchableSelect({
   }
   const groupedOptions = Array.from(groups.entries()).map(([groupName, items]) => [groupName, items] as const)
 
-  React.useEffect(() => {
-    if (open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
       setSearch("")
       if (triggerRef.current) {
         setTriggerWidth(triggerRef.current.offsetWidth)
       }
+    }
+    setOpen(nextOpen)
+  }
+
+  React.useEffect(() => {
+    if (open) {
       setTimeout(() => inputRef.current?.focus(), 0)
     }
   }, [open])
@@ -97,7 +103,7 @@ export function SearchableSelect({
   const showClear = clearable && selectedOption && !disabled
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
           ref={triggerRef}

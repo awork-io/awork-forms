@@ -156,6 +156,8 @@ export function AworkIntegrationSettings({
   // Load awork data when action type requires it
   useEffect(() => {
     if (config.actionType === 'task' || config.actionType === 'both') {
+      // Loading state must reflect the selected action while the request runs.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchProjects();
       fetchTaskCustomFields();
     } else {
@@ -169,6 +171,8 @@ export function AworkIntegrationSettings({
   // Load task-specific data when project is selected
   useEffect(() => {
     if (config.projectId && (config.actionType === 'task' || config.actionType === 'both')) {
+      // Loading state must reflect the selected project while the request runs.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchTaskData(config.projectId);
     } else {
       // Reset task data when no project is selected

@@ -53,12 +53,18 @@ export function MultiSearchableSelect({
         opt.secondaryLabel?.toLowerCase().includes(lowerSearch)
     )
 
-  React.useEffect(() => {
-    if (open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
       setSearch("")
       if (triggerRef.current) {
         setTriggerWidth(triggerRef.current.offsetWidth)
       }
+    }
+    setOpen(nextOpen)
+  }
+
+  React.useEffect(() => {
+    if (open) {
       setTimeout(() => inputRef.current?.focus(), 0)
     }
   }, [open])
@@ -70,7 +76,7 @@ export function MultiSearchableSelect({
   const remove = (value: string) => onValuesChange(values.filter((item) => item !== value))
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
           ref={triggerRef}

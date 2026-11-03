@@ -163,6 +163,8 @@ export function FormEditorPage() {
 
   useEffect(() => {
     if (id) {
+      // loadForm updates state after its request settles.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadForm(parseInt(id));
       trackScreenSeen(2); // Form editor screen
     }

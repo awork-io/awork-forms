@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { SearchableSelect, type SearchableSelectOption } from './searchable-select';
+import { MultiSearchableSelect } from './multi-searchable-select';
 
 describe('SearchableSelect', () => {
   const options: SearchableSelectOption[] = [
@@ -18,6 +19,24 @@ describe('SearchableSelect', () => {
     { value: 'alpha', label: 'Alpha field' },
     { value: 'beta', label: 'Beta field' },
   ];
+
+  it.each(['single', 'multiple'])('clears the %s search when reopened', async (mode) => {
+    const user = userEvent.setup();
+    render(mode === 'single' ? (
+      <SearchableSelect options={options} value={null} onValueChange={vi.fn()} />
+    ) : (
+      <MultiSearchableSelect options={options} values={[]} onValuesChange={vi.fn()} />
+    ));
+
+    await user.click(screen.getByRole('combobox'));
+    await user.type(screen.getByPlaceholderText('Search...'), 'Alpha');
+    expect(screen.queryByText('Description')).not.toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('combobox'));
+
+    expect(screen.getByPlaceholderText('Search...')).toHaveValue('');
+    expect(screen.getByText('Description')).toBeInTheDocument();
+  });
 
   it('keeps ungrouped options alphabetized by label', async () => {
     const user = userEvent.setup();
