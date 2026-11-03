@@ -34,7 +34,7 @@ export function RatingInput({ field, value, onChange, hasError, labelId, minLabe
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const currentIndex = steps.indexOf(selected ?? tabStop);
-    let nextIndex: number | null = null;
+    let nextIndex: number;
     switch (event.key) {
       case 'ArrowRight':
       case 'ArrowUp':

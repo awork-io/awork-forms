@@ -71,6 +71,8 @@ export function FormsPage() {
   };
 
   useEffect(() => {
+    // fetchForms updates state after its request settles.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchForms();
     trackScreenSeen(1); // Forms list screen
     
