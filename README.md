@@ -7,7 +7,7 @@
 
 Create customizable forms that automatically generate tasks and projects in [awork](https://www.awork.com/).
 
-**Live Demo:** [awork-forms.proudpond-0e645c13.germanywestcentral.azurecontainerapps.io](https://awork-forms.proudpond-0e645c13.germanywestcentral.azurecontainerapps.io)
+**Live Demo:** [forms.awork.com](https://forms.awork.com)
 
 ---
 
